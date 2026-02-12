@@ -1,0 +1,195 @@
+use axum::{
+    extract::FromRef,
+    middleware,
+    routing::{delete, get, patch, post, put},
+    Router,
+};
+use sqlx::PgPool;
+use axum::http::{header, Method};
+use tower_http::cors::CorsLayer;
+use tower_http::trace::TraceLayer;
+
+use crate::config::Settings;
+use crate::handlers;
+use crate::middleware::{auth_middleware, auth_rate_limiter, general_rate_limiter};
+
+#[derive(Clone)]
+pub struct AppState {
+    pub pool: PgPool,
+    pub settings: Settings,
+}
+
+impl FromRef<AppState> for PgPool {
+    fn from_ref(state: &AppState) -> Self {
+        state.pool.clone()
+    }
+}
+
+impl FromRef<AppState> for Settings {
+    fn from_ref(state: &AppState) -> Self {
+        state.settings.clone()
+    }
+}
+
+pub fn create_router(pool: PgPool, settings: Settings) -> Router {
+    let state = AppState {
+        pool,
+        settings: settings.clone(),
+    };
+
+    // CORS configuration
+    let cors = CorsLayer::new()
+        .allow_origin(tower_http::cors::Any)
+        .allow_methods([
+            Method::GET,
+            Method::POST,
+            Method::PUT,
+            Method::PATCH,
+            Method::DELETE,
+            Method::OPTIONS,
+        ])
+        .allow_headers([
+            header::CONTENT_TYPE,
+            header::AUTHORIZATION,
+            header::ACCEPT,
+        ]);
+
+    // Public routes (no auth required) with strict rate limiting
+    let public_routes = Router::new()
+        .route("/auth/register", post(handlers::register))
+        .route("/auth/login", post(handlers::login))
+        .route("/auth/refresh", post(handlers::refresh))
+        .layer(auth_rate_limiter());
+
+    // Protected routes (auth required)
+    let protected_routes = Router::new()
+        // Auth
+        .route("/auth/me", get(handlers::me))
+        // Workouts
+        .route("/workouts", get(handlers::list_workouts))
+        .route("/workouts", post(handlers::create_workout))
+        .route("/workouts/{id}", get(handlers::get_workout))
+        .route("/workouts/{id}", patch(handlers::update_workout))
+        .route("/workouts/{id}", delete(handlers::delete_workout))
+        .route("/workouts/{id}/complete", post(handlers::complete_workout))
+        .route("/workouts/{id}/cancel", post(handlers::cancel_workout))
+        // Workout exercises
+        .route(
+            "/workouts/{workout_id}/exercises",
+            post(handlers::add_exercise),
+        )
+        .route(
+            "/workouts/{workout_id}/exercises/{exercise_id}",
+            patch(handlers::update_exercise),
+        )
+        .route(
+            "/workouts/{workout_id}/exercises/{exercise_id}",
+            delete(handlers::delete_exercise),
+        )
+        // Workout sets
+        .route(
+            "/workouts/{workout_id}/exercises/{exercise_id}/sets",
+            post(handlers::add_set),
+        )
+        .route(
+            "/workouts/{workout_id}/exercises/{exercise_id}/sets/{set_id}",
+            patch(handlers::update_set),
+        )
+        .route(
+            "/workouts/{workout_id}/exercises/{exercise_id}/sets/{set_id}",
+            delete(handlers::delete_set),
+        )
+        // Workout supersets
+        .route(
+            "/workouts/{workout_id}/superset",
+            post(handlers::create_superset),
+        )
+        .route(
+            "/workouts/{workout_id}/superset/{superset_id}",
+            delete(handlers::remove_superset),
+        )
+        // Exercises
+        .route("/exercises", get(handlers::list_exercises))
+        .route("/exercises/{id}", get(handlers::get_exercise))
+        .route("/exercises/custom", post(handlers::create_custom_exercise))
+        .route(
+            "/exercises/custom/{id}",
+            put(handlers::update_custom_exercise),
+        )
+        .route(
+            "/exercises/custom/{id}",
+            delete(handlers::delete_custom_exercise),
+        )
+        // Templates
+        .route("/templates", get(handlers::list_templates))
+        .route("/templates", post(handlers::create_template))
+        .route("/templates/{id}", get(handlers::get_template))
+        .route("/templates/{id}", patch(handlers::update_template))
+        .route("/templates/{id}", delete(handlers::delete_template))
+        .route(
+            "/templates/{id}/start",
+            post(handlers::start_workout_from_template),
+        )
+        // Body stats
+        .route(
+            "/body-stats/measurements",
+            get(handlers::list_measurements),
+        )
+        .route(
+            "/body-stats/measurements",
+            post(handlers::create_measurement),
+        )
+        .route(
+            "/body-stats/measurements/{id}",
+            get(handlers::get_measurement),
+        )
+        .route(
+            "/body-stats/measurements/{id}",
+            patch(handlers::update_measurement),
+        )
+        .route(
+            "/body-stats/measurements/{id}",
+            delete(handlers::delete_measurement),
+        )
+        .route("/body-stats/goals", get(handlers::list_goals))
+        .route("/body-stats/goals", post(handlers::create_goal))
+        .route("/body-stats/goals/{id}", get(handlers::get_goal))
+        .route("/body-stats/goals/{id}", patch(handlers::update_goal))
+        .route("/body-stats/goals/{id}", delete(handlers::delete_goal))
+        .route(
+            "/body-stats/goals/{id}/progress",
+            get(handlers::get_goal_progress),
+        )
+        // Statistics
+        .route("/statistics/summary", get(handlers::get_summary))
+        .route("/statistics/volume/weekly", get(handlers::get_weekly_volume))
+        .route(
+            "/statistics/muscle-groups",
+            get(handlers::get_muscle_group_distribution),
+        )
+        .route(
+            "/statistics/exercises/{exercise_id}/progress",
+            get(handlers::get_exercise_progress),
+        )
+        .route(
+            "/statistics/exercises-with-history",
+            get(handlers::get_exercises_with_history),
+        )
+        // Personal Records
+        .route("/personal-records", get(handlers::get_personal_records))
+        // Settings
+        .route("/settings", get(handlers::get_settings))
+        .route("/settings", put(handlers::update_settings))
+        .layer(middleware::from_fn_with_state(
+            settings,
+            auth_middleware,
+        ));
+
+    // Combine all routes under /api/v1 with general rate limiting
+    Router::new()
+        .nest("/api/v1", public_routes.merge(protected_routes))
+        .layer(general_rate_limiter())
+        .layer(TraceLayer::new_for_http())
+        .layer(cors)
+        .with_state(state)
+}

@@ -1,0 +1,219 @@
+// Breakpoints
+$breakpoints: (
+  'sm': 640px,
+  'md': 768px,
+  'lg': 1024px,
+  'xl': 1280px,
+  '2xl': 1536px
+);
+
+@mixin breakpoint($size) {
+  @if map-has-key($breakpoints, $size) {
+    @media (min-width: map-get($breakpoints, $size)) {
+      @content;
+    }
+  }
+}
+
+@mixin breakpoint-down($size) {
+  @if map-has-key($breakpoints, $size) {
+    @media (max-width: calc(map-get($breakpoints, $size) - 1px)) {
+      @content;
+    }
+  }
+}
+
+// Flexbox utilities
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-start {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+// Typography
+@mixin heading($size: 'base') {
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
+
+  @if $size == 'xs' {
+    font-size: var(--font-size-sm);
+  } @else if $size == 'sm' {
+    font-size: var(--font-size-base);
+  } @else if $size == 'base' {
+    font-size: var(--font-size-lg);
+  } @else if $size == 'lg' {
+    font-size: var(--font-size-xl);
+  } @else if $size == 'xl' {
+    font-size: var(--font-size-2xl);
+  } @else if $size == '2xl' {
+    font-size: var(--font-size-3xl);
+  } @else if $size == '3xl' {
+    font-size: var(--font-size-4xl);
+  }
+}
+
+@mixin body-text($size: 'base') {
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+
+  @if $size == 'xs' {
+    font-size: var(--font-size-xs);
+  } @else if $size == 'sm' {
+    font-size: var(--font-size-sm);
+  } @else if $size == 'base' {
+    font-size: var(--font-size-base);
+  } @else if $size == 'lg' {
+    font-size: var(--font-size-lg);
+  }
+}
+
+// Interactive elements
+@mixin interactive {
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+}
+
+@mixin button-reset {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+// Cards & Containers
+@mixin card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+}
+
+@mixin card-raised {
+  @include card;
+  box-shadow: var(--shadow-sm);
+}
+
+// Form elements
+@mixin input-base {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+
+  &::placeholder {
+    color: var(--color-text-tertiary);
+  }
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-gray-400);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-500);
+    box-shadow: 0 0 0 3px var(--color-primary-100);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// Truncate text
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin line-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Scrollbar styling
+@mixin custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: var(--color-background-secondary);
+    border-radius: var(--radius-full);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-gray-300);
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background: var(--color-gray-400);
+    }
+  }
+}
+
+// Animation
+@mixin fade-in($duration: var(--transition-normal)) {
+  animation: fadeIn $duration ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@mixin slide-up($duration: var(--transition-normal)) {
+  animation: slideUp $duration ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

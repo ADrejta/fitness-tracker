@@ -1,0 +1,597 @@
+[
+  {
+    "id": "ex-bench-press",
+    "name": "Barbell Bench Press",
+    "muscleGroups": ["chest", "triceps", "shoulders"],
+    "category": "strength",
+    "equipment": ["barbell", "bench"],
+    "description": "Classic compound chest exercise",
+    "instructions": ["Lie flat on bench", "Grip bar slightly wider than shoulder width", "Lower bar to chest", "Press up to starting position"]
+  },
+  {
+    "id": "ex-incline-bench",
+    "name": "Incline Barbell Bench Press",
+    "muscleGroups": ["chest", "shoulders", "triceps"],
+    "category": "strength",
+    "equipment": ["barbell", "bench"],
+    "description": "Upper chest focused pressing movement"
+  },
+  {
+    "id": "ex-db-bench",
+    "name": "Dumbbell Bench Press",
+    "muscleGroups": ["chest", "triceps", "shoulders"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Dumbbell variation for improved range of motion"
+  },
+  {
+    "id": "ex-db-incline-bench",
+    "name": "Incline Dumbbell Bench Press",
+    "muscleGroups": ["chest", "shoulders", "triceps"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Upper chest with dumbbells"
+  },
+  {
+    "id": "ex-chest-fly",
+    "name": "Dumbbell Chest Fly",
+    "muscleGroups": ["chest"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Isolation exercise for chest"
+  },
+  {
+    "id": "ex-cable-fly",
+    "name": "Cable Chest Fly",
+    "muscleGroups": ["chest"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Constant tension chest isolation"
+  },
+  {
+    "id": "ex-push-up",
+    "name": "Push-Up",
+    "muscleGroups": ["chest", "triceps", "shoulders"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Fundamental bodyweight pushing exercise"
+  },
+  {
+    "id": "ex-dip",
+    "name": "Dip",
+    "muscleGroups": ["chest", "triceps", "shoulders"],
+    "category": "bodyweight",
+    "equipment": ["dip-station"],
+    "description": "Compound exercise for chest and triceps"
+  },
+  {
+    "id": "ex-squat",
+    "name": "Barbell Back Squat",
+    "muscleGroups": ["quads", "glutes", "hamstrings"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "King of leg exercises",
+    "instructions": ["Position bar on upper back", "Feet shoulder width apart", "Descend until thighs parallel", "Drive up through heels"]
+  },
+  {
+    "id": "ex-front-squat",
+    "name": "Front Squat",
+    "muscleGroups": ["quads", "glutes"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Quad-dominant squat variation"
+  },
+  {
+    "id": "ex-goblet-squat",
+    "name": "Goblet Squat",
+    "muscleGroups": ["quads", "glutes"],
+    "category": "strength",
+    "equipment": ["dumbbell", "kettlebell"],
+    "description": "Beginner-friendly squat variation"
+  },
+  {
+    "id": "ex-leg-press",
+    "name": "Leg Press",
+    "muscleGroups": ["quads", "glutes", "hamstrings"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine-based leg compound movement"
+  },
+  {
+    "id": "ex-lunges",
+    "name": "Walking Lunges",
+    "muscleGroups": ["quads", "glutes", "hamstrings"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bodyweight"],
+    "description": "Unilateral leg exercise"
+  },
+  {
+    "id": "ex-leg-extension",
+    "name": "Leg Extension",
+    "muscleGroups": ["quads"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Quad isolation exercise"
+  },
+  {
+    "id": "ex-leg-curl",
+    "name": "Lying Leg Curl",
+    "muscleGroups": ["hamstrings"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Hamstring isolation exercise"
+  },
+  {
+    "id": "ex-romanian-dl",
+    "name": "Romanian Deadlift",
+    "muscleGroups": ["hamstrings", "glutes", "lower-back"],
+    "category": "strength",
+    "equipment": ["barbell", "dumbbell"],
+    "description": "Hip hinge for posterior chain"
+  },
+  {
+    "id": "ex-calf-raise",
+    "name": "Standing Calf Raise",
+    "muscleGroups": ["calves"],
+    "category": "strength",
+    "equipment": ["machine", "bodyweight"],
+    "description": "Calf muscle builder"
+  },
+  {
+    "id": "ex-seated-calf",
+    "name": "Seated Calf Raise",
+    "muscleGroups": ["calves"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Soleus-focused calf exercise"
+  },
+  {
+    "id": "ex-deadlift",
+    "name": "Conventional Deadlift",
+    "muscleGroups": ["back", "hamstrings", "glutes", "traps"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Full body compound lift",
+    "instructions": ["Stand with feet hip-width", "Grip bar outside knees", "Keep back flat", "Drive through floor to stand"]
+  },
+  {
+    "id": "ex-sumo-deadlift",
+    "name": "Sumo Deadlift",
+    "muscleGroups": ["back", "glutes", "quads"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Wide-stance deadlift variation"
+  },
+  {
+    "id": "ex-bent-row",
+    "name": "Barbell Bent Over Row",
+    "muscleGroups": ["back", "lats", "biceps"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Fundamental back builder"
+  },
+  {
+    "id": "ex-db-row",
+    "name": "Dumbbell Row",
+    "muscleGroups": ["back", "lats", "biceps"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Unilateral back exercise"
+  },
+  {
+    "id": "ex-pull-up",
+    "name": "Pull-Up",
+    "muscleGroups": ["lats", "back", "biceps"],
+    "category": "bodyweight",
+    "equipment": ["pull-up-bar"],
+    "description": "Classic vertical pull"
+  },
+  {
+    "id": "ex-chin-up",
+    "name": "Chin-Up",
+    "muscleGroups": ["lats", "biceps", "back"],
+    "category": "bodyweight",
+    "equipment": ["pull-up-bar"],
+    "description": "Supinated grip pull-up"
+  },
+  {
+    "id": "ex-lat-pulldown",
+    "name": "Lat Pulldown",
+    "muscleGroups": ["lats", "back", "biceps"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Machine vertical pull"
+  },
+  {
+    "id": "ex-cable-row",
+    "name": "Seated Cable Row",
+    "muscleGroups": ["back", "lats", "biceps"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Horizontal cable pulling"
+  },
+  {
+    "id": "ex-t-bar-row",
+    "name": "T-Bar Row",
+    "muscleGroups": ["back", "lats", "biceps"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Chest-supported row variation"
+  },
+  {
+    "id": "ex-face-pull",
+    "name": "Face Pull",
+    "muscleGroups": ["shoulders", "traps", "back"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Rear delt and upper back exercise"
+  },
+  {
+    "id": "ex-ohp",
+    "name": "Overhead Press",
+    "muscleGroups": ["shoulders", "triceps"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Standing shoulder press"
+  },
+  {
+    "id": "ex-db-shoulder-press",
+    "name": "Dumbbell Shoulder Press",
+    "muscleGroups": ["shoulders", "triceps"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Seated or standing dumbbell press"
+  },
+  {
+    "id": "ex-lateral-raise",
+    "name": "Lateral Raise",
+    "muscleGroups": ["shoulders"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Side delt isolation"
+  },
+  {
+    "id": "ex-front-raise",
+    "name": "Front Raise",
+    "muscleGroups": ["shoulders"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Front delt isolation"
+  },
+  {
+    "id": "ex-rear-delt-fly",
+    "name": "Rear Delt Fly",
+    "muscleGroups": ["shoulders", "back"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Rear deltoid isolation"
+  },
+  {
+    "id": "ex-shrug",
+    "name": "Barbell Shrug",
+    "muscleGroups": ["traps"],
+    "category": "strength",
+    "equipment": ["barbell", "dumbbell"],
+    "description": "Trap builder"
+  },
+  {
+    "id": "ex-barbell-curl",
+    "name": "Barbell Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["barbell", "ez-bar"],
+    "description": "Classic bicep builder"
+  },
+  {
+    "id": "ex-db-curl",
+    "name": "Dumbbell Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Dumbbell bicep curl"
+  },
+  {
+    "id": "ex-hammer-curl",
+    "name": "Hammer Curl",
+    "muscleGroups": ["biceps", "forearms"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Neutral grip bicep curl"
+  },
+  {
+    "id": "ex-preacher-curl",
+    "name": "Preacher Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["barbell", "ez-bar", "dumbbell"],
+    "description": "Isolated bicep curl"
+  },
+  {
+    "id": "ex-cable-curl",
+    "name": "Cable Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Constant tension bicep curl"
+  },
+  {
+    "id": "ex-tricep-pushdown",
+    "name": "Tricep Pushdown",
+    "muscleGroups": ["triceps"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Cable tricep isolation"
+  },
+  {
+    "id": "ex-skull-crusher",
+    "name": "Skull Crusher",
+    "muscleGroups": ["triceps"],
+    "category": "strength",
+    "equipment": ["barbell", "ez-bar", "dumbbell"],
+    "description": "Lying tricep extension"
+  },
+  {
+    "id": "ex-overhead-ext",
+    "name": "Overhead Tricep Extension",
+    "muscleGroups": ["triceps"],
+    "category": "strength",
+    "equipment": ["dumbbell", "cable"],
+    "description": "Long head tricep focus"
+  },
+  {
+    "id": "ex-close-grip-bench",
+    "name": "Close-Grip Bench Press",
+    "muscleGroups": ["triceps", "chest"],
+    "category": "strength",
+    "equipment": ["barbell", "bench"],
+    "description": "Tricep-focused pressing"
+  },
+  {
+    "id": "ex-wrist-curl",
+    "name": "Wrist Curl",
+    "muscleGroups": ["forearms"],
+    "category": "strength",
+    "equipment": ["barbell", "dumbbell"],
+    "description": "Forearm flexor exercise"
+  },
+  {
+    "id": "ex-crunch",
+    "name": "Crunch",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Basic ab exercise"
+  },
+  {
+    "id": "ex-plank",
+    "name": "Plank",
+    "muscleGroups": ["abs", "obliques"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Core stability exercise"
+  },
+  {
+    "id": "ex-hanging-leg-raise",
+    "name": "Hanging Leg Raise",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["pull-up-bar"],
+    "description": "Advanced ab exercise"
+  },
+  {
+    "id": "ex-cable-crunch",
+    "name": "Cable Crunch",
+    "muscleGroups": ["abs"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Weighted ab exercise"
+  },
+  {
+    "id": "ex-russian-twist",
+    "name": "Russian Twist",
+    "muscleGroups": ["obliques", "abs"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight", "dumbbell"],
+    "description": "Rotational core exercise"
+  },
+  {
+    "id": "ex-hip-thrust",
+    "name": "Barbell Hip Thrust",
+    "muscleGroups": ["glutes", "hamstrings"],
+    "category": "strength",
+    "equipment": ["barbell", "bench"],
+    "description": "Glute-focused hip extension"
+  },
+  {
+    "id": "ex-glute-bridge",
+    "name": "Glute Bridge",
+    "muscleGroups": ["glutes"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Bodyweight glute activation"
+  },
+  {
+    "id": "ex-back-extension",
+    "name": "Back Extension",
+    "muscleGroups": ["lower-back", "glutes", "hamstrings"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight", "machine"],
+    "description": "Lower back strengthening"
+  },
+  {
+    "id": "ex-good-morning",
+    "name": "Good Morning",
+    "muscleGroups": ["lower-back", "hamstrings", "glutes"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Hip hinge with bar on back"
+  },
+  {
+    "id": "ex-hack-squat",
+    "name": "Hack Squat",
+    "muscleGroups": ["quads", "glutes"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine squat variation"
+  },
+  {
+    "id": "ex-bulgarian-split",
+    "name": "Bulgarian Split Squat",
+    "muscleGroups": ["quads", "glutes"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bodyweight"],
+    "description": "Single leg squat variation"
+  },
+  {
+    "id": "ex-smith-squat",
+    "name": "Smith Machine Squat",
+    "muscleGroups": ["quads", "glutes"],
+    "category": "strength",
+    "equipment": ["smith-machine"],
+    "description": "Guided squat movement"
+  },
+  {
+    "id": "ex-machine-chest-press",
+    "name": "Machine Chest Press",
+    "muscleGroups": ["chest", "triceps"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine pressing movement"
+  },
+  {
+    "id": "ex-pec-deck",
+    "name": "Pec Deck",
+    "muscleGroups": ["chest"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine chest fly"
+  },
+  {
+    "id": "ex-machine-row",
+    "name": "Machine Row",
+    "muscleGroups": ["back", "biceps"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Chest-supported machine row"
+  },
+  {
+    "id": "ex-machine-shoulder-press",
+    "name": "Machine Shoulder Press",
+    "muscleGroups": ["shoulders", "triceps"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Guided shoulder pressing"
+  },
+  {
+    "id": "ex-upright-row",
+    "name": "Upright Row",
+    "muscleGroups": ["shoulders", "traps"],
+    "category": "strength",
+    "equipment": ["barbell", "dumbbell", "cable"],
+    "description": "Shoulder and trap exercise"
+  },
+  {
+    "id": "ex-arnold-press",
+    "name": "Arnold Press",
+    "muscleGroups": ["shoulders", "triceps"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Rotational dumbbell press"
+  },
+  {
+    "id": "ex-concentration-curl",
+    "name": "Concentration Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Isolated bicep curl"
+  },
+  {
+    "id": "ex-incline-curl",
+    "name": "Incline Dumbbell Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Stretched position bicep curl"
+  },
+  {
+    "id": "ex-diamond-pushup",
+    "name": "Diamond Push-Up",
+    "muscleGroups": ["triceps", "chest"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Close-grip push-up for triceps"
+  },
+  {
+    "id": "ex-tricep-dip",
+    "name": "Bench Dip",
+    "muscleGroups": ["triceps"],
+    "category": "bodyweight",
+    "equipment": ["bench"],
+    "description": "Tricep-focused dip variation"
+  },
+  {
+    "id": "ex-ab-wheel",
+    "name": "Ab Wheel Rollout",
+    "muscleGroups": ["abs"],
+    "category": "strength",
+    "equipment": ["bodyweight"],
+    "description": "Advanced core exercise"
+  },
+  {
+    "id": "ex-mountain-climber",
+    "name": "Mountain Climber",
+    "muscleGroups": ["abs", "obliques"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Dynamic core and cardio exercise"
+  },
+  {
+    "id": "ex-box-jump",
+    "name": "Box Jump",
+    "muscleGroups": ["quads", "glutes", "calves"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Plyometric leg exercise"
+  },
+  {
+    "id": "ex-step-up",
+    "name": "Step-Up",
+    "muscleGroups": ["quads", "glutes"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Unilateral leg exercise"
+  },
+  {
+    "id": "ex-kettlebell-swing",
+    "name": "Kettlebell Swing",
+    "muscleGroups": ["glutes", "hamstrings", "lower-back"],
+    "category": "strength",
+    "equipment": ["kettlebell"],
+    "description": "Hip hinge power exercise"
+  },
+  {
+    "id": "ex-farmers-walk",
+    "name": "Farmer's Walk",
+    "muscleGroups": ["forearms", "traps", "abs"],
+    "category": "strength",
+    "equipment": ["dumbbell", "kettlebell"],
+    "description": "Loaded carry exercise"
+  },
+  {
+    "id": "ex-cable-lateral-raise",
+    "name": "Cable Lateral Raise",
+    "muscleGroups": ["shoulders"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Constant tension lateral raise"
+  },
+  {
+    "id": "ex-reverse-fly-machine",
+    "name": "Reverse Fly Machine",
+    "muscleGroups": ["shoulders", "back"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine rear delt fly"
+  }
+]
