@@ -1,0 +1,15 @@
+<div class="progress-wrapper">
+  @if (label || showValue) {
+    <div class="progress-header">
+      @if (label) {
+        <span class="progress-label">{{ label }}</span>
+      }
+      @if (showValue) {
+        <span class="progress-value">{{ displayValue }}</span>
+      }
+    </div>
+  }
+  <div [class]="trackClasses" role="progressbar" [attr.aria-valuenow]="value" [attr.aria-valuemin]="0" [attr.aria-valuemax]="max">
+    <div [class]="barClasses" [style.width.%]="percentage"></div>
+  </div>
+</div>

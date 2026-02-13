@@ -21,6 +21,7 @@ pub fn calculate_estimated_1rm(weight: f64, reps: i32) -> Option<f64> {
     Some(weight * (36.0 / (37.0 - reps as f64)))
 }
 
+#[cfg(test)]
 /// Calculate total volume for a set (weight * reps)
 pub fn calculate_set_volume(weight: Option<f64>, reps: Option<i32>) -> f64 {
     match (weight, reps) {

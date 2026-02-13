@@ -4,9 +4,10 @@ use axum::{
 };
 use sqlx::PgPool;
 use tracing::{debug, error, info, instrument};
+use validator::Validate;
 
 use crate::dto::{
-    DashboardSummary, ExerciseProgressResponse, ExercisesWithHistoryResponse,
+    DashboardSummary, ErrorResponse, ExerciseProgressResponse, ExercisesWithHistoryResponse,
     ExerciseWithHistorySummary, MuscleGroupDistribution, PersonalRecordResponse,
     PersonalRecordsListResponse, StatisticsQuery, WeeklyVolumeResponse,
 };
@@ -15,6 +16,15 @@ use crate::middleware::AuthUser;
 use crate::repositories::PersonalRecordRepository;
 use crate::services::StatisticsService;
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/summary",
+    tag = "Statistics",
+    responses(
+        (status = 200, description = "Dashboard summary", body = DashboardSummary),
+    ),
+    security(("bearer_auth" = []))
+)]
 #[instrument(skip(pool), fields(user_id = %auth_user.user_id))]
 pub async fn get_summary(
     State(pool): State<PgPool>,
@@ -34,25 +44,64 @@ pub async fn get_summary(
     Ok(Json(summary))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/volume/weekly",
+    tag = "Statistics",
+    params(StatisticsQuery),
+    responses(
+        (status = 200, description = "Weekly volume data", body = WeeklyVolumeResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_weekly_volume(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Query(query): Query<StatisticsQuery>,
 ) -> Result<Json<WeeklyVolumeResponse>, AppError> {
+    query
+        .validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let response = StatisticsService::get_weekly_volume(&pool, auth_user.user_id, &query).await?;
     Ok(Json(response))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/muscle-groups",
+    tag = "Statistics",
+    params(StatisticsQuery),
+    responses(
+        (status = 200, description = "Muscle group distribution", body = MuscleGroupDistribution),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_muscle_group_distribution(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Query(query): Query<StatisticsQuery>,
 ) -> Result<Json<MuscleGroupDistribution>, AppError> {
+    query
+        .validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let response =
         StatisticsService::get_muscle_group_distribution(&pool, auth_user.user_id, &query).await?;
     Ok(Json(response))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/exercises/{exercise_id}/progress",
+    tag = "Statistics",
+    params(("exercise_id" = String, Path, description = "Exercise template ID")),
+    responses(
+        (status = 200, description = "Exercise progress data", body = ExerciseProgressResponse),
+        (status = 404, description = "Exercise not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_exercise_progress(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -63,6 +112,15 @@ pub async fn get_exercise_progress(
     Ok(Json(response))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/personal-records",
+    tag = "Personal Records",
+    responses(
+        (status = 200, description = "All personal records", body = PersonalRecordsListResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 #[instrument(skip(pool), fields(user_id = %auth_user.user_id))]
 pub async fn get_personal_records(
     State(pool): State<PgPool>,
@@ -89,6 +147,15 @@ pub async fn get_personal_records(
     Ok(Json(PersonalRecordsListResponse { records }))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/exercises-with-history",
+    tag = "Statistics",
+    responses(
+        (status = 200, description = "Exercises that have workout history", body = ExercisesWithHistoryResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 #[instrument(skip(pool), fields(user_id = %auth_user.user_id))]
 pub async fn get_exercises_with_history(
     State(pool): State<PgPool>,

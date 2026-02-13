@@ -1,5 +1,6 @@
 mod auth;
 mod body_stats;
+mod error;
 mod exercise;
 mod settings;
 mod statistics;
@@ -8,6 +9,7 @@ mod workout;
 
 pub use auth::*;
 pub use body_stats::*;
+pub use error::*;
 pub use exercise::*;
 pub use settings::*;
 pub use statistics::*;

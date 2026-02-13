@@ -1,8 +1,9 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "muscle_group", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum MuscleGroup {
@@ -23,7 +24,7 @@ pub enum MuscleGroup {
     LowerBack,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "exercise_category", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum ExerciseCategory {
@@ -32,7 +33,7 @@ pub enum ExerciseCategory {
     Bodyweight,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "equipment", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum Equipment {

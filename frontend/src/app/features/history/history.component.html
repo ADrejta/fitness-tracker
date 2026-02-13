@@ -1,0 +1,117 @@
+<app-page-container title="History" subtitle="Your workout history">
+  @if (workoutService.isLoading() || isLoadingPage()) {
+    <!-- Loading Skeletons -->
+    <div class="skeleton-container">
+      <app-skeleton variant="card"></app-skeleton>
+      <app-skeleton variant="card"></app-skeleton>
+      <app-skeleton variant="card"></app-skeleton>
+    </div>
+  } @else if (workoutGroups().length > 0) {
+    <!-- Stats Summary -->
+    <div class="stats-row">
+      <div class="stat-item">
+        <span class="stat-item__value">{{ workoutService.totalWorkouts() }}</span>
+        <span class="stat-item__label">Total Workouts</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item__value">{{ workoutService.getWorkoutStreak() }}</span>
+        <span class="stat-item__label">Current Streak</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-item__value">{{ workoutService.getLongestStreak() }}</span>
+        <span class="stat-item__label">Best Streak</span>
+      </div>
+    </div>
+
+    <!-- Workout Groups -->
+    <div class="workout-groups">
+      @for (group of workoutGroups(); track group.label) {
+        <div class="workout-group">
+          <h3 class="workout-group__title">{{ group.label }}</h3>
+          <div class="workout-group__list">
+            @for (workout of group.workouts; track workout.id) {
+              <app-card [interactive]="true">
+                <a [routerLink]="['/history', workout.id]" class="workout-item">
+                  <div class="workout-item__header">
+                    <h4 class="workout-item__name">{{ workout.name }}</h4>
+                    <span class="workout-item__date">{{ formatDate(workout.completedAt!) }}</span>
+                  </div>
+                  <div class="workout-item__details">
+                    <div class="workout-item__stat">
+                      <span class="workout-item__stat-value">{{ workout.exerciseCount ?? workout.exercises.length }}</span>
+                      <span class="workout-item__stat-label">exercises</span>
+                    </div>
+                    <div class="workout-item__stat">
+                      <span class="workout-item__stat-value">{{ workout.totalSets }}</span>
+                      <span class="workout-item__stat-label">sets</span>
+                    </div>
+                    <div class="workout-item__stat">
+                      <span class="workout-item__stat-value">{{ formatVolume(workout.totalVolume) }}</span>
+                      <span class="workout-item__stat-label">volume</span>
+                    </div>
+                    <div class="workout-item__stat">
+                      <span class="workout-item__stat-value">{{ formatDuration(workout.duration || 0) }}</span>
+                      <span class="workout-item__stat-label">duration</span>
+                    </div>
+                  </div>
+                  @if (workout.exercises.length) {
+                    <div class="workout-item__exercises">
+                      @for (exercise of workout.exercises.slice(0, 3); track exercise.id) {
+                        <app-badge [size]="'sm'">{{ exercise.exerciseName }}</app-badge>
+                      }
+                      @if (workout.exercises.length > 3) {
+                        <app-badge [size]="'sm'" [variant]="'default'">+{{ workout.exercises.length - 3 }}</app-badge>
+                      }
+                    </div>
+                  }
+                </a>
+              </app-card>
+            }
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+      <div class="pagination">
+        <button
+          class="pagination__btn"
+          [disabled]="currentPage() === 1"
+          (click)="loadPage(currentPage() - 1)"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Previous
+        </button>
+        <span class="pagination__info">
+          Page {{ currentPage() }} of {{ totalPages() }}
+        </span>
+        <button
+          class="pagination__btn"
+          [disabled]="currentPage() === totalPages()"
+          (click)="loadPage(currentPage() + 1)"
+        >
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    }
+  } @else {
+    <app-empty-state
+      title="No Workouts Yet"
+      description="Complete your first workout to start tracking your progress!"
+    >
+      <div empty-icon>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <app-button routerLink="/workout" [queryParams]="{ start: 'true' }">Start Workout</app-button>
+    </app-empty-state>
+  }
+</app-page-container>

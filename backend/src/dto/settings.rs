@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
+use validator::Validate;
 
 use crate::models::{MeasurementUnit, PlateCalculatorSettings, Theme, WeightUnit};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SettingsResponse {
     pub weight_unit: WeightUnit,
@@ -16,12 +18,13 @@ pub struct SettingsResponse {
     pub plate_calculator: PlateCalculatorSettings,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateSettingsRequest {
     pub weight_unit: Option<WeightUnit>,
     pub measurement_unit: Option<MeasurementUnit>,
     pub theme: Option<Theme>,
+    #[validate(range(min = 1, max = 600))]
     pub default_rest_timer: Option<i32>,
     pub auto_start_rest_timer: Option<bool>,
     pub show_warmup_sets: Option<bool>,

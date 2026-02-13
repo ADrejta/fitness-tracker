@@ -1,0 +1,15 @@
+<div [class]="cardClasses">
+  @if (hasHeader) {
+    <div class="card__header">
+      <ng-content select="[card-header]"></ng-content>
+    </div>
+  }
+  <div class="card__body" [class.card__body--no-padding]="noPadding">
+    <ng-content></ng-content>
+  </div>
+  @if (hasFooter) {
+    <div class="card__footer">
+      <ng-content select="[card-footer]"></ng-content>
+    </div>
+  }
+</div>

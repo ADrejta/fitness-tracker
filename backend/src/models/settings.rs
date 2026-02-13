@@ -1,15 +1,16 @@
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PlateConfig {
     pub weight: f64,
     pub available: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum BarbellType {
     Olympic,
@@ -19,7 +20,7 @@ pub enum BarbellType {
     Custom,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PlateCalculatorSettings {
     pub selected_barbell: BarbellType,
@@ -56,7 +57,7 @@ impl Default for PlateCalculatorSettings {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "weight_unit", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum WeightUnit {
@@ -64,7 +65,7 @@ pub enum WeightUnit {
     Lbs,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "measurement_unit", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum MeasurementUnit {
@@ -72,7 +73,7 @@ pub enum MeasurementUnit {
     In,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "theme", rename_all = "lowercase")]
 #[serde(rename_all = "lowercase")]
 pub enum Theme {

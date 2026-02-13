@@ -1,6 +1,7 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -27,7 +28,7 @@ pub struct BodyMeasurement {
     pub notes: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "goal_type", rename_all = "kebab-case")]
 #[serde(rename_all = "camelCase")]
 pub enum GoalType {
@@ -36,7 +37,7 @@ pub enum GoalType {
     Measurement,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "measurement_type", rename_all = "snake_case")]
 #[serde(rename_all = "camelCase")]
 pub enum MeasurementType {

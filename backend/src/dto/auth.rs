@@ -1,23 +1,25 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 use uuid::Uuid;
 use validator::Validate;
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct RegisterRequest {
-    #[validate(email(message = "Invalid email address"))]
+    #[validate(email(message = "Invalid email address"), length(max = 254))]
     pub email: String,
-    #[validate(length(min = 8, message = "Password must be at least 8 characters"))]
+    #[validate(length(min = 8, max = 128, message = "Password must be between 8 and 128 characters"))]
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, ToSchema)]
 pub struct LoginRequest {
-    #[validate(email(message = "Invalid email address"))]
+    #[validate(email(message = "Invalid email address"), length(max = 254))]
     pub email: String,
+    #[validate(length(max = 128))]
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthResponse {
     pub access_token: String,
@@ -25,19 +27,19 @@ pub struct AuthResponse {
     pub user: UserResponse,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct UserResponse {
     pub id: Uuid,
     pub email: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct RefreshRequest {
     pub refresh_token: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct TokenResponse {
     pub access_token: String,

@@ -1,0 +1,117 @@
+<div
+  class="set-row"
+  [class.set-row--warmup]="set.isWarmup"
+  [class.set-row--completed]="set.isCompleted"
+>
+  <div class="set-row__number">
+    @if (set.isWarmup) {
+      <span class="set-row__warmup-badge">W</span>
+    } @else {
+      {{ set.setNumber }}
+    }
+  </div>
+
+  <div class="set-row__previous">
+    @if (previousSet) {
+      <span class="set-row__previous-value">
+        {{ previousSet.actualWeight || '-' }} × {{ previousSet.actualReps || '-' }}
+      </span>
+    } @else {
+      <span class="set-row__previous-value set-row__previous-value--empty">—</span>
+    }
+  </div>
+
+  <div class="set-row__inputs">
+    <div class="set-row__input-group">
+      @if (progressionSuggestion && !set.isCompleted && set.setNumber === 1) {
+        <button
+          class="set-row__suggestion"
+          (click)="applySuggestion()"
+          [title]="progressionSuggestion.reason"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          {{ progressionSuggestion.suggestedWeight }}
+        </button>
+      }
+      <input
+        type="number"
+        class="set-row__input"
+        [class.set-row__input--filled]="weightValue !== null"
+        [class.set-row__input--has-suggestion]="progressionSuggestion && !set.isCompleted && set.setNumber === 1"
+        [placeholder]="set.targetWeight?.toString() || '0'"
+        [value]="weightValue"
+        (input)="onWeightChange($event)"
+        [disabled]="set.isCompleted"
+        inputmode="decimal"
+      />
+      <span class="set-row__unit">{{ settingsService.weightUnit() }}</span>
+      <div class="set-row__calc-wrapper">
+        <button
+          type="button"
+          class="set-row__calc-btn"
+          (click)="togglePlateCalculator($event)"
+          [class.set-row__calc-btn--active]="showPlateCalculator()"
+          title="Plate Calculator"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+            <line x1="8" y1="6" x2="16" y2="6"></line>
+            <line x1="8" y1="10" x2="16" y2="10"></line>
+            <line x1="8" y1="14" x2="12" y2="14"></line>
+            <line x1="8" y1="18" x2="12" y2="18"></line>
+          </svg>
+        </button>
+        @if (showPlateCalculator()) {
+          <div class="set-row__calc-popover" (click)="$event.stopPropagation()">
+            <app-plate-calculator
+              [targetWeight]="currentWeight"
+              [weightUnit]="settingsService.weightUnit()"
+              (openSettings)="navigateToSettings()"
+            ></app-plate-calculator>
+          </div>
+        }
+      </div>
+    </div>
+
+    <span class="set-row__separator">×</span>
+
+    <div class="set-row__input-group">
+      <input
+        type="number"
+        class="set-row__input"
+        [class.set-row__input--filled]="repsValue !== null"
+        [placeholder]="set.targetReps?.toString() || '0'"
+        [value]="repsValue"
+        (input)="onRepsChange($event)"
+        [disabled]="set.isCompleted"
+        inputmode="numeric"
+      />
+      <span class="set-row__unit">reps</span>
+    </div>
+  </div>
+
+  @if (estimated1RM !== null && !set.isCompleted) {
+    <div class="set-row__e1rm">
+      <span class="set-row__e1rm-value">{{ estimated1RM }}</span>
+      <span class="set-row__e1rm-label">e1RM</span>
+    </div>
+  }
+
+  <div class="set-row__actions">
+    @if (set.isCompleted) {
+      <button class="set-row__check set-row__check--completed" (click)="toggleComplete()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+      </button>
+    } @else {
+      <button class="set-row__check" (click)="toggleComplete()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+        </svg>
+      </button>
+    }
+  </div>
+</div>

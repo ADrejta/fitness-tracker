@@ -1,0 +1,53 @@
+<div class="auth-container">
+  <div class="auth-card">
+    <h1>Welcome Back</h1>
+    <p class="subtitle">Sign in to continue tracking your workouts</p>
+
+    @if (error()) {
+      <div class="error-message">{{ error() }}</div>
+    }
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          [(ngModel)]="email"
+          required
+          email
+          placeholder="Enter your email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          [(ngModel)]="password"
+          required
+          minlength="6"
+          placeholder="Enter your password"
+        />
+      </div>
+
+      <button
+        type="submit"
+        class="btn-primary"
+        [disabled]="isLoading() || !loginForm.valid"
+      >
+        {{ isLoading() ? 'Signing in...' : 'Sign In' }}
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      <p>Don't have an account? <a routerLink="/register">Sign up</a></p>
+      <p class="guest-link">
+        <a (click)="continueAsGuest()">Continue as guest</a>
+      </p>
+    </div>
+  </div>
+</div>

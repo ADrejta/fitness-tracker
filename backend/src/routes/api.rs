@@ -7,11 +7,15 @@ use axum::{
 use sqlx::PgPool;
 use axum::http::{header, Method};
 use tower_http::cors::CorsLayer;
-use tower_http::trace::TraceLayer;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tracing::Level;
+use utoipa::OpenApi;
+use utoipa_swagger_ui::SwaggerUi;
 
 use crate::config::Settings;
 use crate::handlers;
-use crate::middleware::{auth_middleware, auth_rate_limiter, general_rate_limiter};
+use crate::middleware::{auth_middleware, auth_rate_limiter, general_rate_limiter, request_id_middleware};
+use crate::openapi::ApiDoc;
 
 #[derive(Clone)]
 pub struct AppState {
@@ -37,9 +41,15 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
         settings: settings.clone(),
     };
 
-    // CORS configuration
+    // CORS configuration - use origins from settings
+    let origins: Vec<header::HeaderValue> = settings
+        .cors
+        .allowed_origins
+        .iter()
+        .filter_map(|o| o.parse().ok())
+        .collect();
     let cors = CorsLayer::new()
-        .allow_origin(tower_http::cors::Any)
+        .allow_origin(origins)
         .allow_methods([
             Method::GET,
             Method::POST,
@@ -187,9 +197,27 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
 
     // Combine all routes under /api/v1 with general rate limiting
     Router::new()
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .nest("/api/v1", public_routes.merge(protected_routes))
         .layer(general_rate_limiter())
-        .layer(TraceLayer::new_for_http())
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &axum::http::Request<_>| {
+                    let request_id = request
+                        .extensions()
+                        .get::<crate::middleware::request_id::RequestId>()
+                        .map(|r| r.0.clone())
+                        .unwrap_or_default();
+                    tracing::info_span!(
+                        "request",
+                        method = %request.method(),
+                        uri = %request.uri(),
+                        request_id = %request_id,
+                    )
+                })
+                .on_response(DefaultOnResponse::new().level(Level::INFO)),
+        )
+        .layer(middleware::from_fn(request_id_middleware))
         .layer(cors)
         .with_state(state)
 }

@@ -1,0 +1,181 @@
+<app-page-container title="Plate Calculator" subtitle="Calculate plates needed for your target weight">
+  <!-- Input Section -->
+  <app-card>
+    <div class="calculator-input">
+      <div class="input-group">
+        <label class="input-label">Target Weight</label>
+        <div class="weight-input-row">
+          <input
+            type="number"
+            class="weight-input"
+            [ngModel]="targetWeight()"
+            (ngModelChange)="targetWeight.set($event)"
+            placeholder="0"
+            min="0"
+            step="2.5"
+          />
+          <span class="weight-unit">{{ settingsService.weightUnit() }}</span>
+        </div>
+      </div>
+
+      <div class="input-group">
+        <label class="input-label">Barbell Type</label>
+        <select
+          class="barbell-select"
+          [ngModel]="selectedBarbell()"
+          (ngModelChange)="selectedBarbell.set($event)"
+        >
+          @for (preset of barbellPresets; track preset.type) {
+            <option [value]="preset.type">
+              {{ preset.name }} ({{ getBarbellWeight(preset.type) }} {{ settingsService.weightUnit() }})
+            </option>
+          }
+        </select>
+      </div>
+
+      <!-- Quick Add Buttons -->
+      <div class="quick-buttons">
+        <label class="input-label">Quick Add</label>
+        <div class="quick-buttons-row">
+          @for (amount of quickAddAmounts(); track amount) {
+            <button class="quick-btn" (click)="addWeight(amount)">
+              +{{ amount }}
+            </button>
+          }
+          <button class="quick-btn quick-btn--clear" (click)="targetWeight.set(currentBarbellWeight())">
+            Bar Only
+          </button>
+        </div>
+      </div>
+    </div>
+  </app-card>
+
+  <!-- Visual Barbell Display -->
+  <app-card>
+    <div class="barbell-visual">
+      <h3 class="section-title">Barbell Setup</h3>
+
+      @if (!calculation().isAchievable && targetWeight() > 0) {
+        <div class="warning-banner">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>
+            Cannot achieve exactly {{ targetWeight() }} {{ settingsService.weightUnit() }} with available plates.
+            @if (calculation().remainder > 0) {
+              Missing {{ calculation().remainder }} {{ settingsService.weightUnit() }}.
+            }
+          </span>
+        </div>
+      }
+
+      <div class="barbell-container">
+        <!-- Left Plates -->
+        <div class="plates-side plates-side--left">
+          @for (plate of calculation().perSide; track plate.weight) {
+            @for (i of getPlateArray(plate.count); track i) {
+              <div
+                class="plate"
+                [style.height.px]="getPlateHeight(plate.weight)"
+                [style.background]="getPlateColor(plate.weight)"
+                [attr.title]="plate.weight + ' ' + settingsService.weightUnit()"
+              >
+                <span class="plate-label">{{ plate.weight }}</span>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Barbell Bar -->
+        <div class="barbell-bar">
+          <div class="barbell-sleeve barbell-sleeve--left"></div>
+          <div class="barbell-grip"></div>
+          <div class="barbell-sleeve barbell-sleeve--right"></div>
+        </div>
+
+        <!-- Right Plates (mirrored) -->
+        <div class="plates-side plates-side--right">
+          @for (plate of calculation().perSide; track plate.weight) {
+            @for (i of getPlateArray(plate.count); track i) {
+              <div
+                class="plate"
+                [style.height.px]="getPlateHeight(plate.weight)"
+                [style.background]="getPlateColor(plate.weight)"
+                [attr.title]="plate.weight + ' ' + settingsService.weightUnit()"
+              >
+                <span class="plate-label">{{ plate.weight }}</span>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Weight Breakdown -->
+      <div class="weight-breakdown">
+        <div class="breakdown-item">
+          <span class="breakdown-label">Bar</span>
+          <span class="breakdown-value">{{ currentBarbellWeight() }} {{ settingsService.weightUnit() }}</span>
+        </div>
+        @if (calculation().perSide.length > 0) {
+          <div class="breakdown-item">
+            <span class="breakdown-label">Plates (per side)</span>
+            <span class="breakdown-value">{{ weightPerSide() }} {{ settingsService.weightUnit() }}</span>
+          </div>
+          <div class="breakdown-item breakdown-item--total">
+            <span class="breakdown-label">Total</span>
+            <span class="breakdown-value">{{ achievableWeight() }} {{ settingsService.weightUnit() }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </app-card>
+
+  <!-- Plate List -->
+  <app-card>
+    <h3 class="section-title">Plates Per Side</h3>
+    @if (calculation().perSide.length === 0) {
+      <div class="empty-state">
+        @if (targetWeight() <= currentBarbellWeight()) {
+          <p>Bar only - no plates needed</p>
+        } @else {
+          <p>Enter a target weight above</p>
+        }
+      </div>
+    } @else {
+      <div class="plate-list">
+        @for (plate of calculation().perSide; track plate.weight) {
+          <div class="plate-list-item">
+            <div
+              class="plate-color-dot"
+              [style.background]="getPlateColor(plate.weight)"
+            ></div>
+            <span class="plate-weight">{{ plate.weight }} {{ settingsService.weightUnit() }}</span>
+            <span class="plate-count">× {{ plate.count }}</span>
+            <span class="plate-total">= {{ plate.weight * plate.count }} {{ settingsService.weightUnit() }}</span>
+          </div>
+        }
+      </div>
+      <div class="total-plates">
+        <span>Total plates needed: {{ totalPlateCount() }} ({{ totalPlateCount() * 2 }} total)</span>
+      </div>
+    }
+  </app-card>
+
+  <!-- Common Weights Reference -->
+  <app-card>
+    <h3 class="section-title">Common Weights</h3>
+    <div class="common-weights">
+      @for (weight of commonWeights(); track weight) {
+        <button
+          class="common-weight-btn"
+          [class.active]="targetWeight() === weight"
+          (click)="targetWeight.set(weight)"
+        >
+          {{ weight }} {{ settingsService.weightUnit() }}
+        </button>
+      }
+    </div>
+  </app-card>
+</app-page-container>

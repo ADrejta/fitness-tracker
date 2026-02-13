@@ -1,0 +1,23 @@
+<button
+  [type]="type"
+  [class]="buttonClasses"
+  [disabled]="disabled || loading"
+  (click)="handleClick($event)"
+>
+  @if (loading) {
+    <span class="btn__spinner"></span>
+  }
+  @if (iconLeft && !loading) {
+    <span class="btn__icon btn__icon--left">
+      <ng-content select="[icon-left]"></ng-content>
+    </span>
+  }
+  <span class="btn__text">
+    <ng-content></ng-content>
+  </span>
+  @if (iconRight) {
+    <span class="btn__icon btn__icon--right">
+      <ng-content select="[icon-right]"></ng-content>
+    </span>
+  }
+</button>

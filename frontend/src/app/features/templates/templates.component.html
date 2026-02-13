@@ -1,0 +1,336 @@
+<app-page-container title="Templates" subtitle="Your saved workout routines">
+  <!-- Create Button -->
+  <div class="page-actions">
+    <app-button (clicked)="openCreateModal()">
+      <span class="create-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Template
+      </span>
+    </app-button>
+  </div>
+
+  @if (templateService.templates().length > 0) {
+    <div class="templates-list">
+      @for (template of templateService.sortedTemplates(); track template.id) {
+        <app-card [interactive]="true">
+          <div class="template-card">
+            <div class="template-card__header">
+              <h3 class="template-card__name">{{ template.name }}</h3>
+              <button class="template-card__menu" (click)="$event.stopPropagation(); showMenu(template)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="1"></circle>
+                  <circle cx="12" cy="5" r="1"></circle>
+                  <circle cx="12" cy="19" r="1"></circle>
+                </svg>
+              </button>
+            </div>
+
+            @if (template.description) {
+              <p class="template-card__description">{{ template.description }}</p>
+            }
+
+            <div class="template-card__meta">
+              <span>{{ template.exercises.length }} exercises</span>
+              @if (template.lastUsedAt) {
+                <span>Last used {{ formatDate(template.lastUsedAt) }}</span>
+              }
+            </div>
+
+            <div class="template-card__exercises">
+              @for (exercise of template.exercises.slice(0, 4); track exercise.id) {
+                <app-badge [size]="'sm'">{{ exercise.exerciseName }}</app-badge>
+              }
+              @if (template.exercises.length > 4) {
+                <app-badge [size]="'sm'" [variant]="'default'">+{{ template.exercises.length - 4 }}</app-badge>
+              }
+            </div>
+
+            <div class="template-card__actions">
+              <app-button [fullWidth]="true" (clicked)="$event.stopPropagation(); startWorkout(template)">
+                <span class="start-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                  </svg>
+                  Start Workout
+                </span>
+              </app-button>
+            </div>
+          </div>
+        </app-card>
+      }
+    </div>
+  } @else {
+    <app-empty-state
+      title="No Templates"
+      description="Create a template to quickly start workouts with predefined exercises."
+    >
+      <div empty-icon>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="3" y1="9" x2="21" y2="9"></line>
+          <line x1="9" y1="21" x2="9" y2="9"></line>
+        </svg>
+      </div>
+    </app-empty-state>
+  }
+
+  <!-- Create/Edit Template Modal -->
+  <app-modal
+    [isOpen]="showCreateModal"
+    [title]="isEditing ? 'Edit Template' : 'Create Template'"
+    [showFooter]="true"
+    size="lg"
+    (closed)="closeCreateModal()"
+  >
+    <div class="template-form">
+      <div class="form-group">
+        <label>Template Name</label>
+        <app-input
+          placeholder="e.g., Push Day, Leg Day"
+          [(ngModel)]="templateName"
+        />
+      </div>
+
+      <div class="form-group">
+        <label>Description (optional)</label>
+        <textarea
+          class="form-textarea"
+          placeholder="Describe this workout..."
+          [(ngModel)]="templateDescription"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <div class="exercises-section">
+        <div class="exercises-header">
+          <h4>Exercises</h4>
+          <app-button variant="secondary" size="sm" (clicked)="showExercisePicker = true">
+            <span class="add-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Add Exercise
+            </span>
+          </app-button>
+        </div>
+
+        @if (templateExercises().length > 0) {
+          <div class="exercises-list">
+            @for (exercise of groupedTemplateExercises(); track exercise.id; let i = $index) {
+              @if (exercise.isFirstInSuperset) {
+                <div class="superset-label">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M4 12h16M4 6h16M4 18h16"></path>
+                  </svg>
+                  Superset
+                  <button class="superset-remove" (click)="$event.stopPropagation(); removeSupersetFromExercises(exercise.supersetId!)">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+              }
+              <div
+                class="exercise-card"
+                [class.in-superset]="exercise.supersetId"
+                [class.superset-first]="exercise.isFirstInSuperset"
+                [class.superset-last]="exercise.isLastInSuperset"
+                [class.selected-for-superset]="selectedForSuperset().includes(exercise.id)"
+              >
+                <div class="exercise-card__header" (click)="toggleExercise(exercise)">
+                  <div class="exercise-card__info">
+                    <input
+                      type="checkbox"
+                      class="superset-checkbox"
+                      [checked]="selectedForSuperset().includes(exercise.id)"
+                      [disabled]="!!exercise.supersetId"
+                      (click)="$event.stopPropagation()"
+                      (change)="toggleSupersetSelection(exercise.id)"
+                    />
+                    <span class="exercise-card__number">{{ i + 1 }}</span>
+                    <div>
+                      <h5 class="exercise-card__name">{{ exercise.exerciseName }}</h5>
+                      <span class="exercise-card__sets">{{ exercise.sets.length }} sets</span>
+                    </div>
+                  </div>
+                  <div class="exercise-card__actions">
+                    <button
+                      class="icon-btn icon-btn--move"
+                      [disabled]="i === 0"
+                      (click)="$event.stopPropagation(); moveExerciseUp(i)"
+                      title="Move up"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="18 15 12 9 6 15"></polyline>
+                      </svg>
+                    </button>
+                    <button
+                      class="icon-btn icon-btn--move"
+                      [disabled]="i === templateExercises().length - 1"
+                      (click)="$event.stopPropagation(); moveExerciseDown(i)"
+                      title="Move down"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                    <button class="icon-btn" (click)="$event.stopPropagation(); removeExercise(exercise.id)">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 6h18"></path>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                      </svg>
+                    </button>
+                    <svg
+                      class="chevron"
+                      [class.chevron--open]="exercise.isExpanded"
+                      width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    >
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </div>
+                </div>
+
+                @if (exercise.isExpanded) {
+                  <div class="exercise-card__sets">
+                    @for (set of exercise.sets; track set.setNumber; let j = $index) {
+                      <div class="set-row">
+                        <span class="set-row__number">Set {{ set.setNumber }}</span>
+                        <div class="set-row__inputs">
+                          <div class="set-input">
+                            <input
+                              type="number"
+                              [value]="set.targetReps"
+                              (change)="updateSetReps(exercise.id, j, $event)"
+                              min="1"
+                            />
+                            <span>reps</span>
+                          </div>
+                          <div class="set-input">
+                            <input
+                              type="number"
+                              [value]="set.targetWeight || ''"
+                              (change)="updateSetWeight(exercise.id, j, $event)"
+                              placeholder="—"
+                              min="0"
+                              step="0.5"
+                            />
+                            <span>kg</span>
+                          </div>
+                        </div>
+                        <button class="icon-btn icon-btn--sm" (click)="removeSet(exercise.id, j)">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                          </svg>
+                        </button>
+                      </div>
+                    }
+                    <button class="add-set-btn" (click)="addSet(exercise.id)">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                      Add Set
+                    </button>
+                  </div>
+                }
+              </div>
+            }
+
+            @if (selectedForSuperset().length >= 2) {
+              <div class="superset-action">
+                <app-button variant="secondary" size="sm" (clicked)="createSupersetFromSelection()">
+                  <span class="superset-btn-content">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M4 12h16M4 6h16M4 18h16"></path>
+                    </svg>
+                    Link as Superset
+                  </span>
+                </app-button>
+                <app-button variant="ghost" size="sm" (clicked)="clearSupersetSelection()">Clear</app-button>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="exercises-empty">
+            <p>No exercises added yet</p>
+            <span>Click "Add Exercise" to get started</span>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div modal-footer>
+      <app-button variant="ghost" (clicked)="closeCreateModal()">Cancel</app-button>
+      <app-button
+        [disabled]="!templateName || templateExercises().length === 0"
+        (clicked)="saveTemplate()"
+      >
+        {{ isEditing ? 'Save Changes' : 'Create Template' }}
+      </app-button>
+    </div>
+  </app-modal>
+
+  <!-- Exercise Picker -->
+  <app-exercise-picker
+    [isOpen]="showExercisePicker"
+    (closed)="showExercisePicker = false"
+    (exerciseSelected)="addExerciseToTemplate($event)"
+  />
+
+  <!-- Template Menu Modal -->
+  <app-modal
+    [isOpen]="showMenuModal"
+    [title]="selectedTemplate?.name || 'Template'"
+    [showFooter]="true"
+    size="sm"
+    (closed)="closeMenu()"
+  >
+    <div class="menu-options">
+      <button class="menu-option" (click)="editTemplate()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Edit template
+      </button>
+      <button class="menu-option" (click)="duplicateTemplate()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+        Duplicate template
+      </button>
+      <button class="menu-option menu-option--danger" (click)="showDeleteConfirm = true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 6h18"></path>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+        </svg>
+        Delete template
+      </button>
+    </div>
+    <div modal-footer>
+      <app-button variant="ghost" (clicked)="closeMenu()">Close</app-button>
+    </div>
+  </app-modal>
+
+  <!-- Delete Confirmation -->
+  <app-modal
+    [isOpen]="showDeleteConfirm"
+    title="Delete Template?"
+    [showFooter]="true"
+    size="sm"
+    (closed)="showDeleteConfirm = false"
+  >
+    <p>Are you sure you want to delete "{{ selectedTemplate?.name }}"? This action cannot be undone.</p>
+    <div modal-footer>
+      <app-button variant="ghost" (clicked)="showDeleteConfirm = false">Cancel</app-button>
+      <app-button variant="danger" (clicked)="deleteTemplate()">Delete</app-button>
+    </div>
+  </app-modal>
+</app-page-container>

@@ -1,0 +1,84 @@
+<app-modal
+  [isOpen]="isOpen"
+  title="Add Exercise"
+  [showFooter]="false"
+  [noPadding]="true"
+  size="lg"
+  (closed)="close()"
+>
+  <div class="picker">
+    <!-- Search -->
+    <div class="picker__search">
+      <app-input
+        type="search"
+        placeholder="Search exercises..."
+        [clearable]="true"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+      />
+    </div>
+
+    <!-- Muscle Group Filters -->
+    <div class="picker__filters">
+      <button
+        class="filter-chip"
+        [class.filter-chip--active]="selectedMuscleGroup() === null"
+        (click)="selectedMuscleGroup.set(null)"
+      >
+        All
+      </button>
+      @for (group of popularMuscleGroups; track group) {
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="selectedMuscleGroup() === group"
+          (click)="selectedMuscleGroup.set(group)"
+        >
+          {{ exerciseService.getMuscleGroupLabel(group) }}
+        </button>
+      }
+    </div>
+
+    <!-- Exercise List -->
+    <div class="picker__list">
+      @if (filteredExercises().length > 0) {
+        @for (exercise of filteredExercises(); track exercise.id) {
+          <button class="exercise-item" (click)="selectExercise(exercise)">
+            <div class="exercise-item__info">
+              <h4 class="exercise-item__name">{{ exercise.name }}</h4>
+              <div class="exercise-item__tags">
+                @for (
+                  muscle of exercise.muscleGroups.slice(0, 2);
+                  track muscle
+                ) {
+                  <app-badge [size]="'sm'" [variant]="'default'">
+                    {{ exerciseService.getMuscleGroupLabel(muscle) }}
+                  </app-badge>
+                }
+              </div>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        }
+      } @else {
+        <div class="picker__empty">
+          <p>No exercises found</p>
+          @if (searchQuery()) {
+            <button class="picker__clear" (click)="searchQuery.set('')">
+              Clear search
+            </button>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</app-modal>

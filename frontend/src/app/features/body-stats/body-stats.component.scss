@@ -1,0 +1,111 @@
+.add-btn {
+  margin-bottom: var(--spacing-lg);
+}
+
+.add-btn-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.section-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0 0 var(--spacing-md);
+}
+
+.latest-stats {
+  margin-bottom: var(--spacing-lg);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.stat-item {
+  text-align: center;
+
+  &__value {
+    display: block;
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+  }
+}
+
+.latest-date {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.weight-change {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  &__label {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+
+  &__value {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+
+    &--positive {
+      color: var(--color-success-600);
+    }
+
+    &--negative {
+      color: var(--color-danger-600);
+    }
+  }
+}
+
+.section {
+  margin-top: var(--spacing-lg);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.measurement-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &__date {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+  }
+
+  &__stats {
+    display: flex;
+    gap: var(--spacing-md);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+}

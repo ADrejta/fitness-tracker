@@ -8,9 +8,9 @@ use validator::Validate;
 
 use crate::dto::{
     CreateSetRequest, CreateSupersetRequest, CreateWorkoutExerciseRequest, CreateWorkoutRequest,
-    SupersetResponse, UpdateSetRequest, UpdateWorkoutExerciseRequest, UpdateWorkoutRequest,
-    WorkoutExerciseResponse, WorkoutListResponse, WorkoutQuery, WorkoutResponse,
-    WorkoutSetResponse, WorkoutSummaryResponse,
+    ErrorResponse, SupersetResponse, UpdateSetRequest, UpdateWorkoutExerciseRequest,
+    UpdateWorkoutRequest, WorkoutExerciseResponse, WorkoutListResponse, WorkoutQuery,
+    WorkoutResponse, WorkoutSetResponse, WorkoutSummaryResponse,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
@@ -18,6 +18,18 @@ use crate::repositories::WorkoutRepository;
 use crate::services::WorkoutService;
 
 // Workout handlers
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/workouts",
+    tag = "Workouts",
+    request_body = CreateWorkoutRequest,
+    responses(
+        (status = 200, description = "Workout created", body = WorkoutResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn create_workout(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -39,11 +51,25 @@ pub async fn create_workout(
     Ok(Json(response))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/workouts",
+    tag = "Workouts",
+    params(WorkoutQuery),
+    responses(
+        (status = 200, description = "List of workouts", body = WorkoutListResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn list_workouts(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Query(query): Query<WorkoutQuery>,
 ) -> Result<Json<WorkoutListResponse>, AppError> {
+    query
+        .validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let (workouts, total) = WorkoutRepository::find_all(&pool, auth_user.user_id, &query).await?;
 
     Ok(Json(WorkoutListResponse {
@@ -66,6 +92,17 @@ pub async fn list_workouts(
     }))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/workouts/{id}",
+    tag = "Workouts",
+    params(("id" = Uuid, Path, description = "Workout ID")),
+    responses(
+        (status = 200, description = "Workout details", body = WorkoutResponse),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_workout(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -75,12 +112,27 @@ pub async fn get_workout(
     Ok(Json(response))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/api/v1/workouts/{id}",
+    tag = "Workouts",
+    params(("id" = Uuid, Path, description = "Workout ID")),
+    request_body = UpdateWorkoutRequest,
+    responses(
+        (status = 200, description = "Workout updated", body = WorkoutResponse),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_workout(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Path(id): Path<Uuid>,
     Json(req): Json<UpdateWorkoutRequest>,
 ) -> Result<Json<WorkoutResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     WorkoutRepository::update(
         &pool,
         id,
@@ -94,6 +146,17 @@ pub async fn update_workout(
     Ok(Json(response))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/workouts/{id}",
+    tag = "Workouts",
+    params(("id" = Uuid, Path, description = "Workout ID")),
+    responses(
+        (status = 200, description = "Workout deleted"),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn delete_workout(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -102,6 +165,17 @@ pub async fn delete_workout(
     WorkoutRepository::delete(&pool, id, auth_user.user_id).await
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/workouts/{id}/complete",
+    tag = "Workouts",
+    params(("id" = Uuid, Path, description = "Workout ID")),
+    responses(
+        (status = 200, description = "Workout completed", body = WorkoutResponse),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn complete_workout(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -111,6 +185,17 @@ pub async fn complete_workout(
     Ok(Json(response))
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/workouts/{id}/cancel",
+    tag = "Workouts",
+    params(("id" = Uuid, Path, description = "Workout ID")),
+    responses(
+        (status = 200, description = "Workout cancelled", body = WorkoutResponse),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn cancel_workout(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -122,6 +207,20 @@ pub async fn cancel_workout(
 }
 
 // Exercise handlers
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/workouts/{workout_id}/exercises",
+    tag = "Workout Exercises",
+    params(("workout_id" = Uuid, Path, description = "Workout ID")),
+    request_body = CreateWorkoutExerciseRequest,
+    responses(
+        (status = 200, description = "Exercise added to workout", body = WorkoutExerciseResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn add_exercise(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -171,11 +270,29 @@ pub async fn add_exercise(
     }))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/api/v1/workouts/{workout_id}/exercises/{exercise_id}",
+    tag = "Workout Exercises",
+    params(
+        ("workout_id" = Uuid, Path, description = "Workout ID"),
+        ("exercise_id" = Uuid, Path, description = "Exercise ID"),
+    ),
+    request_body = UpdateWorkoutExerciseRequest,
+    responses(
+        (status = 200, description = "Exercise updated", body = WorkoutExerciseResponse),
+        (status = 404, description = "Exercise not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_exercise(
     State(pool): State<PgPool>,
     Path((_workout_id, exercise_id)): Path<(Uuid, Uuid)>,
     Json(req): Json<UpdateWorkoutExerciseRequest>,
 ) -> Result<Json<WorkoutExerciseResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let exercise = WorkoutRepository::update_exercise(&pool, exercise_id, req.notes.as_deref()).await?;
     let sets = WorkoutRepository::get_sets(&pool, exercise_id).await?;
 
@@ -202,6 +319,20 @@ pub async fn update_exercise(
     }))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/workouts/{workout_id}/exercises/{exercise_id}",
+    tag = "Workout Exercises",
+    params(
+        ("workout_id" = Uuid, Path, description = "Workout ID"),
+        ("exercise_id" = Uuid, Path, description = "Exercise ID"),
+    ),
+    responses(
+        (status = 200, description = "Exercise removed from workout"),
+        (status = 404, description = "Exercise not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn delete_exercise(
     State(pool): State<PgPool>,
     Path((_workout_id, exercise_id)): Path<(Uuid, Uuid)>,
@@ -210,11 +341,30 @@ pub async fn delete_exercise(
 }
 
 // Set handlers
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/workouts/{workout_id}/exercises/{exercise_id}/sets",
+    tag = "Workout Sets",
+    params(
+        ("workout_id" = Uuid, Path, description = "Workout ID"),
+        ("exercise_id" = Uuid, Path, description = "Exercise ID"),
+    ),
+    request_body = CreateSetRequest,
+    responses(
+        (status = 200, description = "Set added", body = WorkoutSetResponse),
+        (status = 404, description = "Exercise not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn add_set(
     State(pool): State<PgPool>,
     Path((_workout_id, exercise_id)): Path<(Uuid, Uuid)>,
     Json(req): Json<CreateSetRequest>,
 ) -> Result<Json<WorkoutSetResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let set = WorkoutRepository::add_set(
         &pool,
         exercise_id,
@@ -237,11 +387,30 @@ pub async fn add_set(
     }))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/api/v1/workouts/{workout_id}/exercises/{exercise_id}/sets/{set_id}",
+    tag = "Workout Sets",
+    params(
+        ("workout_id" = Uuid, Path, description = "Workout ID"),
+        ("exercise_id" = Uuid, Path, description = "Exercise ID"),
+        ("set_id" = Uuid, Path, description = "Set ID"),
+    ),
+    request_body = UpdateSetRequest,
+    responses(
+        (status = 200, description = "Set updated", body = WorkoutSetResponse),
+        (status = 404, description = "Set not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_set(
     State(pool): State<PgPool>,
     Path((_workout_id, _exercise_id, set_id)): Path<(Uuid, Uuid, Uuid)>,
     Json(req): Json<UpdateSetRequest>,
 ) -> Result<Json<WorkoutSetResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let set = WorkoutRepository::update_set(
         &pool,
         set_id,
@@ -267,6 +436,21 @@ pub async fn update_set(
     }))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/workouts/{workout_id}/exercises/{exercise_id}/sets/{set_id}",
+    tag = "Workout Sets",
+    params(
+        ("workout_id" = Uuid, Path, description = "Workout ID"),
+        ("exercise_id" = Uuid, Path, description = "Exercise ID"),
+        ("set_id" = Uuid, Path, description = "Set ID"),
+    ),
+    responses(
+        (status = 200, description = "Set deleted"),
+        (status = 404, description = "Set not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn delete_set(
     State(pool): State<PgPool>,
     Path((_workout_id, _exercise_id, set_id)): Path<(Uuid, Uuid, Uuid)>,
@@ -275,6 +459,20 @@ pub async fn delete_set(
 }
 
 // Superset handlers
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/workouts/{workout_id}/superset",
+    tag = "Workout Supersets",
+    params(("workout_id" = Uuid, Path, description = "Workout ID")),
+    request_body = CreateSupersetRequest,
+    responses(
+        (status = 200, description = "Superset created", body = SupersetResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn create_superset(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -297,6 +495,20 @@ pub async fn create_superset(
     }))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/workouts/{workout_id}/superset/{superset_id}",
+    tag = "Workout Supersets",
+    params(
+        ("workout_id" = Uuid, Path, description = "Workout ID"),
+        ("superset_id" = Uuid, Path, description = "Superset ID"),
+    ),
+    responses(
+        (status = 200, description = "Superset removed"),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn remove_superset(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,

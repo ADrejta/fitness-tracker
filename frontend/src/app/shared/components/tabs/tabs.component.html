@@ -1,0 +1,22 @@
+<div class="tabs-container">
+  <div class="tabs" role="tablist">
+    @for (tab of tabs; track tab.id) {
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        [class.tab--active]="tab.id === activeTab"
+        [class.tab--disabled]="tab.disabled"
+        [attr.aria-selected]="tab.id === activeTab"
+        [disabled]="tab.disabled"
+        (click)="selectTab(tab.id)"
+      >
+        {{ tab.label }}
+      </button>
+    }
+    <div class="tabs__indicator" [style.transform]="indicatorTransform" [style.width.px]="indicatorWidth"></div>
+  </div>
+  <div class="tabs-content">
+    <ng-content></ng-content>
+  </div>
+</div>

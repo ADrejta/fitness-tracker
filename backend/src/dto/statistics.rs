@@ -1,10 +1,12 @@
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
+use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
+use validator::Validate;
 
 use crate::models::{MuscleGroup, RecordType};
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct DashboardSummary {
     pub total_workouts: i64,
@@ -18,7 +20,7 @@ pub struct DashboardSummary {
     pub recent_prs: Vec<PersonalRecordResponse>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PersonalRecordResponse {
     pub id: Uuid,
@@ -32,13 +34,13 @@ pub struct PersonalRecordResponse {
     pub workout_id: Uuid,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WeeklyVolumeResponse {
     pub weeks: Vec<WeekVolume>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct WeekVolume {
     pub week_start: NaiveDate,
@@ -46,13 +48,13 @@ pub struct WeekVolume {
     pub workout_count: i32,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MuscleGroupDistribution {
     pub distributions: Vec<MuscleGroupData>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct MuscleGroupData {
     pub muscle_group: MuscleGroup,
@@ -61,7 +63,7 @@ pub struct MuscleGroupData {
     pub percentage: f64,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExerciseProgressResponse {
     pub exercise_template_id: String,
@@ -70,7 +72,7 @@ pub struct ExerciseProgressResponse {
     pub personal_records: Vec<PersonalRecordResponse>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExerciseHistoryEntry {
     pub date: DateTime<Utc>,
@@ -81,7 +83,7 @@ pub struct ExerciseHistoryEntry {
     pub estimated_1rm: Option<f64>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct SetHistoryEntry {
     pub set_number: i32,
@@ -90,27 +92,29 @@ pub struct SetHistoryEntry {
     pub is_warmup: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate, IntoParams)]
 #[serde(rename_all = "camelCase")]
+#[into_params(rename_all = "camelCase")]
 pub struct StatisticsQuery {
     pub start_date: Option<NaiveDate>,
     pub end_date: Option<NaiveDate>,
+    #[validate(range(min = 1, max = 52))]
     pub weeks: Option<i32>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct PersonalRecordsListResponse {
     pub records: Vec<PersonalRecordResponse>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExercisesWithHistoryResponse {
     pub exercises: Vec<ExerciseWithHistorySummary>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct ExerciseWithHistorySummary {
     pub exercise_template_id: String,

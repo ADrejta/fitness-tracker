@@ -7,18 +7,7 @@ import { ToastContainerComponent } from './shared/components';
   selector: 'app-root',
   standalone: true,
   imports: [RouterOutlet, HeaderComponent, NavigationComponent, ToastContainerComponent],
-  template: `
-    <app-header />
-    <router-outlet />
-    <app-navigation />
-    <app-toast-container />
-  `,
-  styles: [`
-    :host {
-      display: block;
-      min-height: 100vh;
-      min-height: 100dvh;
-    }
-  `]
+  templateUrl: './app.component.html',
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent {}

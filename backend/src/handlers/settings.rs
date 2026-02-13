@@ -1,11 +1,22 @@
 use axum::{extract::State, Extension, Json};
 use sqlx::PgPool;
 
-use crate::dto::{SettingsResponse, UpdateSettingsRequest};
+use validator::Validate;
+
+use crate::dto::{ErrorResponse, SettingsResponse, UpdateSettingsRequest};
 use crate::error::AppError;
 use crate::middleware::AuthUser;
 use crate::repositories::SettingsRepository;
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/settings",
+    tag = "Settings",
+    responses(
+        (status = 200, description = "User settings", body = SettingsResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_settings(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -25,11 +36,25 @@ pub async fn get_settings(
     }))
 }
 
+#[utoipa::path(
+    put,
+    path = "/api/v1/settings",
+    tag = "Settings",
+    request_body = UpdateSettingsRequest,
+    responses(
+        (status = 200, description = "Settings updated", body = SettingsResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_settings(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Json(req): Json<UpdateSettingsRequest>,
 ) -> Result<Json<SettingsResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let settings = SettingsRepository::update(
         &pool,
         auth_user.user_id,

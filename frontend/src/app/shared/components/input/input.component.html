@@ -1,0 +1,47 @@
+<div class="input-wrapper" [class.input-wrapper--error]="error" [class.input-wrapper--disabled]="disabled">
+  @if (label) {
+    <label class="input-label" [for]="inputId">
+      {{ label }}
+      @if (required) {
+        <span class="input-label__required">*</span>
+      }
+    </label>
+  }
+  <div class="input-container">
+    @if (prefix) {
+      <span class="input-prefix">{{ prefix }}</span>
+    }
+    <input
+      [id]="inputId"
+      [type]="type"
+      [placeholder]="placeholder"
+      [disabled]="disabled"
+      [readonly]="readonly"
+      [min]="min"
+      [max]="max"
+      [step]="step"
+      [class]="inputClasses"
+      [value]="value"
+      (input)="onInput($event)"
+      (blur)="onBlur()"
+      (keydown.enter)="onEnter($event)"
+    />
+    @if (suffix) {
+      <span class="input-suffix">{{ suffix }}</span>
+    }
+    @if (clearable && value) {
+      <button type="button" class="input-clear" (click)="clear()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    }
+  </div>
+  @if (error) {
+    <span class="input-error">{{ error }}</span>
+  }
+  @if (hint && !error) {
+    <span class="input-hint">{{ hint }}</span>
+  }
+</div>

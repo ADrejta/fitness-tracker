@@ -1,9 +1,10 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
+use utoipa::ToSchema;
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "workout_status", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum WorkoutStatus {
@@ -39,17 +40,6 @@ pub struct WorkoutExercise {
     pub superset_id: Option<Uuid>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkoutExerciseWithSets {
-    pub id: Uuid,
-    pub exercise_template_id: String,
-    pub exercise_name: String,
-    pub sets: Vec<WorkoutSet>,
-    pub notes: Option<String>,
-    pub superset_id: Option<Uuid>,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct Workout {
@@ -67,19 +57,3 @@ pub struct Workout {
     pub notes: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkoutWithExercises {
-    pub id: Uuid,
-    pub name: String,
-    pub started_at: DateTime<Utc>,
-    pub completed_at: Option<DateTime<Utc>>,
-    pub exercises: Vec<WorkoutExerciseWithSets>,
-    pub total_volume: f64,
-    pub total_sets: i32,
-    pub total_reps: i32,
-    pub duration: Option<i32>,
-    pub status: WorkoutStatus,
-    pub template_id: Option<Uuid>,
-    pub notes: Option<String>,
-}

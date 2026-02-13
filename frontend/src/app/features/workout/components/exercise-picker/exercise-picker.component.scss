@@ -1,0 +1,119 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  height: 70vh;
+  max-height: 600px;
+}
+
+.picker__search {
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.picker__filters {
+  display: flex;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  overflow-x: auto;
+  border-bottom: 1px solid var(--color-border-light);
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--color-background-tertiary);
+  }
+
+  &--active {
+    background: var(--color-primary-600);
+    color: white;
+    border-color: var(--color-primary-600);
+  }
+}
+
+.picker__list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-sm);
+}
+
+.exercise-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--spacing-md);
+  background: none;
+  border: none;
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  text-align: left;
+
+  &:hover {
+    background: var(--color-background-secondary);
+  }
+
+  &__info {
+    flex: 1;
+  }
+
+  &__name {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text);
+    margin: 0 0 var(--spacing-xs);
+  }
+
+  &__tags {
+    display: flex;
+    gap: var(--spacing-xs);
+  }
+
+  svg {
+    color: var(--color-primary-600);
+    flex-shrink: 0;
+  }
+}
+
+.picker__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2xl);
+  color: var(--color-text-secondary);
+  text-align: center;
+
+  p {
+    margin: 0 0 var(--spacing-sm);
+  }
+}
+
+.picker__clear {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-primary-600);
+  background: none;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}

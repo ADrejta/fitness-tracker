@@ -1,0 +1,14 @@
+<div class="empty-state">
+  @if (icon) {
+    <div class="empty-state__icon">
+      <ng-content select="[empty-icon]"></ng-content>
+    </div>
+  }
+  <h3 class="empty-state__title">{{ title }}</h3>
+  @if (description) {
+    <p class="empty-state__description">{{ description }}</p>
+  }
+  <div class="empty-state__action">
+    <ng-content></ng-content>
+  </div>
+</div>

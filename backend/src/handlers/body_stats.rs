@@ -7,9 +7,9 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::dto::{
-    BodyMeasurementResponse, CreateGoalRequest, CreateMeasurementRequest, GoalProgressResponse,
-    GoalResponse, MeasurementQuery, MeasurementTrendResponse, UpdateGoalRequest,
-    UpdateMeasurementRequest,
+    BodyMeasurementResponse, CreateGoalRequest, CreateMeasurementRequest, ErrorResponse,
+    GoalProgressResponse, GoalResponse, MeasurementQuery, MeasurementTrendResponse,
+    UpdateGoalRequest, UpdateMeasurementRequest,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
@@ -17,6 +17,18 @@ use crate::models::{BodyMeasurement, GoalType};
 use crate::repositories::BodyStatsRepository;
 
 // Measurement handlers
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/body-stats/measurements",
+    tag = "Body Stats",
+    request_body = CreateMeasurementRequest,
+    responses(
+        (status = 200, description = "Measurement created", body = BodyMeasurementResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn create_measurement(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -51,11 +63,25 @@ pub async fn create_measurement(
     Ok(Json(measurement_to_response(measurement)))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/body-stats/measurements",
+    tag = "Body Stats",
+    params(MeasurementQuery),
+    responses(
+        (status = 200, description = "List of measurements", body = MeasurementTrendResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn list_measurements(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Query(query): Query<MeasurementQuery>,
 ) -> Result<Json<MeasurementTrendResponse>, AppError> {
+    query
+        .validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let (measurements, total) =
         BodyStatsRepository::find_measurements(&pool, auth_user.user_id, &query).await?;
 
@@ -68,6 +94,17 @@ pub async fn list_measurements(
     }))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/body-stats/measurements/{id}",
+    tag = "Body Stats",
+    params(("id" = Uuid, Path, description = "Measurement ID")),
+    responses(
+        (status = 200, description = "Measurement details", body = BodyMeasurementResponse),
+        (status = 404, description = "Measurement not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_measurement(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -80,12 +117,27 @@ pub async fn get_measurement(
     Ok(Json(measurement_to_response(measurement)))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/api/v1/body-stats/measurements/{id}",
+    tag = "Body Stats",
+    params(("id" = Uuid, Path, description = "Measurement ID")),
+    request_body = UpdateMeasurementRequest,
+    responses(
+        (status = 200, description = "Measurement updated", body = BodyMeasurementResponse),
+        (status = 404, description = "Measurement not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_measurement(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Path(id): Path<Uuid>,
     Json(req): Json<UpdateMeasurementRequest>,
 ) -> Result<Json<BodyMeasurementResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let measurement = BodyStatsRepository::update_measurement(
         &pool,
         id,
@@ -113,6 +165,17 @@ pub async fn update_measurement(
     Ok(Json(measurement_to_response(measurement)))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/body-stats/measurements/{id}",
+    tag = "Body Stats",
+    params(("id" = Uuid, Path, description = "Measurement ID")),
+    responses(
+        (status = 200, description = "Measurement deleted"),
+        (status = 404, description = "Measurement not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn delete_measurement(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -122,6 +185,18 @@ pub async fn delete_measurement(
 }
 
 // Goal handlers
+
+#[utoipa::path(
+    post,
+    path = "/api/v1/body-stats/goals",
+    tag = "Body Stats Goals",
+    request_body = CreateGoalRequest,
+    responses(
+        (status = 200, description = "Goal created", body = GoalResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn create_goal(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -155,6 +230,15 @@ pub async fn create_goal(
     }))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/body-stats/goals",
+    tag = "Body Stats Goals",
+    responses(
+        (status = 200, description = "List of goals", body = Vec<GoalResponse>),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn list_goals(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -179,6 +263,17 @@ pub async fn list_goals(
     ))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/body-stats/goals/{id}",
+    tag = "Body Stats Goals",
+    params(("id" = Uuid, Path, description = "Goal ID")),
+    responses(
+        (status = 200, description = "Goal details", body = GoalResponse),
+        (status = 404, description = "Goal not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_goal(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -201,12 +296,27 @@ pub async fn get_goal(
     }))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/api/v1/body-stats/goals/{id}",
+    tag = "Body Stats Goals",
+    params(("id" = Uuid, Path, description = "Goal ID")),
+    request_body = UpdateGoalRequest,
+    responses(
+        (status = 200, description = "Goal updated", body = GoalResponse),
+        (status = 404, description = "Goal not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_goal(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Path(id): Path<Uuid>,
     Json(req): Json<UpdateGoalRequest>,
 ) -> Result<Json<GoalResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let goal = BodyStatsRepository::update_goal(
         &pool,
         id,
@@ -230,6 +340,17 @@ pub async fn update_goal(
     }))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/body-stats/goals/{id}",
+    tag = "Body Stats Goals",
+    params(("id" = Uuid, Path, description = "Goal ID")),
+    responses(
+        (status = 200, description = "Goal deleted"),
+        (status = 404, description = "Goal not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn delete_goal(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -238,6 +359,17 @@ pub async fn delete_goal(
     BodyStatsRepository::delete_goal(&pool, id, auth_user.user_id).await
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/body-stats/goals/{id}/progress",
+    tag = "Body Stats Goals",
+    params(("id" = Uuid, Path, description = "Goal ID")),
+    responses(
+        (status = 200, description = "Goal progress", body = GoalProgressResponse),
+        (status = 404, description = "Goal not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_goal_progress(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,

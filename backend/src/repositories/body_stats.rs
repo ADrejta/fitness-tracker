@@ -88,8 +88,8 @@ impl BodyStatsRepository {
         user_id: Uuid,
         query: &MeasurementQuery,
     ) -> Result<(Vec<BodyMeasurement>, i64), AppError> {
-        let limit = query.limit.unwrap_or(50);
-        let offset = query.offset.unwrap_or(0);
+        let limit = query.limit.unwrap_or(50).min(100);
+        let offset = query.offset.unwrap_or(0).max(0);
 
         let mut count_sql = String::from("SELECT COUNT(*) FROM body_measurements WHERE user_id = $1");
         let mut sql = String::from("SELECT * FROM body_measurements WHERE user_id = $1");

@@ -1,0 +1,141 @@
+<app-page-container title="Exercise Library" subtitle="Browse and manage exercises">
+  <!-- Search -->
+  <div class="search-bar">
+    <app-input
+      type="search"
+      placeholder="Search exercises..."
+      [clearable]="true"
+      [(ngModel)]="searchQuery"
+    />
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <button
+      class="filter-chip"
+      [class.filter-chip--active]="selectedMuscle() === null"
+      (click)="selectedMuscle.set(null)"
+    >
+      All
+    </button>
+    @for (muscle of muscleGroups; track muscle) {
+      <button
+        class="filter-chip"
+        [class.filter-chip--active]="selectedMuscle() === muscle"
+        (click)="selectedMuscle.set(muscle)"
+      >
+        {{ exerciseService.getMuscleGroupLabel(muscle) }}
+      </button>
+    }
+  </div>
+
+  <!-- Exercise Count -->
+  <p class="exercise-count">{{ filteredExercises().length }} exercises</p>
+
+  <!-- Exercise List -->
+  <div class="exercise-list">
+    @for (exercise of filteredExercises(); track exercise.id) {
+      <app-card [interactive]="true" (click)="viewExercise(exercise)">
+        <div class="exercise-item">
+          <div class="exercise-item__info">
+            <h3 class="exercise-item__name">{{ exercise.name }}</h3>
+            <div class="exercise-item__tags">
+              @for (muscle of exercise.muscleGroups.slice(0, 3); track muscle) {
+                <app-badge [size]="'sm'">{{ exerciseService.getMuscleGroupLabel(muscle) }}</app-badge>
+              }
+            </div>
+          </div>
+          @if (exercise.isCustom) {
+            <app-badge [variant]="'primary'" [size]="'sm'">Custom</app-badge>
+          }
+        </div>
+      </app-card>
+    }
+  </div>
+
+  <!-- Add Custom Exercise Button -->
+  <div class="fab">
+    <app-button [iconOnly]="true" (clicked)="showAddModal = true">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+    </app-button>
+  </div>
+
+  <!-- Exercise Detail Modal -->
+  <app-modal
+    [isOpen]="showDetailModal"
+    [title]="selectedExercise?.name || ''"
+    [showFooter]="!!selectedExercise?.isCustom"
+    (closed)="closeDetailModal()"
+  >
+    @if (selectedExercise) {
+      <div class="exercise-detail">
+        <div class="detail-section">
+          <h4>Muscle Groups</h4>
+          <div class="detail-tags">
+            @for (muscle of selectedExercise.muscleGroups; track muscle) {
+              <app-badge>{{ exerciseService.getMuscleGroupLabel(muscle) }}</app-badge>
+            }
+          </div>
+        </div>
+        <div class="detail-section">
+          <h4>Equipment</h4>
+          <div class="detail-tags">
+            @for (eq of selectedExercise.equipment; track eq) {
+              <app-badge [variant]="'default'">{{ exerciseService.getEquipmentLabel(eq) }}</app-badge>
+            }
+          </div>
+        </div>
+        @if (selectedExercise.description) {
+          <div class="detail-section">
+            <h4>Description</h4>
+            <p>{{ selectedExercise.description }}</p>
+          </div>
+        }
+      </div>
+    }
+    @if (selectedExercise?.isCustom) {
+      <div modal-footer>
+        <app-button variant="danger" (clicked)="deleteExercise()">Delete</app-button>
+        <app-button variant="ghost" (clicked)="closeDetailModal()">Close</app-button>
+      </div>
+    }
+  </app-modal>
+
+  <!-- Add Exercise Modal -->
+  <app-modal
+    [isOpen]="showAddModal"
+    title="Add Custom Exercise"
+    [showFooter]="true"
+    (closed)="closeAddModal()"
+  >
+    <div class="form-stack">
+      <app-input
+        label="Exercise Name"
+        placeholder="e.g., Cable Fly"
+        [(ngModel)]="newExercise.name"
+      />
+      <div class="form-field">
+        <label>Muscle Groups</label>
+        <div class="checkbox-grid">
+          @for (muscle of muscleGroups; track muscle) {
+            <label class="checkbox-item">
+              <input
+                type="checkbox"
+                [checked]="newExercise.muscleGroups.includes(muscle)"
+                (change)="toggleMuscle(muscle)"
+              />
+              {{ exerciseService.getMuscleGroupLabel(muscle) }}
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+    <div modal-footer>
+      <app-button variant="ghost" (clicked)="closeAddModal()">Cancel</app-button>
+      <app-button (clicked)="addExercise()" [disabled]="!newExercise.name">Add</app-button>
+    </div>
+  </app-modal>
+</app-page-container>

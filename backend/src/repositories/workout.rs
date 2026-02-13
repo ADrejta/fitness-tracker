@@ -59,8 +59,8 @@ impl WorkoutRepository {
         user_id: Uuid,
         query: &WorkoutQuery,
     ) -> Result<(Vec<WorkoutWithCount>, i64), AppError> {
-        let limit = query.limit.unwrap_or(20);
-        let offset = query.offset.unwrap_or(0);
+        let limit = query.limit.unwrap_or(20).min(100);
+        let offset = query.offset.unwrap_or(0).max(0);
 
         let total = if let Some(ref status) = query.status {
             sqlx::query_scalar::<_, i64>(

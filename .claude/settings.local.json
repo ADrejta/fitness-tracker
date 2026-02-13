@@ -17,7 +17,12 @@
       "Bash(curl -s http://localhost:8080/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"\"email\"\":\"\"demo@example.com\"\",\"\"password\"\":\"\"demo1234\"\"}')",
       "Bash(curl:*)",
       "Bash(TOKEN=\"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhMDAwMDAwMC0wMDAwLTAwMDAtMDAwMC0wMDAwMDAwMDAwMDEiLCJlbWFpbCI6ImRlbW9AZXhhbXBsZS5jb20iLCJleHAiOjE3Njk2MTMwODAsImlhdCI6MTc2OTUyNjY4MCwidG9rZW5fdHlwZSI6ImFjY2VzcyJ9.vJKJ7n9rc9YWBzQ1480XfjRDWKt8UIKC1Gh5hXTrm1U\")",
-      "Bash(cargo test:*)"
+      "Bash(cargo test:*)",
+      "WebFetch(domain:docs.rs)",
+      "WebSearch",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)"
     ]
   }
 }

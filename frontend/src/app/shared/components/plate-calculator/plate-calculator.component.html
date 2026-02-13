@@ -1,0 +1,101 @@
+<div class="plate-calculator">
+  <div class="plate-calculator__header">
+    <span class="plate-calculator__title">Plate Calculator</span>
+    <span class="plate-calculator__target">{{ weight() }} {{ unit() }}</span>
+  </div>
+
+  <div class="plate-calculator__barbell-selector">
+    <label class="plate-calculator__label">Barbell</label>
+    <select
+      class="plate-calculator__select"
+      [ngModel]="selectedBarbell()"
+      (ngModelChange)="onBarbellChange($event)"
+    >
+      @for (preset of barbellPresets; track preset.type) {
+        <option [value]="preset.type">
+          {{ preset.name }} ({{ unit() === 'kg' ? preset.weightKg : preset.weightLbs }} {{ unit() }})
+        </option>
+      }
+    </select>
+  </div>
+
+  @if (selectedBarbell() === 'custom') {
+    <div class="plate-calculator__custom-weight">
+      <label class="plate-calculator__label">Custom bar weight ({{ unit() }})</label>
+      <input
+        type="number"
+        class="plate-calculator__input"
+        [ngModel]="customBarbellWeight()"
+        (ngModelChange)="onCustomWeightChange($event)"
+        min="0"
+        step="0.5"
+      />
+    </div>
+  }
+
+  @if (calculation().perSide.length === 0 && calculation().isAchievable) {
+    <div class="plate-calculator__empty">
+      Just the bar ({{ barWeight() }} {{ unit() }})
+    </div>
+  } @else if (calculation().perSide.length === 0) {
+    <div class="plate-calculator__empty">
+      Weight is less than bar ({{ barWeight() }} {{ unit() }})
+    </div>
+  } @else {
+    <div class="plate-calculator__visual">
+      <!-- Bar visualization -->
+      <div class="plate-calculator__bar"></div>
+
+      <!-- Plates on one side -->
+      <div class="plate-calculator__plates">
+        @for (plate of calculation().perSide; track plate.weight) {
+          @for (i of getRange(plate.count); track i) {
+            <div
+              class="plate-calculator__plate"
+              [style.background-color]="getPlateColor(plate.weight)"
+              [style.height.px]="getPlateHeight(plate.weight)"
+            >
+              {{ plate.weight }}
+            </div>
+          }
+        }
+      </div>
+    </div>
+
+    <div class="plate-calculator__breakdown">
+      <div class="plate-calculator__row plate-calculator__row--header">
+        <span>Plate</span>
+        <span>Per Side</span>
+        <span>Total</span>
+      </div>
+      @for (plate of calculation().perSide; track plate.weight) {
+        <div class="plate-calculator__row">
+          <span class="plate-calculator__plate-weight">
+            <span
+              class="plate-calculator__color-dot"
+              [style.background-color]="getPlateColor(plate.weight)"
+            ></span>
+            {{ plate.weight }} {{ unit() }}
+          </span>
+          <span>{{ plate.count }}</span>
+          <span>{{ plate.count * 2 }}</span>
+        </div>
+      }
+      <div class="plate-calculator__row plate-calculator__row--total">
+        <span>Bar</span>
+        <span></span>
+        <span>{{ barWeight() }} {{ unit() }}</span>
+      </div>
+    </div>
+
+    @if (!calculation().isAchievable) {
+      <div class="plate-calculator__warning">
+        Cannot achieve exact weight. Off by {{ calculation().remainder }} {{ unit() }}
+      </div>
+    }
+  }
+
+  <button class="plate-calculator__settings-link" (click)="openSettings.emit()">
+    Configure available plates
+  </button>
+</div>

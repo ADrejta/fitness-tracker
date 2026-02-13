@@ -1,0 +1,17 @@
+<div
+  class="skeleton"
+  [class.skeleton--text]="variant === 'text'"
+  [class.skeleton--title]="variant === 'title'"
+  [class.skeleton--avatar]="variant === 'avatar'"
+  [class.skeleton--card]="variant === 'card'"
+  [style.width]="width"
+  [style.height]="height"
+>
+  @if (variant === 'card') {
+    <div class="skeleton__card-content">
+      <div class="skeleton__line skeleton__line--title"></div>
+      <div class="skeleton__line skeleton__line--text"></div>
+      <div class="skeleton__line skeleton__line--text skeleton__line--short"></div>
+    </div>
+  }
+</div>

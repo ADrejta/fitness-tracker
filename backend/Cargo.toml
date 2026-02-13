@@ -38,6 +38,10 @@ dotenvy = "0.15"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
+# OpenAPI / Swagger
+utoipa = { version = "5", features = ["axum_extras", "chrono", "uuid"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
+
 [[bin]]
 name = "fitness_tracker_api"
 path = "src/main.rs"

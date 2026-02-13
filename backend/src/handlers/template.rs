@@ -7,14 +7,24 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::dto::{
-    CreateTemplateRequest, TemplateExerciseResponse, TemplateListResponse, TemplateSetResponse,
-    TemplateSummaryResponse, UpdateTemplateRequest, WorkoutResponse, WorkoutTemplateResponse,
+    CreateTemplateRequest, ErrorResponse, TemplateExerciseResponse, TemplateListResponse,
+    TemplateSetResponse, TemplateSummaryResponse, UpdateTemplateRequest, WorkoutResponse,
+    WorkoutTemplateResponse,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
 use crate::repositories::TemplateRepository;
 use crate::services::WorkoutService;
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/templates",
+    tag = "Templates",
+    responses(
+        (status = 200, description = "List of templates", body = TemplateListResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn list_templates(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -41,6 +51,17 @@ pub async fn list_templates(
     }))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/templates/{id}",
+    tag = "Templates",
+    params(("id" = Uuid, Path, description = "Template ID")),
+    responses(
+        (status = 200, description = "Template details", body = WorkoutTemplateResponse),
+        (status = 404, description = "Template not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_template(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -85,6 +106,17 @@ pub async fn get_template(
     }))
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/templates",
+    tag = "Templates",
+    request_body = CreateTemplateRequest,
+    responses(
+        (status = 200, description = "Template created", body = WorkoutTemplateResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn create_template(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -139,12 +171,27 @@ pub async fn create_template(
     }))
 }
 
+#[utoipa::path(
+    patch,
+    path = "/api/v1/templates/{id}",
+    tag = "Templates",
+    params(("id" = Uuid, Path, description = "Template ID")),
+    request_body = UpdateTemplateRequest,
+    responses(
+        (status = 200, description = "Template updated", body = WorkoutTemplateResponse),
+        (status = 404, description = "Template not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_template(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Path(id): Path<Uuid>,
     Json(req): Json<UpdateTemplateRequest>,
 ) -> Result<Json<WorkoutTemplateResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let template = TemplateRepository::update(
         &pool,
         id,
@@ -192,6 +239,17 @@ pub async fn update_template(
     }))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/templates/{id}",
+    tag = "Templates",
+    params(("id" = Uuid, Path, description = "Template ID")),
+    responses(
+        (status = 200, description = "Template deleted"),
+        (status = 404, description = "Template not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn delete_template(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -200,6 +258,17 @@ pub async fn delete_template(
     TemplateRepository::delete(&pool, id, auth_user.user_id).await
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/templates/{id}/start",
+    tag = "Templates",
+    params(("id" = Uuid, Path, description = "Template ID")),
+    responses(
+        (status = 200, description = "Workout started from template", body = WorkoutResponse),
+        (status = 404, description = "Template not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn start_workout_from_template(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,

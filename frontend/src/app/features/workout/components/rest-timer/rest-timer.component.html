@@ -1,0 +1,68 @@
+@if (isVisible()) {
+  <div class="rest-timer" [class.rest-timer--minimized]="isMinimized()">
+    @if (isMinimized()) {
+      <button class="rest-timer__expand" (click)="isMinimized.set(false)">
+        <span class="rest-timer__mini-time">{{ formatTime(remainingSeconds()) }}</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+    } @else {
+      <div class="rest-timer__content">
+        <div class="rest-timer__header">
+          <span class="rest-timer__label">Rest Timer</span>
+          <button class="rest-timer__minimize" (click)="isMinimized.set(true)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <div class="rest-timer__display">
+          <svg class="rest-timer__progress" viewBox="0 0 100 100">
+            <circle class="rest-timer__track" cx="50" cy="50" r="45" />
+            <circle
+              class="rest-timer__bar"
+              cx="50" cy="50" r="45"
+              [style.strokeDasharray]="circumference"
+              [style.strokeDashoffset]="progressOffset()"
+            />
+          </svg>
+          <span class="rest-timer__time">{{ formatTime(remainingSeconds()) }}</span>
+        </div>
+
+        <div class="rest-timer__presets">
+          @for (preset of presets; track preset) {
+            <button
+              class="rest-timer__preset"
+              [class.rest-timer__preset--active]="duration() === preset"
+              (click)="setDuration(preset)"
+            >
+              {{ formatPreset(preset) }}
+            </button>
+          }
+        </div>
+
+        <div class="rest-timer__actions">
+          @if (isRunning()) {
+            <button class="rest-timer__btn rest-timer__btn--pause" (click)="pause()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+            </button>
+          } @else {
+            <button class="rest-timer__btn rest-timer__btn--play" (click)="start()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </button>
+          }
+          <button class="rest-timer__btn rest-timer__btn--skip" (click)="skip()">
+            Skip
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+}

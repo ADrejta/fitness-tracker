@@ -7,12 +7,23 @@ use uuid::Uuid;
 use validator::Validate;
 
 use crate::dto::{
-    CreateExerciseRequest, ExerciseQuery, ExerciseTemplateResponse, UpdateExerciseRequest,
+    CreateExerciseRequest, ErrorResponse, ExerciseQuery, ExerciseTemplateResponse,
+    UpdateExerciseRequest,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
 use crate::repositories::ExerciseRepository;
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/exercises",
+    tag = "Exercises",
+    params(ExerciseQuery),
+    responses(
+        (status = 200, description = "List of exercises", body = Vec<ExerciseTemplateResponse>),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn list_exercises(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -37,6 +48,17 @@ pub async fn list_exercises(
     ))
 }
 
+#[utoipa::path(
+    get,
+    path = "/api/v1/exercises/{id}",
+    tag = "Exercises",
+    params(("id" = String, Path, description = "Exercise template ID")),
+    responses(
+        (status = 200, description = "Exercise details", body = ExerciseTemplateResponse),
+        (status = 404, description = "Exercise not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn get_exercise(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -58,6 +80,17 @@ pub async fn get_exercise(
     }))
 }
 
+#[utoipa::path(
+    post,
+    path = "/api/v1/exercises/custom",
+    tag = "Exercises",
+    request_body = CreateExerciseRequest,
+    responses(
+        (status = 200, description = "Custom exercise created", body = ExerciseTemplateResponse),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn create_custom_exercise(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
@@ -98,12 +131,27 @@ pub async fn create_custom_exercise(
     }))
 }
 
+#[utoipa::path(
+    put,
+    path = "/api/v1/exercises/custom/{id}",
+    tag = "Exercises",
+    params(("id" = String, Path, description = "Custom exercise template ID")),
+    request_body = UpdateExerciseRequest,
+    responses(
+        (status = 200, description = "Custom exercise updated", body = ExerciseTemplateResponse),
+        (status = 404, description = "Exercise not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn update_custom_exercise(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Path(id): Path<String>,
     Json(req): Json<UpdateExerciseRequest>,
 ) -> Result<Json<ExerciseTemplateResponse>, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
     let exercise = ExerciseRepository::update(
         &pool,
         &id,
@@ -129,6 +177,17 @@ pub async fn update_custom_exercise(
     }))
 }
 
+#[utoipa::path(
+    delete,
+    path = "/api/v1/exercises/custom/{id}",
+    tag = "Exercises",
+    params(("id" = String, Path, description = "Custom exercise template ID")),
+    responses(
+        (status = 200, description = "Custom exercise deleted"),
+        (status = 404, description = "Exercise not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
 pub async fn delete_custom_exercise(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,

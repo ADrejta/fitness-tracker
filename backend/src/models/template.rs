@@ -51,17 +51,3 @@ pub struct WorkoutTemplate {
     #[sqlx(skip)]
     pub tags: Option<Vec<String>>,
 }
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct WorkoutTemplateWithExercises {
-    pub id: Uuid,
-    pub name: String,
-    pub description: Option<String>,
-    pub exercises: Vec<TemplateExercise>,
-    pub estimated_duration: Option<i32>,
-    pub created_at: DateTime<Utc>,
-    pub last_used_at: Option<DateTime<Utc>>,
-    pub usage_count: i32,
-    pub tags: Option<Vec<String>>,
-}

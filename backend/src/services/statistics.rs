@@ -3,6 +3,7 @@ use sqlx::PgPool;
 use tracing::{debug, error, info, instrument};
 use uuid::Uuid;
 
+#[cfg(test)]
 /// Calculate current and longest streak from a list of workout dates.
 /// Dates should be sorted in descending order (most recent first).
 pub fn calculate_streaks_from_dates(workout_dates: &[NaiveDate], today: NaiveDate) -> (i32, i32) {
@@ -58,6 +59,7 @@ pub fn calculate_streaks_from_dates(workout_dates: &[NaiveDate], today: NaiveDat
     (current_streak, longest_streak)
 }
 
+#[cfg(test)]
 /// Calculate percentage of a part to a total
 pub fn calculate_percentage(part: i64, total: i64) -> f64 {
     if total > 0 {
@@ -67,6 +69,7 @@ pub fn calculate_percentage(part: i64, total: i64) -> f64 {
     }
 }
 
+#[cfg(test)]
 /// Calculate estimated 1RM using Brzycki formula
 /// Used in statistics for exercise progress charts
 pub fn estimate_1rm(weight: f64, reps: i32) -> Option<f64> {
