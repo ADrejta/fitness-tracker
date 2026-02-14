@@ -6,6 +6,7 @@ import { StorageService } from './storage.service';
 import { WorkoutService } from './workout.service';
 import { ExerciseService } from './exercise.service';
 import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 import { WorkoutTemplate, TemplateExercise, Workout } from '../models';
 
 const TEMPLATES_KEY = 'templates';
@@ -36,6 +37,7 @@ export class TemplateService {
   private workoutService = inject(WorkoutService);
   private exerciseService = inject(ExerciseService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   private _templates = signal<WorkoutTemplate[]>([]);
   private _isLoading = signal<boolean>(false);
@@ -68,7 +70,6 @@ export class TemplateService {
     // Re-fetch when authentication state changes
     effect(() => {
       const isAuth = this.authService.isAuthenticated();
-      console.log('[TemplateService] Auth state changed:', isAuth);
       if (isAuth) {
         this.fetchTemplates();
       }
@@ -76,22 +77,20 @@ export class TemplateService {
   }
 
   private fetchTemplates(): void {
-    console.log('[TemplateService] Fetching templates from API...');
     this._isLoading.set(true);
     this.http.get<TemplateListResponse>(`${environment.apiUrl}/templates`)
       .subscribe({
         next: (response) => {
-          console.log('[TemplateService] API response:', response);
           // Fetch full details for each template
           const templates = response.templates.map(summary => this.fetchTemplateDetails(summary.id));
           Promise.all(templates.map(t => firstValueFrom(t))).then(fullTemplates => {
             this._templates.set(fullTemplates.filter((t): t is WorkoutTemplate => t !== null));
-            console.log('[TemplateService] Templates loaded:', this._templates().length);
             this._isLoading.set(false);
           });
         },
         error: (err) => {
           console.error('[TemplateService] Failed to fetch templates:', err);
+          this.toastService.error('Failed to load templates');
           this._templates.set(this.storage.get<WorkoutTemplate[]>(TEMPLATES_KEY, []));
           this._isLoading.set(false);
         }

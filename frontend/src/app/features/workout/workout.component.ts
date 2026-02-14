@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, ViewChild, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, ViewChild, signal, computed, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
@@ -40,6 +41,7 @@ export class WorkoutComponent implements OnInit {
   templateService = inject(TemplateService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private destroyRef = inject(DestroyRef);
 
   showExercisePicker = false;
   showFinishModal = false;
@@ -71,7 +73,7 @@ export class WorkoutComponent implements OnInit {
 
   ngOnInit(): void {
     // Check if we should start a new workout
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       if (params['start'] === 'true' && !this.workoutService.hasActiveWorkout()) {
         this.startEmptyWorkout();
       }

@@ -2,6 +2,7 @@ import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { StorageService } from './storage.service';
 import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 import {
   UserSettings,
   DEFAULT_SETTINGS,
@@ -23,6 +24,7 @@ export class SettingsService {
   private http = inject(HttpClient);
   private storage = inject(StorageService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   private _settings = signal<UserSettings>(this.loadSettings());
 
@@ -62,6 +64,7 @@ export class SettingsService {
       this._settings.set(settings);
     } catch (error) {
       console.error('Failed to load settings from API:', error);
+      this.toastService.error('Failed to load settings');
     }
   }
 
@@ -89,6 +92,7 @@ export class SettingsService {
         return;
       } catch (error) {
         console.error('Failed to update settings via API:', error);
+        this.toastService.error('Failed to update settings');
       }
     }
 

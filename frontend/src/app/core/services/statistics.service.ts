@@ -4,6 +4,7 @@ import { environment } from '../../../environments/environment';
 import { WorkoutService } from './workout.service';
 import { ExerciseService } from './exercise.service';
 import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 import { Workout, MuscleGroup } from '../models';
 import {
   startOfWeek,
@@ -124,6 +125,7 @@ export class StatisticsService {
   private workoutService = inject(WorkoutService);
   private exerciseService = inject(ExerciseService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   private _summary = signal<DashboardSummary | null>(null);
   private _isLoading = signal<boolean>(false);
@@ -493,6 +495,7 @@ export class StatisticsService {
       };
     } catch (error) {
       console.error('Failed to fetch exercise progress from API:', error);
+      this.toastService.error('Failed to load exercise progress');
       return this.getExerciseProgress(exerciseId);
     }
   }

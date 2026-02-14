@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { StorageService } from './storage.service';
 import { ExerciseService } from './exercise.service';
 import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 import {
   Workout,
   WorkoutExercise,
@@ -42,6 +43,7 @@ export class WorkoutService {
   private storage = inject(StorageService);
   private exerciseService = inject(ExerciseService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   private _workouts = signal<Workout[]>(this.loadWorkouts());
   private _activeWorkout = signal<Workout | null>(this.loadActiveWorkout());
@@ -108,7 +110,6 @@ export class WorkoutService {
     // Load from API if authenticated
     effect(() => {
       const isAuth = this.authService.isAuthenticated();
-      console.log('[WorkoutService] Auth state changed:', isAuth);
       if (isAuth) {
         this.loadFromApi();
       }
@@ -116,7 +117,6 @@ export class WorkoutService {
   }
 
   private async loadFromApi(): Promise<void> {
-    console.log('[WorkoutService] Loading workouts from API...');
     try {
       this._isLoading.set(true);
       const [workoutsResponse, prsResponse] = await Promise.all([
@@ -128,22 +128,20 @@ export class WorkoutService {
         ).catch(() => ({ records: [] }))
       ]);
 
-      console.log('[WorkoutService] API response:', workoutsResponse);
       // Ensure each workout has an exercises array (API returns summary with exerciseCount)
       const workouts = workoutsResponse.workouts.map(w => ({
         ...w,
         exercises: w.exercises || []
       }));
       this._workouts.set(workouts);
-      console.log('[WorkoutService] Workouts loaded:', workouts.length);
 
       // Load personal records
       if (prsResponse.records.length > 0) {
         this._personalRecords.set(prsResponse.records);
-        console.log('[WorkoutService] Personal records loaded:', prsResponse.records.length);
       }
     } catch (error) {
       console.error('[WorkoutService] Failed to load workouts from API:', error);
+      this.toastService.error('Failed to load workouts');
     } finally {
       this._isLoading.set(false);
     }
@@ -201,6 +199,7 @@ export class WorkoutService {
         return workout;
       } catch (error) {
         console.error('Failed to create workout via API:', error);
+        this.toastService.error('Failed to create workout');
       }
     }
 
@@ -245,6 +244,7 @@ export class WorkoutService {
         return response;
       } catch (error) {
         console.error('Failed to add exercise via API:', error);
+        this.toastService.error('Failed to add exercise');
       }
     }
 
@@ -276,6 +276,7 @@ export class WorkoutService {
         );
       } catch (error) {
         console.error('Failed to remove exercise via API:', error);
+        this.toastService.error('Failed to remove exercise');
       }
     }
 
@@ -320,6 +321,7 @@ export class WorkoutService {
         return response;
       } catch (error) {
         console.error('Failed to add set via API:', error);
+        this.toastService.error('Failed to add set');
       }
     }
 
@@ -368,6 +370,7 @@ export class WorkoutService {
         );
       } catch (error) {
         console.error('Failed to update set via API:', error);
+        this.toastService.error('Failed to update set');
       }
     }
 
@@ -419,6 +422,7 @@ export class WorkoutService {
         );
       } catch (error) {
         console.error('Failed to update workout notes via API:', error);
+        this.toastService.error('Failed to update workout notes');
       }
     }
   }
@@ -438,6 +442,7 @@ export class WorkoutService {
         );
       } catch (error) {
         console.error('Failed to update workout name via API:', error);
+        this.toastService.error('Failed to update workout name');
       }
     }
   }
@@ -455,6 +460,7 @@ export class WorkoutService {
         );
       } catch (error) {
         console.error('Failed to remove set via API:', error);
+        this.toastService.error('Failed to remove set');
       }
     }
 
@@ -496,6 +502,7 @@ export class WorkoutService {
         return completedWorkout;
       } catch (error) {
         console.error('Failed to complete workout via API:', error);
+        this.toastService.error('Failed to complete workout');
       }
     }
 
@@ -549,6 +556,7 @@ export class WorkoutService {
         return;
       } catch (error) {
         console.error('Failed to cancel workout via API:', error);
+        this.toastService.error('Failed to cancel workout');
       }
     }
 
@@ -676,6 +684,7 @@ export class WorkoutService {
         );
       } catch (error) {
         console.error('Failed to delete workout via API:', error);
+        this.toastService.error('Failed to delete workout');
         return false;
       }
     }
@@ -828,6 +837,7 @@ export class WorkoutService {
         return response.supersetId;
       } catch (error) {
         console.error('Failed to create superset via API:', error);
+        this.toastService.error('Failed to create superset');
       }
     }
 
@@ -870,6 +880,7 @@ export class WorkoutService {
           );
         } catch (error) {
           console.error('Failed to remove superset via API:', error);
+          this.toastService.error('Failed to remove superset');
         }
       }
 

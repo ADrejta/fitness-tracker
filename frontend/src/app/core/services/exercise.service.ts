@@ -2,6 +2,7 @@ import { Injectable, signal, computed, inject, effect } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { StorageService } from './storage.service';
 import { AuthService } from './auth.service';
+import { ToastService } from './toast.service';
 import {
   ExerciseTemplate,
   MuscleGroup,
@@ -26,6 +27,7 @@ export class ExerciseService {
   private http = inject(HttpClient);
   private storage = inject(StorageService);
   private authService = inject(AuthService);
+  private toastService = inject(ToastService);
 
   private _exercises = signal<ExerciseTemplate[]>(this.loadExercises());
   private _defaultExercisesLoaded = signal(false);
@@ -78,6 +80,7 @@ export class ExerciseService {
       // If API returns empty, keep existing exercises (defaults + local custom)
     } catch (error) {
       console.error('Failed to load exercises from API:', error);
+      this.toastService.error('Failed to load exercises');
       // On error, keep existing exercises - don't clear them
     }
   }
@@ -107,6 +110,7 @@ export class ExerciseService {
         }
       } catch (error) {
         console.error('Failed to load default exercises:', error);
+        this.toastService.error('Failed to load default exercises');
       }
     }
 
@@ -191,6 +195,7 @@ export class ExerciseService {
         return newExercise;
       } catch (error) {
         console.error('Failed to create exercise via API:', error);
+        this.toastService.error('Failed to create exercise');
       }
     }
 
@@ -219,6 +224,7 @@ export class ExerciseService {
         );
       } catch (error) {
         console.error('Failed to update exercise via API:', error);
+        this.toastService.error('Failed to update exercise');
         return false;
       }
     }
@@ -240,6 +246,7 @@ export class ExerciseService {
         );
       } catch (error) {
         console.error('Failed to delete exercise via API:', error);
+        this.toastService.error('Failed to delete exercise');
         return false;
       }
     }
