@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
 import { ButtonComponent, CardComponent, BadgeComponent, ProgressComponent } from '../../shared/components';
-import { WorkoutService, TemplateService, StatisticsService, SettingsService } from '../../core/services';
+import { WorkoutService, TemplateService, StatisticsService, SettingsService, ProgramService } from '../../core/services';
 import { format, isToday, isYesterday } from 'date-fns';
 
 @Component({
@@ -26,6 +26,7 @@ export class HomeComponent {
   templateService = inject(TemplateService);
   statisticsService = inject(StatisticsService);
   settingsService = inject(SettingsService);
+  programService = inject(ProgramService);
   private router = inject(Router);
 
   get greeting(): string {

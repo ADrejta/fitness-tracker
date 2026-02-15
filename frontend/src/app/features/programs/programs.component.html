@@ -1,0 +1,373 @@
+<app-page-container title="Programs" subtitle="Multi-week training plans">
+  <!-- Create Button -->
+  <div class="page-actions">
+    <app-button (clicked)="openCreateModal()">
+      <span class="action-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        Create Program
+      </span>
+    </app-button>
+  </div>
+
+  <!-- Active Program -->
+  @if (programService.activeProgram(); as active) {
+    <div class="active-program-section">
+      <h2 class="section-title">Active Program</h2>
+      <app-card [highlight]="true">
+        <div class="program-card program-card--active">
+          <div class="program-card__header">
+            <div>
+              <h3 class="program-card__name">{{ active.name }}</h3>
+              <app-badge [variant]="'success'" [size]="'sm'">Active</app-badge>
+            </div>
+          </div>
+          @if (active.description) {
+            <p class="program-card__description">{{ active.description }}</p>
+          }
+          <div class="program-card__progress">
+            <div class="program-card__progress-label">
+              <span>Week {{ active.currentWeek }} of {{ active.durationWeeks }}</span>
+            </div>
+            <app-progress
+              [value]="active.currentWeek"
+              [max]="active.durationWeeks"
+              [variant]="'success'"
+              [size]="'sm'"
+              [showValue]="false"
+            ></app-progress>
+          </div>
+
+          <!-- Today's workouts from active program -->
+          @for (week of active.weeks; track week.weekNumber) {
+            @if (week.weekNumber === active.currentWeek) {
+              <div class="program-card__today">
+                <h4 class="program-card__today-title">This Week's Workouts</h4>
+                <div class="program-card__workout-list">
+                  @for (workout of week.workouts; track workout.id) {
+                    <div
+                      class="workout-slot"
+                      [class.workout-slot--rest]="workout.isRestDay"
+                      [class.workout-slot--completed]="workout.completedWorkoutId"
+                      [class.workout-slot--clickable]="!workout.isRestDay && !workout.completedWorkoutId"
+                      (click)="startProgramWorkout(active.id, workout)"
+                    >
+                      <div class="workout-slot__day">Day {{ workout.dayNumber }}</div>
+                      <div class="workout-slot__name">{{ workout.name }}</div>
+                      <div class="workout-slot__status">
+                        @if (workout.completedWorkoutId) {
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success-500)" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                          </svg>
+                        } @else if (workout.isRestDay) {
+                          <span class="workout-slot__rest-label">Rest</span>
+                        } @else {
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                          </svg>
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
+      </app-card>
+    </div>
+  }
+
+  <!-- All Programs -->
+  @if (programService.programs().length > 0) {
+    <div class="programs-section">
+      <h2 class="section-title">All Programs</h2>
+      <div class="programs-list">
+        @for (program of programService.programs(); track program.id) {
+          <app-card [interactive]="true">
+            <div class="program-card" (click)="viewProgram(program)">
+              <div class="program-card__header">
+                <div>
+                  <h3 class="program-card__name">{{ program.name }}</h3>
+                  @if (program.isActive) {
+                    <app-badge [variant]="'success'" [size]="'sm'">Active</app-badge>
+                  }
+                </div>
+                <button class="program-card__menu" (click)="$event.stopPropagation(); showProgramMenu(program)">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="1"></circle>
+                    <circle cx="12" cy="5" r="1"></circle>
+                    <circle cx="12" cy="19" r="1"></circle>
+                  </svg>
+                </button>
+              </div>
+              @if (program.description) {
+                <p class="program-card__description">{{ program.description }}</p>
+              }
+              <div class="program-card__meta">
+                <span>{{ program.durationWeeks }} weeks</span>
+                <span>{{ program.totalWorkouts }} workouts</span>
+                @if (program.startedAt) {
+                  <span>Started {{ formatDate(program.startedAt) }}</span>
+                }
+              </div>
+              @if (program.totalWorkouts > 0) {
+                <div class="program-card__progress">
+                  <app-progress
+                    [value]="program.completedWorkouts"
+                    [max]="program.totalWorkouts"
+                    [variant]="'primary'"
+                    [size]="'sm'"
+                    [showValue]="true"
+                    [valueFormat]="'fraction'"
+                  ></app-progress>
+                </div>
+              }
+            </div>
+          </app-card>
+        }
+      </div>
+    </div>
+  } @else if (!programService.isLoading()) {
+    <app-empty-state
+      title="No Programs"
+      description="Create a multi-week training program to structure your workouts."
+    >
+      <div empty-icon>
+        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+      </div>
+    </app-empty-state>
+  }
+
+  <!-- Create/Edit Program Modal -->
+  <app-modal
+    [isOpen]="showCreateModal"
+    [title]="isEditing ? 'Edit Program' : 'Create Program'"
+    [size]="'lg'"
+    (closed)="closeCreateModal()"
+  >
+    <div class="program-form">
+      <div class="program-form__fields">
+        <app-input
+          label="Program Name"
+          placeholder="e.g., 8-Week PPL Split"
+          [(ngModel)]="programName"
+        ></app-input>
+        <app-input
+          label="Description (optional)"
+          placeholder="Describe your program..."
+          [(ngModel)]="programDescription"
+        ></app-input>
+        <app-input
+          label="Duration (weeks)"
+          type="number"
+          [min]="1"
+          [max]="52"
+          [(ngModel)]="programDurationWeeks"
+          (ngModelChange)="onDurationChange()"
+        ></app-input>
+      </div>
+
+      <div class="program-form__schedule">
+        <div class="program-form__schedule-header">
+          <h3>Weekly Schedule</h3>
+          <app-button [variant]="'ghost'" [size]="'sm'" (clicked)="copyWeekToAll()">
+            Copy to all weeks
+          </app-button>
+        </div>
+
+        <app-tabs
+          [tabs]="weekTabs()"
+          [activeTab]="activeWeekTab"
+          (tabChange)="activeWeekTab = $event"
+        ></app-tabs>
+
+        <div class="day-slots">
+          @for (slot of currentWeekSlots(); track slot.dayNumber; let i = $index) {
+            <div class="day-slot" [class.day-slot--rest]="slot.isRestDay">
+              <div class="day-slot__header">
+                <span class="day-slot__day">{{ slot.dayName }}</span>
+                <button
+                  class="day-slot__toggle-rest"
+                  [class.day-slot__toggle-rest--active]="slot.isRestDay"
+                  (click)="toggleRestDay(i)"
+                >
+                  {{ slot.isRestDay ? 'Set Workout' : 'Rest Day' }}
+                </button>
+              </div>
+              @if (!slot.isRestDay) {
+                <div class="day-slot__content">
+                  @if (slot.templateId) {
+                    <div class="day-slot__template">
+                      <app-badge [size]="'sm'">{{ slot.templateName || 'Template' }}</app-badge>
+                      <button class="day-slot__clear" (click)="clearTemplate(i)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <line x1="18" y1="6" x2="6" y2="18"></line>
+                          <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                      </button>
+                    </div>
+                  } @else {
+                    <input
+                      class="day-slot__name-input"
+                      type="text"
+                      [value]="slot.name"
+                      placeholder="Workout name"
+                      (input)="updateDayName(i, $any($event.target).value)"
+                    />
+                  }
+                  <app-button [variant]="'ghost'" [size]="'sm'" (clicked)="openTemplatePicker(i)">
+                    {{ slot.templateId ? 'Change' : 'Pick' }} Template
+                  </app-button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="program-form__actions">
+        <app-button [variant]="'secondary'" (clicked)="closeCreateModal()">Cancel</app-button>
+        <app-button (clicked)="saveProgram()">
+          {{ isEditing ? 'Update' : 'Create' }} Program
+        </app-button>
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- Template Picker Modal -->
+  <app-modal
+    [isOpen]="showTemplatePicker"
+    title="Select Template"
+    [size]="'md'"
+    (closed)="showTemplatePicker = false"
+  >
+    <div class="template-picker">
+      @if (templateService.templates().length > 0) {
+        @for (template of templateService.templates(); track template.id) {
+          <app-card [interactive]="true">
+            <div class="template-pick" (click)="selectTemplate(template)">
+              <h4>{{ template.name }}</h4>
+              <span class="template-pick__meta">{{ template.exercises.length }} exercises</span>
+            </div>
+          </app-card>
+        }
+      } @else {
+        <p class="template-picker__empty">No templates available. Create templates first.</p>
+      }
+    </div>
+  </app-modal>
+
+  <!-- Menu Modal -->
+  <app-modal
+    [isOpen]="showMenuModal"
+    [title]="selectedProgram?.name || 'Program'"
+    [size]="'sm'"
+    (closed)="closeMenu()"
+  >
+    <div class="menu-actions">
+      <button class="menu-action" (click)="viewProgram(selectedProgram!)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+        View Details
+      </button>
+      @if (!selectedProgram?.isActive) {
+        <button class="menu-action" (click)="startProgram(selectedProgram!)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Start Program
+        </button>
+      }
+      <button class="menu-action" (click)="openEditModal(selectedProgram!)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        Edit
+      </button>
+      <button class="menu-action menu-action--danger" (click)="confirmDelete(selectedProgram!)">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        Delete
+      </button>
+    </div>
+  </app-modal>
+
+  <!-- Delete Confirmation -->
+  <app-modal
+    [isOpen]="showDeleteConfirm"
+    title="Delete Program"
+    [size]="'sm'"
+    (closed)="showDeleteConfirm = false"
+  >
+    <p class="delete-confirm__text">
+      Are you sure you want to delete <strong>{{ selectedProgram?.name }}</strong>? This cannot be undone.
+    </p>
+    <div class="delete-confirm__actions">
+      <app-button [variant]="'secondary'" (clicked)="showDeleteConfirm = false">Cancel</app-button>
+      <app-button [variant]="'danger'" (clicked)="deleteProgram()">Delete</app-button>
+    </div>
+  </app-modal>
+
+  <!-- Program Detail Modal -->
+  <app-modal
+    [isOpen]="showDetailModal"
+    [title]="detailProgram()?.name || 'Program'"
+    [size]="'lg'"
+    (closed)="closeDetail()"
+  >
+    @if (detailProgram(); as program) {
+      <div class="program-detail">
+        @if (program.description) {
+          <p class="program-detail__description">{{ program.description }}</p>
+        }
+        <div class="program-detail__meta">
+          <span>{{ program.durationWeeks }} weeks</span>
+          @if (program.isActive) {
+            <app-badge [variant]="'success'" [size]="'sm'">Active - Week {{ program.currentWeek }}</app-badge>
+          }
+        </div>
+        @for (week of program.weeks; track week.weekNumber) {
+          <div class="program-detail__week">
+            <h4 class="program-detail__week-title">Week {{ week.weekNumber }}</h4>
+            <div class="program-detail__workout-list">
+              @for (workout of week.workouts; track workout.id) {
+                <div
+                  class="workout-slot"
+                  [class.workout-slot--rest]="workout.isRestDay"
+                  [class.workout-slot--completed]="workout.completedWorkoutId"
+                  [class.workout-slot--clickable]="program.isActive && !workout.isRestDay && !workout.completedWorkoutId"
+                  (click)="program.isActive ? startProgramWorkout(program.id, workout) : null"
+                >
+                  <div class="workout-slot__day">Day {{ workout.dayNumber }}</div>
+                  <div class="workout-slot__name">{{ workout.name }}</div>
+                  <div class="workout-slot__status">
+                    @if (workout.completedWorkoutId) {
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success-500)" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    } @else if (workout.isRestDay) {
+                      <span class="workout-slot__rest-label">Rest</span>
+                    }
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </app-modal>
+</app-page-container>

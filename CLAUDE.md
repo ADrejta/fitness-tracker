@@ -37,6 +37,7 @@ The API is documented with OpenAPI 3.1 via `utoipa`. Swagger UI is available at 
 
 - Auth, Workouts, Workout Exercises, Workout Sets, Workout Supersets
 - Exercises, Templates
+- Programs, Program Workouts
 - Body Stats, Body Stats Goals
 - Statistics, Personal Records
 - Settings
@@ -52,3 +53,23 @@ cargo test                    # all tests
 cargo test --lib              # unit tests only
 cargo test dto::              # tests for a specific module
 ```
+
+### Demo User & Seed Script
+
+The seed script (`cargo run --bin seed`) creates a fully-featured demo user (demo@example.com / demo1234) with data for every feature in the app. Use `--force` to reset.
+
+**When adding a new feature that stores user data, always update the seed script (`backend/src/bin/seed.rs`) to include demo data for the new feature.** This ensures the demo user showcases all functionality. Specifically:
+
+1. Add a `seed_<feature>()` function with realistic demo data.
+2. Call it from `seed_demo_user()`.
+3. Add the corresponding `DELETE` statement to `clear_demo_data()` (respecting FK order).
+
+The demo user currently has: workout templates, workout history, personal records, body measurements, body stats goals, workout programs, and user settings.
+
+### README
+
+**When adding a new user-facing feature, always update `README.md`** to reflect the change:
+
+1. Add or update the feature description in the **Features** list.
+2. Add any new API endpoints to the **API Overview** table.
+3. Update any other sections affected (e.g., Getting Started, Configuration).

@@ -136,6 +136,15 @@ impl WorkoutService {
         Self::get_workout_with_exercises(pool, workout.id, user_id).await
     }
 
+    pub async fn start_empty(
+        pool: &PgPool,
+        user_id: Uuid,
+        name: &str,
+    ) -> Result<WorkoutResponse, AppError> {
+        let workout = WorkoutRepository::create(pool, user_id, name, None, None).await?;
+        Self::get_workout_with_exercises(pool, workout.id, user_id).await
+    }
+
     pub async fn complete_workout(
         pool: &PgPool,
         workout_id: Uuid,

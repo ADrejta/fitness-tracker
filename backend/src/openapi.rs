@@ -54,6 +54,15 @@ use crate::models::{
         handlers::update_template,
         handlers::delete_template,
         handlers::start_workout_from_template,
+        // Programs
+        handlers::create_program,
+        handlers::list_programs,
+        handlers::get_program,
+        handlers::update_program,
+        handlers::delete_program,
+        handlers::start_program,
+        handlers::start_program_workout,
+        handlers::get_active_program,
         // Body stats
         handlers::create_measurement,
         handlers::list_measurements,
@@ -95,6 +104,10 @@ use crate::models::{
             WorkoutTemplateResponse, TemplateExerciseResponse, TemplateSetResponse,
             CreateTemplateRequest, CreateTemplateExerciseRequest, CreateTemplateSetRequest,
             UpdateTemplateRequest, TemplateListResponse, TemplateSummaryResponse,
+            // Programs
+            CreateProgramRequest, CreateProgramWorkoutRequest, UpdateProgramRequest,
+            ProgramResponse, ProgramWeekResponse, ProgramWorkoutResponse,
+            ProgramSummaryResponse, ProgramListResponse,
             // Body stats
             BodyMeasurementResponse, CreateMeasurementRequest, UpdateMeasurementRequest,
             GoalResponse, CreateGoalRequest, UpdateGoalRequest, MeasurementTrendResponse,
@@ -121,6 +134,8 @@ use crate::models::{
         (name = "Workout Supersets", description = "Superset grouping of exercises"),
         (name = "Exercises", description = "Exercise template library"),
         (name = "Templates", description = "Workout template management"),
+        (name = "Programs", description = "Workout program management"),
+        (name = "Program Workouts", description = "Workouts within a program"),
         (name = "Body Stats", description = "Body measurements"),
         (name = "Body Stats Goals", description = "Body stats goals and progress"),
         (name = "Statistics", description = "Workout statistics and analytics"),

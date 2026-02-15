@@ -69,6 +69,33 @@
     </div>
   </section>
 
+  <!-- Active Program -->
+  @if (programService.activeProgram(); as program) {
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">Active Program</h2>
+        <a routerLink="/programs" class="section__link">View all</a>
+      </div>
+      <app-card [interactive]="true" [highlight]="true">
+        <a routerLink="/programs" class="active-program">
+          <div class="active-program__header">
+            <h3 class="active-program__name">{{ program.name }}</h3>
+            <app-badge [variant]="'success'" [size]="'sm'">Week {{ program.currentWeek }}</app-badge>
+          </div>
+          <app-progress
+            [value]="program.currentWeek"
+            [max]="program.durationWeeks"
+            [variant]="'success'"
+            [size]="'sm'"
+            [showValue]="true"
+            [valueFormat]="'fraction'"
+            label="Weeks"
+          ></app-progress>
+        </a>
+      </app-card>
+    </section>
+  }
+
   <!-- Recent Templates -->
   @if (templateService.recentTemplates().length > 0) {
     <section class="section">
@@ -180,6 +207,17 @@
           </svg>
         </div>
         <span>Templates</span>
+      </a>
+      <a routerLink="/programs" class="quick-link">
+        <div class="quick-link__icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </div>
+        <span>Programs</span>
       </a>
       <a routerLink="/exercises" class="quick-link">
         <div class="quick-link__icon">

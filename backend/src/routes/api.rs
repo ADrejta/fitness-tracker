@@ -140,6 +140,18 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
             "/templates/{id}/start",
             post(handlers::start_workout_from_template),
         )
+        // Programs
+        .route("/programs", get(handlers::list_programs))
+        .route("/programs", post(handlers::create_program))
+        .route("/programs/active", get(handlers::get_active_program))
+        .route("/programs/{id}", get(handlers::get_program))
+        .route("/programs/{id}", patch(handlers::update_program))
+        .route("/programs/{id}", delete(handlers::delete_program))
+        .route("/programs/{id}/start", post(handlers::start_program))
+        .route(
+            "/programs/{program_id}/workouts/{workout_id}/start",
+            post(handlers::start_program_workout),
+        )
         // Body stats
         .route(
             "/body-stats/measurements",

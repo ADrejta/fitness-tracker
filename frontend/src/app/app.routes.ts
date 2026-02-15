@@ -64,6 +64,13 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'programs',
+    loadComponent: () =>
+      import('./features/programs/programs.component').then(
+        (m) => m.ProgramsComponent
+      ),
+  },
+  {
     path: 'templates',
     loadComponent: () =>
       import('./features/templates/templates.component').then(

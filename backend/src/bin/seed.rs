@@ -55,12 +55,31 @@ async fn clear_demo_data(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::error::
         .execute(pool)
         .await?;
 
+    sqlx::query("DELETE FROM body_stats_goals WHERE user_id = $1")
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+
     sqlx::query("DELETE FROM body_measurements WHERE user_id = $1")
         .bind(user_id)
         .execute(pool)
         .await?;
 
     sqlx::query("DELETE FROM personal_records WHERE user_id = $1")
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+
+    // Delete program workouts, then programs
+    sqlx::query(
+        "DELETE FROM program_workouts WHERE program_id IN
+         (SELECT id FROM workout_programs WHERE user_id = $1)"
+    )
+    .bind(user_id)
+    .execute(pool)
+    .await?;
+
+    sqlx::query("DELETE FROM workout_programs WHERE user_id = $1")
         .bind(user_id)
         .execute(pool)
         .await?;
@@ -192,6 +211,14 @@ async fn seed_demo_user(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::error::E
     // Create body measurements
     seed_body_measurements(&mut tx, user_id).await?;
     println!("  Created body measurements");
+
+    // Create body stats goals
+    seed_body_stats_goals(&mut tx, user_id).await?;
+    println!("  Created body stats goals");
+
+    // Create workout programs
+    seed_programs(&mut tx, user_id).await?;
+    println!("  Created workout programs");
 
     // Create user settings
     seed_user_settings(&mut tx, user_id).await?;
@@ -512,6 +539,197 @@ async fn seed_body_measurements(
         .bind(shoulders)
         .execute(&mut **tx)
         .await?;
+    }
+
+    Ok(())
+}
+
+async fn seed_body_stats_goals(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    user_id: Uuid,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let now = Utc::now();
+
+    // Goal: lose weight from 82.5 to 78 kg
+    sqlx::query(
+        "INSERT INTO body_stats_goals (id, user_id, goal_type, measurement_type, target_value, start_value, start_date, target_date, is_completed)
+         VALUES ($1, $2, 'weight'::goal_type, 'weight'::measurement_type, $3, $4, $5, $6, false)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(user_id)
+    .bind(78.0_f64)
+    .bind(82.5_f64)
+    .bind((now - Duration::days(28)).date_naive())
+    .bind((now + Duration::days(60)).date_naive())
+    .execute(&mut **tx)
+    .await?;
+
+    // Goal: reduce body fat from 18.5% to 15%
+    sqlx::query(
+        "INSERT INTO body_stats_goals (id, user_id, goal_type, measurement_type, target_value, start_value, start_date, target_date, is_completed)
+         VALUES ($1, $2, 'body-fat'::goal_type, 'body_fat_percentage'::measurement_type, $3, $4, $5, $6, false)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(user_id)
+    .bind(15.0_f64)
+    .bind(18.5_f64)
+    .bind((now - Duration::days(28)).date_naive())
+    .bind((now + Duration::days(90)).date_naive())
+    .execute(&mut **tx)
+    .await?;
+
+    // Goal: grow biceps from 35cm to 38cm
+    sqlx::query(
+        "INSERT INTO body_stats_goals (id, user_id, goal_type, measurement_type, target_value, start_value, start_date, target_date, is_completed)
+         VALUES ($1, $2, 'measurement'::goal_type, 'right_bicep'::measurement_type, $3, $4, $5, $6, false)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(user_id)
+    .bind(38.0_f64)
+    .bind(35.5_f64)
+    .bind((now - Duration::days(28)).date_naive())
+    .bind((now + Duration::days(120)).date_naive())
+    .execute(&mut **tx)
+    .await?;
+
+    Ok(())
+}
+
+async fn seed_programs(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    user_id: Uuid,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let now = Utc::now();
+
+    // Get template IDs (Push, Pull, Leg - created in order)
+    let template_ids: Vec<Uuid> = sqlx::query_scalar(
+        "SELECT id FROM workout_templates WHERE user_id = $1 ORDER BY created_at ASC"
+    )
+    .bind(user_id)
+    .fetch_all(&mut **tx)
+    .await?;
+
+    let (push_id, pull_id, leg_id) = if template_ids.len() >= 3 {
+        (template_ids[0], template_ids[1], template_ids[2])
+    } else {
+        return Ok(()); // Skip if templates weren't created
+    };
+
+    // Create a 4-week PPL program (active, in week 2)
+    let program_id = Uuid::new_v4();
+    sqlx::query(
+        "INSERT INTO workout_programs (id, user_id, name, description, duration_weeks, is_active, current_week, current_day, started_at, created_at)
+         VALUES ($1, $2, $3, $4, $5, true, 2, 1, $6, $7)"
+    )
+    .bind(program_id)
+    .bind(user_id)
+    .bind("4-Week PPL Program")
+    .bind("Push/Pull/Legs split with progressive overload focus. 6 training days per week with Sunday rest.")
+    .bind(4_i32)
+    .bind(now - Duration::days(7))
+    .bind(now - Duration::days(10))
+    .execute(&mut **tx)
+    .await?;
+
+    // Get some completed workout IDs for week 1 slots
+    let completed_workout_ids: Vec<Uuid> = sqlx::query_scalar(
+        "SELECT id FROM workouts WHERE user_id = $1 AND status = 'completed' ORDER BY completed_at DESC LIMIT 6"
+    )
+    .bind(user_id)
+    .fetch_all(&mut **tx)
+    .await?;
+
+    // Build 4 weeks of PPL schedule
+    // Pattern: Mon=Push, Tue=Pull, Wed=Legs, Thu=Push, Fri=Pull, Sat=Legs, Sun=Rest
+    let day_schedule: [(i32, &str, Option<Uuid>, bool); 7] = [
+        (1, "Push Day", Some(push_id), false),
+        (2, "Pull Day", Some(pull_id), false),
+        (3, "Leg Day", Some(leg_id), false),
+        (4, "Push Day", Some(push_id), false),
+        (5, "Pull Day", Some(pull_id), false),
+        (6, "Leg Day", Some(leg_id), false),
+        (7, "Rest Day", None, true),
+    ];
+
+    for week in 1..=4 {
+        for (day_num, name, template_id, is_rest_day) in &day_schedule {
+            let workout_slot_id = Uuid::new_v4();
+
+            // Week 1 workouts are completed (link to existing workout history)
+            let (completed_workout_id, completed_at) = if week == 1 && !is_rest_day {
+                // Map day slots to completed workouts from history
+                let idx = (*day_num as usize - 1).min(completed_workout_ids.len().saturating_sub(1));
+                if idx < completed_workout_ids.len() {
+                    (Some(completed_workout_ids[idx]), Some(now - Duration::days(7 - *day_num as i64 + 1)))
+                } else {
+                    (None, None)
+                }
+            } else {
+                (None, None)
+            };
+
+            sqlx::query(
+                "INSERT INTO program_workouts (id, program_id, week_number, day_number, name, template_id, is_rest_day, completed_workout_id, completed_at)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)"
+            )
+            .bind(workout_slot_id)
+            .bind(program_id)
+            .bind(week)
+            .bind(*day_num)
+            .bind(*name)
+            .bind(*template_id)
+            .bind(*is_rest_day)
+            .bind(completed_workout_id)
+            .bind(completed_at)
+            .execute(&mut **tx)
+            .await?;
+        }
+    }
+
+    // Create a second program (not active, completed)
+    let program2_id = Uuid::new_v4();
+    sqlx::query(
+        "INSERT INTO workout_programs (id, user_id, name, description, duration_weeks, is_active, current_week, current_day, started_at, completed_at, created_at)
+         VALUES ($1, $2, $3, $4, $5, false, 2, 7, $6, $7, $8)"
+    )
+    .bind(program2_id)
+    .bind(user_id)
+    .bind("2-Week Starter Plan")
+    .bind("Beginner-friendly introduction with 3 training days per week.")
+    .bind(2_i32)
+    .bind(now - Duration::days(30))
+    .bind(now - Duration::days(16))
+    .bind(now - Duration::days(35))
+    .execute(&mut **tx)
+    .await?;
+
+    // Starter plan: Mon/Wed/Fri full body, rest on other days
+    let starter_schedule: [(i32, &str, Option<Uuid>, bool); 7] = [
+        (1, "Full Body A", Some(push_id), false),
+        (2, "Rest Day", None, true),
+        (3, "Full Body B", Some(pull_id), false),
+        (4, "Rest Day", None, true),
+        (5, "Full Body C", Some(leg_id), false),
+        (6, "Rest Day", None, true),
+        (7, "Rest Day", None, true),
+    ];
+
+    for week in 1..=2 {
+        for (day_num, name, template_id, is_rest_day) in &starter_schedule {
+            sqlx::query(
+                "INSERT INTO program_workouts (id, program_id, week_number, day_number, name, template_id, is_rest_day)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)"
+            )
+            .bind(Uuid::new_v4())
+            .bind(program2_id)
+            .bind(week)
+            .bind(*day_num)
+            .bind(*name)
+            .bind(*template_id)
+            .bind(*is_rest_day)
+            .execute(&mut **tx)
+            .await?;
+        }
     }
 
     Ok(())

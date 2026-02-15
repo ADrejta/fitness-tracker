@@ -7,10 +7,11 @@ A full-stack web application for tracking workouts, monitoring body stats, and a
 - **Workout Management** - Create, track, and complete workouts with exercises and sets
 - **Exercise Library** - Browse default exercises or create custom ones
 - **Workout Templates** - Save and reuse workout routines
-- **Body Stats Tracking** - Monitor body measurements and set fitness goals
-- **Statistics & Analytics** - View personal records, weekly volume, and muscle group distribution
-- **Superset Support** - Group exercises into supersets
-- **Plate Calculator** - Calculate barbell plate configurations
+- **Workout Programs** - Create multi-week training plans (e.g., PPL splits), track progress through weekly schedules, and start workouts directly from program slots
+- **Body Stats Tracking** - Monitor body measurements and set fitness goals with progress tracking
+- **Statistics & Analytics** - View personal records, weekly volume, muscle group distribution, and exercise progress over time
+- **Superset Support** - Group exercises into supersets within workouts and templates
+- **Plate Calculator** - Calculate barbell plate configurations with customizable available plates
 
 ## Tech Stack
 
@@ -82,6 +83,18 @@ npm start
 
 The application will be available at `http://localhost:4200`
 
+### Demo Data
+
+Seed the database with a fully-featured demo user:
+
+```bash
+cd backend
+cargo run --bin seed           # create demo user with sample data
+cargo run --bin seed -- --force # reset and re-seed demo data
+```
+
+Login with `demo@example.com` / `demo1234` to explore all features with pre-populated workout history, templates, programs, body stats, goals, and personal records.
+
 ## Configuration
 
 ### Backend Environment Variables
@@ -107,8 +120,14 @@ Base URL: `/api/v1`
 | `POST /workouts` | Create workout |
 | `GET /exercises` | List exercises |
 | `GET /templates` | List workout templates |
+| `GET /programs` | List workout programs |
+| `POST /programs` | Create a workout program |
+| `POST /programs/{id}/start` | Activate a program |
+| `GET /programs/active` | Get active program |
 | `GET /body-stats/measurements` | List body measurements |
+| `GET /body-stats/goals` | List body stats goals |
 | `GET /statistics/summary` | Get stats summary |
+| `GET /personal-records` | Get personal records |
 
 ## License
 

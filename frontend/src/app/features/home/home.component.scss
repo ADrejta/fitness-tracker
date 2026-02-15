@@ -115,6 +115,25 @@
   }
 }
 
+.active-program {
+  display: block;
+  text-decoration: none;
+  color: var(--color-text);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  &__name {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    margin: 0;
+  }
+}
+
 .templates-list {
   display: flex;
   flex-direction: column;
@@ -226,8 +245,12 @@
 
 .quick-links {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--spacing-sm);
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(5, 1fr);
+  }
 }
 
 .quick-link {
