@@ -151,6 +151,12 @@
   --color-text-secondary: var(--color-gray-400);
   --color-text-tertiary: var(--color-gray-500);
 
+  // Tinted backgrounds for hover/active states
+  --color-primary-50: #172554;
+  --color-primary-100: #1e3a5f;
+  --color-success-50: #052e16;
+  --color-danger-50: #450a0a;
+
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.4), 0 1px 2px -1px rgb(0 0 0 / 0.4);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);

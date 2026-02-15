@@ -11,6 +11,7 @@ import { Tab } from '../../shared/components/tabs/tabs.component';
 import { ProgramService, TemplateService, ToastService } from '../../core/services';
 import { ProgramSummary, WorkoutProgram, ProgramWorkout, WorkoutTemplate } from '../../core/models';
 import { format, parseISO } from 'date-fns';
+import { PROGRAM_PRESETS, ProgramPreset, PresetDaySlot } from './program-presets';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -48,6 +49,13 @@ export class ProgramsComponent {
   templateService = inject(TemplateService);
   private router = inject(Router);
   private toastService = inject(ToastService);
+
+  // Preset state
+  presets = PROGRAM_PRESETS;
+  showPresetsModal = false;
+  showPresetDetail = false;
+  selectedPreset: ProgramPreset | null = null;
+  expandedPresetDay: number | null = null;
 
   // Modal state
   showCreateModal = false;
@@ -339,6 +347,63 @@ export class ProgramsComponent {
       },
       error: () => {}
     });
+  }
+
+  // Preset actions
+  openPresetsModal(): void {
+    this.showPresetsModal = true;
+  }
+
+  viewPresetDetail(preset: ProgramPreset): void {
+    this.selectedPreset = preset;
+    this.expandedPresetDay = null;
+    this.showPresetsModal = false;
+    this.showPresetDetail = true;
+  }
+
+  closePresetDetail(): void {
+    this.showPresetDetail = false;
+    this.selectedPreset = null;
+    this.expandedPresetDay = null;
+  }
+
+  backToPresets(): void {
+    this.showPresetDetail = false;
+    this.selectedPreset = null;
+    this.expandedPresetDay = null;
+    this.showPresetsModal = true;
+  }
+
+  togglePresetDay(day: PresetDaySlot): void {
+    if (day.isRestDay) return;
+    this.expandedPresetDay = this.expandedPresetDay === day.dayNumber ? null : day.dayNumber;
+  }
+
+  usePreset(preset: ProgramPreset): void {
+    const workouts = preset.schedule.map(slot => ({
+      weekNumber: slot.weekNumber,
+      dayNumber: slot.dayNumber,
+      name: slot.name,
+      isRestDay: slot.isRestDay,
+    }));
+
+    this.programService.createProgram({
+      name: preset.name,
+      description: preset.description,
+      durationWeeks: preset.durationWeeks,
+      workouts,
+    }).subscribe({
+      next: () => {
+        this.toastService.success(`${preset.name} added to your programs`);
+        this.showPresetDetail = false;
+        this.selectedPreset = null;
+      },
+      error: () => {}
+    });
+  }
+
+  getPresetWeekDays(preset: ProgramPreset, weekNumber: number) {
+    return preset.schedule.filter(s => s.weekNumber === weekNumber);
   }
 
   // Helpers

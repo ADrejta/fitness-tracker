@@ -1,6 +1,17 @@
 <app-page-container title="Programs" subtitle="Multi-week training plans">
-  <!-- Create Button -->
+  <!-- Action Buttons -->
   <div class="page-actions">
+    <app-button [variant]="'secondary'" (clicked)="openPresetsModal()">
+      <span class="action-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+        </svg>
+        Browse Presets
+      </span>
+    </app-button>
     <app-button (clicked)="openCreateModal()">
       <span class="action-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -133,7 +144,7 @@
   } @else if (!programService.isLoading()) {
     <app-empty-state
       title="No Programs"
-      description="Create a multi-week training program to structure your workouts."
+      description="Create a program from scratch or start with a preset template."
     >
       <div empty-icon>
         <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -143,6 +154,7 @@
           <line x1="3" y1="10" x2="21" y2="10"></line>
         </svg>
       </div>
+      <app-button [variant]="'secondary'" (clicked)="openPresetsModal()">Browse Presets</app-button>
     </app-empty-state>
   }
 
@@ -367,6 +379,111 @@
             </div>
           </div>
         }
+      </div>
+    }
+  </app-modal>
+
+  <!-- Browse Presets Modal -->
+  <app-modal
+    [isOpen]="showPresetsModal"
+    title="Program Presets"
+    [size]="'lg'"
+    (closed)="showPresetsModal = false"
+  >
+    <div class="presets-browse">
+      <p class="presets-browse__intro">Choose a ready-made training plan to get started quickly.</p>
+      <div class="presets-grid">
+        @for (preset of presets; track preset.name) {
+          <div class="preset-card" (click)="viewPresetDetail(preset)">
+            <div class="preset-card__header">
+              <h3 class="preset-card__name">{{ preset.name }}</h3>
+              <div class="preset-card__badges">
+                <app-badge
+                  [variant]="preset.focus === 'Strength' ? 'info' : 'primary'"
+                  [size]="'sm'"
+                >{{ preset.focus }}</app-badge>
+                <app-badge
+                  [variant]="preset.difficulty === 'Advanced' ? 'danger' : preset.difficulty === 'Intermediate' ? 'warning' : 'success'"
+                  [size]="'sm'"
+                >{{ preset.difficulty }}</app-badge>
+              </div>
+            </div>
+            <p class="preset-card__description">{{ preset.description }}</p>
+            <div class="preset-card__meta">
+              <span>{{ preset.daysPerWeek }} days/week</span>
+              <span>{{ preset.durationWeeks }} weeks</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </app-modal>
+
+  <!-- Preset Detail Modal -->
+  <app-modal
+    [isOpen]="showPresetDetail"
+    [title]="selectedPreset?.name || 'Preset'"
+    [size]="'lg'"
+    (closed)="closePresetDetail()"
+  >
+    @if (selectedPreset; as preset) {
+      <div class="preset-detail">
+        <div class="preset-detail__header">
+          <app-badge
+            [variant]="preset.focus === 'Strength' ? 'info' : 'primary'"
+            [size]="'sm'"
+          >{{ preset.focus }}</app-badge>
+          <app-badge
+            [variant]="preset.difficulty === 'Advanced' ? 'danger' : preset.difficulty === 'Intermediate' ? 'warning' : 'success'"
+            [size]="'sm'"
+          >{{ preset.difficulty }}</app-badge>
+          <span class="preset-detail__meta">{{ preset.daysPerWeek }} days/week</span>
+          <span class="preset-detail__meta">{{ preset.durationWeeks }} weeks</span>
+        </div>
+        <p class="preset-detail__description">{{ preset.description }}</p>
+
+        <h4 class="preset-detail__schedule-title">Week 1 Schedule</h4>
+        <div class="preset-detail__days">
+          @for (day of getPresetWeekDays(preset, 1); track day.dayNumber) {
+            <div>
+              <div
+                class="workout-slot"
+                [class.workout-slot--rest]="day.isRestDay"
+                [class.workout-slot--expandable]="!day.isRestDay"
+                [class.workout-slot--expanded]="expandedPresetDay === day.dayNumber"
+                (click)="togglePresetDay(day)"
+              >
+                <div class="workout-slot__day">Day {{ day.dayNumber }}</div>
+                <div class="workout-slot__name">{{ day.name }}</div>
+                <div class="workout-slot__status">
+                  @if (day.isRestDay) {
+                    <span class="workout-slot__rest-label">Rest</span>
+                  } @else {
+                    <svg
+                      class="workout-slot__chevron"
+                      [class.workout-slot__chevron--open]="expandedPresetDay === day.dayNumber"
+                      width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    >
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  }
+                </div>
+              </div>
+              @if (expandedPresetDay === day.dayNumber && day.exercises.length > 0) {
+                <ol class="preset-exercise-list">
+                  @for (exercise of day.exercises; track exercise) {
+                    <li>{{ exercise }}</li>
+                  }
+                </ol>
+              }
+            </div>
+          }
+        </div>
+
+        <div class="preset-detail__actions">
+          <app-button [variant]="'secondary'" (clicked)="backToPresets()">Back</app-button>
+          <app-button (clicked)="usePreset(preset)">Use This Program</app-button>
+        </div>
       </div>
     }
   </app-modal>
