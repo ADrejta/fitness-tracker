@@ -69,6 +69,32 @@
       </app-card>
     </div>
 
+    <!-- Progressive Overload Suggestions -->
+    @if (actionableSuggestions().length > 0) {
+      <div class="section overload-section">
+        <h3 class="section-title">Progressive Overload</h3>
+        <div class="overload-grid">
+          @for (suggestion of actionableSuggestions(); track suggestion.exerciseTemplateId) {
+            <div class="overload-card" [class.overload-card--weight]="suggestion.suggestionType === 'increase_weight'" [class.overload-card--reps]="suggestion.suggestionType === 'increase_reps'">
+              <div class="overload-card__header">
+                <span class="overload-card__exercise">{{ suggestion.exerciseName }}</span>
+                <span class="overload-card__confidence overload-card__confidence--{{ suggestion.confidence }}">{{ suggestion.confidence }}</span>
+              </div>
+              <div class="overload-card__body">
+                <span class="overload-card__current">{{ getCurrentLabel(suggestion) }}</span>
+                <svg class="overload-card__arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+                <span class="overload-card__suggested">{{ getSuggestionLabel(suggestion) }}</span>
+              </div>
+              <p class="overload-card__reason">{{ suggestion.reason }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Weekly Volume Chart (Simple Bar Chart) -->
     <app-card class="chart-card">
       <h3 class="chart-title">Weekly Volume Trend</h3>

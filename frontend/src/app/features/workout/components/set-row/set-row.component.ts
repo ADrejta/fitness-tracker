@@ -8,6 +8,8 @@ import { PlateCalculatorComponent } from '../../../../shared/components';
 
 export interface ProgressionSuggestion {
   suggestedWeight: number;
+  suggestedReps?: number;
+  type: 'increase_weight' | 'increase_reps' | 'maintain';
   reason: string;
 }
 
@@ -74,8 +76,13 @@ export class SetRowComponent {
 
   applySuggestion(): void {
     if (this.progressionSuggestion) {
-      this.weightValue = this.progressionSuggestion.suggestedWeight;
-      this.setUpdated.emit({ targetWeight: this.weightValue });
+      if (this.progressionSuggestion.type === 'increase_weight') {
+        this.weightValue = this.progressionSuggestion.suggestedWeight;
+        this.setUpdated.emit({ targetWeight: this.weightValue });
+      } else if (this.progressionSuggestion.type === 'increase_reps' && this.progressionSuggestion.suggestedReps) {
+        this.repsValue = this.progressionSuggestion.suggestedReps;
+        this.setUpdated.emit({ targetReps: this.repsValue });
+      }
     }
   }
 

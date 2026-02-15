@@ -5,6 +5,7 @@ import { WorkoutService } from './workout.service';
 import { ExerciseService } from './exercise.service';
 import { AuthService } from './auth.service';
 import { ToastService } from './toast.service';
+import { SettingsService } from './settings.service';
 import { Workout, MuscleGroup } from '../models';
 import {
   startOfWeek,
@@ -117,6 +118,25 @@ export interface ExerciseWithHistory {
   workoutCount: number;
 }
 
+export type SuggestionType = 'increase_weight' | 'increase_reps' | 'maintain';
+export type SuggestionConfidence = 'high' | 'medium' | 'low';
+
+export interface ExerciseOverloadSuggestion {
+  exerciseTemplateId: string;
+  exerciseName: string;
+  suggestionType: SuggestionType;
+  suggestedWeight: number | null;
+  suggestedReps: number | null;
+  currentWeight: number;
+  currentReps: number;
+  reason: string;
+  confidence: SuggestionConfidence;
+}
+
+interface OverloadSuggestionsResponse {
+  suggestions: ExerciseOverloadSuggestion[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -126,16 +146,19 @@ export class StatisticsService {
   private exerciseService = inject(ExerciseService);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private settingsService = inject(SettingsService);
 
   private _summary = signal<DashboardSummary | null>(null);
   private _isLoading = signal<boolean>(false);
   private _exercisesWithHistory = signal<ExerciseWithHistory[]>([]);
   private _muscleGroupDistribution = signal<MuscleGroupData[]>([]);
+  private _overloadSuggestions = signal<ExerciseOverloadSuggestion[]>([]);
 
   readonly summary = this._summary.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
   readonly exercisesWithHistory = this._exercisesWithHistory.asReadonly();
   readonly muscleGroupDistribution = this._muscleGroupDistribution.asReadonly();
+  readonly overloadSuggestions = this._overloadSuggestions.asReadonly();
 
   // Computed stats (local fallback)
   readonly totalWorkouts = computed(() =>
@@ -195,6 +218,7 @@ export class StatisticsService {
     this.loadSummary();
     this.loadExercisesWithHistory();
     this.loadMuscleGroupDistribution();
+    this.loadOverloadSuggestions();
   }
 
   private loadSummary(): void {
@@ -257,6 +281,183 @@ export class StatisticsService {
       // For non-authenticated users, compute locally
       this._muscleGroupDistribution.set(this.getMuscleGroupDistribution());
     }
+  }
+
+  private loadOverloadSuggestions(): void {
+    if (this.authService.isAuthenticated()) {
+      this.http.get<OverloadSuggestionsResponse>(`${environment.apiUrl}/statistics/progressive-overload`)
+        .subscribe({
+          next: (response) => {
+            this._overloadSuggestions.set(response.suggestions);
+          },
+          error: () => {
+            // Fall back to local computation
+            this._overloadSuggestions.set(this.computeLocalOverloadSuggestions());
+          }
+        });
+    } else {
+      this._overloadSuggestions.set(this.computeLocalOverloadSuggestions());
+    }
+  }
+
+  private isLargeMuscleExercise(muscleGroups: MuscleGroup[]): boolean {
+    const largeMuscles: MuscleGroup[] = ['chest', 'back', 'quads', 'hamstrings', 'glutes', 'lats'];
+    return muscleGroups.some(mg => largeMuscles.includes(mg));
+  }
+
+  private computeLocalOverloadSuggestions(): ExerciseOverloadSuggestion[] {
+    const suggestions: ExerciseOverloadSuggestion[] = [];
+    const exercises = this.exerciseService.exercises();
+    const unit = this.settingsService.weightUnit();
+    const largeIncrement = unit === 'kg' ? 2.5 : 5;
+    const smallIncrement = unit === 'kg' ? 1.25 : 2.5;
+
+    for (const template of exercises) {
+      const workouts = this.workoutService.getWorkoutsForExercise(template.id);
+      if (workouts.length === 0) continue;
+
+      const isLarge = this.isLargeMuscleExercise(template.muscleGroups);
+      const increment = isLarge ? largeIncrement : smallIncrement;
+
+      const sessionCount = Math.min(workouts.length, 3);
+      const recentWorkouts = workouts.slice(0, sessionCount);
+
+      const sessionData = recentWorkouts.map(workout => {
+        const exercise = (workout.exercises || []).find(e => e.exerciseTemplateId === template.id);
+        if (!exercise) return null;
+        const workingSets = exercise.sets.filter(s => !s.isWarmup && s.isCompleted);
+        if (workingSets.length === 0) return null;
+        const maxWeight = Math.max(...workingSets.map(s => s.actualWeight || 0));
+        const setsAtMax = workingSets.filter(s => s.actualWeight === maxWeight);
+        const avgReps = Math.round(setsAtMax.reduce((sum, s) => sum + (s.actualReps || 0), 0) / setsAtMax.length);
+        const allTargetsMet = workingSets.every(s => (s.actualReps || 0) > 0);
+        return { maxWeight, avgReps, allTargetsMet };
+      }).filter((d): d is NonNullable<typeof d> => d !== null);
+
+      if (sessionData.length === 0) continue;
+
+      const last = sessionData[0];
+      const confidence: SuggestionConfidence = sessionCount >= 3 ? 'high' : sessionCount >= 2 ? 'medium' : 'low';
+
+      if (sessionData.length >= 2) {
+        const prev = sessionData[1];
+        const consistent = last.allTargetsMet && prev.allTargetsMet && Math.abs(last.maxWeight - prev.maxWeight) < 0.01;
+
+        if (isLarge) {
+          // Large-muscle exercises: favor weight increases
+          if (consistent) {
+            const suggested = last.maxWeight + increment;
+            suggestions.push({
+              exerciseTemplateId: template.id,
+              exerciseName: template.name,
+              suggestionType: 'increase_weight',
+              suggestedWeight: suggested,
+              suggestedReps: null,
+              currentWeight: last.maxWeight,
+              currentReps: last.avgReps,
+              reason: `Completed all sets at ${last.maxWeight}${unit} in last 2 sessions. Try ${suggested}${unit}!`,
+              confidence,
+            });
+          } else if (last.allTargetsMet) {
+            const suggestedReps = Math.min(last.avgReps + 1, 15);
+            suggestions.push({
+              exerciseTemplateId: template.id,
+              exerciseName: template.name,
+              suggestionType: 'increase_reps',
+              suggestedWeight: null,
+              suggestedReps,
+              currentWeight: last.maxWeight,
+              currentReps: last.avgReps,
+              reason: `Good session! Try ${suggestedReps} reps at ${last.maxWeight}${unit} next time.`,
+              confidence,
+            });
+          } else {
+            suggestions.push({
+              exerciseTemplateId: template.id,
+              exerciseName: template.name,
+              suggestionType: 'maintain',
+              suggestedWeight: null,
+              suggestedReps: null,
+              currentWeight: last.maxWeight,
+              currentReps: last.avgReps,
+              reason: `Keep working at ${last.maxWeight}${unit} x ${last.avgReps} reps.`,
+              confidence,
+            });
+          }
+        } else {
+          // Small-muscle exercises: favor rep increases first
+          if (consistent && last.avgReps < 15) {
+            const suggestedReps = Math.min(last.avgReps + 1, 15);
+            suggestions.push({
+              exerciseTemplateId: template.id,
+              exerciseName: template.name,
+              suggestionType: 'increase_reps',
+              suggestedWeight: null,
+              suggestedReps,
+              currentWeight: last.maxWeight,
+              currentReps: last.avgReps,
+              reason: `Isolation exercise — build reps before adding weight. Try ${suggestedReps} reps at ${last.maxWeight}${unit}.`,
+              confidence,
+            });
+          } else if (consistent && last.avgReps >= 15) {
+            const suggested = last.maxWeight + increment;
+            suggestions.push({
+              exerciseTemplateId: template.id,
+              exerciseName: template.name,
+              suggestionType: 'increase_weight',
+              suggestedWeight: suggested,
+              suggestedReps: null,
+              currentWeight: last.maxWeight,
+              currentReps: last.avgReps,
+              reason: `Hit ${last.avgReps} reps consistently — time for a small weight jump. Try ${suggested}${unit}!`,
+              confidence,
+            });
+          } else if (last.allTargetsMet) {
+            suggestions.push({
+              exerciseTemplateId: template.id,
+              exerciseName: template.name,
+              suggestionType: 'maintain',
+              suggestedWeight: null,
+              suggestedReps: null,
+              currentWeight: last.maxWeight,
+              currentReps: last.avgReps,
+              reason: `Good session at ${last.maxWeight}${unit} x ${last.avgReps} reps. Build more consistency before progressing.`,
+              confidence,
+            });
+          } else {
+            suggestions.push({
+              exerciseTemplateId: template.id,
+              exerciseName: template.name,
+              suggestionType: 'maintain',
+              suggestedWeight: null,
+              suggestedReps: null,
+              currentWeight: last.maxWeight,
+              currentReps: last.avgReps,
+              reason: `Keep working at ${last.maxWeight}${unit} x ${last.avgReps} reps.`,
+              confidence,
+            });
+          }
+        }
+      } else {
+        suggestions.push({
+          exerciseTemplateId: template.id,
+          exerciseName: template.name,
+          suggestionType: 'maintain',
+          suggestedWeight: null,
+          suggestedReps: null,
+          currentWeight: last.maxWeight,
+          currentReps: last.avgReps,
+          reason: 'Need more workout data for a suggestion.',
+          confidence,
+        });
+      }
+    }
+
+    return suggestions;
+  }
+
+  getSuggestionForExercise(exerciseTemplateId: string): ExerciseOverloadSuggestion | undefined {
+    return this._overloadSuggestions().find(s => s.exerciseTemplateId === exerciseTemplateId);
   }
 
   getWeeklyVolumeTrend(weeks: number = 12): VolumeDataPoint[] {
@@ -471,6 +672,7 @@ export class StatisticsService {
     this.loadSummary();
     this.loadExercisesWithHistory();
     this.loadMuscleGroupDistribution();
+    this.loadOverloadSuggestions();
   }
 
   async getExerciseProgressFromApi(exerciseId: string): Promise<ExerciseProgress | null> {

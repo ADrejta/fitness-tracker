@@ -8,8 +8,8 @@ use validator::Validate;
 
 use crate::dto::{
     DashboardSummary, ErrorResponse, ExerciseProgressResponse, ExercisesWithHistoryResponse,
-    ExerciseWithHistorySummary, MuscleGroupDistribution, PersonalRecordResponse,
-    PersonalRecordsListResponse, StatisticsQuery, WeeklyVolumeResponse,
+    ExerciseWithHistorySummary, MuscleGroupDistribution, OverloadSuggestionsResponse,
+    PersonalRecordResponse, PersonalRecordsListResponse, StatisticsQuery, WeeklyVolumeResponse,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
@@ -194,4 +194,26 @@ pub async fn get_exercises_with_history(
         .collect();
 
     Ok(Json(ExercisesWithHistoryResponse { exercises }))
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/progressive-overload",
+    tag = "Statistics",
+    responses(
+        (status = 200, description = "Progressive overload suggestions", body = OverloadSuggestionsResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
+#[instrument(skip(pool), fields(user_id = %auth_user.user_id))]
+pub async fn get_overload_suggestions(
+    State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
+) -> Result<Json<OverloadSuggestionsResponse>, AppError> {
+    info!("Fetching progressive overload suggestions");
+
+    let response =
+        StatisticsService::get_progressive_overload_suggestions(&pool, auth_user.user_id).await?;
+
+    Ok(Json(response))
 }

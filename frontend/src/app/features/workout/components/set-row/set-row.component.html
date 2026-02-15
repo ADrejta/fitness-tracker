@@ -23,7 +23,7 @@
 
   <div class="set-row__inputs">
     <div class="set-row__input-group">
-      @if (progressionSuggestion && !set.isCompleted && set.setNumber === 1) {
+      @if (progressionSuggestion && !set.isCompleted && !set.isWarmup && progressionSuggestion.type === 'increase_weight') {
         <button
           class="set-row__suggestion"
           (click)="applySuggestion()"
@@ -39,7 +39,7 @@
         type="number"
         class="set-row__input"
         [class.set-row__input--filled]="weightValue !== null"
-        [class.set-row__input--has-suggestion]="progressionSuggestion && !set.isCompleted && set.setNumber === 1"
+        [class.set-row__input--has-suggestion]="progressionSuggestion && !set.isCompleted && !set.isWarmup && progressionSuggestion.type === 'increase_weight'"
         [placeholder]="set.targetWeight?.toString() || '0'"
         [value]="weightValue"
         (input)="onWeightChange($event)"
@@ -78,10 +78,23 @@
     <span class="set-row__separator">×</span>
 
     <div class="set-row__input-group">
+      @if (progressionSuggestion && !set.isCompleted && !set.isWarmup && progressionSuggestion.type === 'increase_reps') {
+        <button
+          class="set-row__suggestion set-row__suggestion--reps"
+          (click)="applySuggestion()"
+          [title]="progressionSuggestion.reason"
+        >
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15"></polyline>
+          </svg>
+          {{ progressionSuggestion.suggestedReps }}
+        </button>
+      }
       <input
         type="number"
         class="set-row__input"
         [class.set-row__input--filled]="repsValue !== null"
+        [class.set-row__input--has-suggestion]="progressionSuggestion && !set.isCompleted && !set.isWarmup && progressionSuggestion.type === 'increase_reps'"
         [placeholder]="set.targetReps?.toString() || '0'"
         [value]="repsValue"
         (input)="onRepsChange($event)"

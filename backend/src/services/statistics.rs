@@ -81,13 +81,26 @@ pub fn estimate_1rm(weight: f64, reps: i32) -> Option<f64> {
 }
 
 use crate::dto::{
-    DashboardSummary, ExerciseHistoryEntry, ExerciseProgressResponse, MuscleGroupData,
-    MuscleGroupDistribution, PersonalRecordResponse, SetHistoryEntry, StatisticsQuery, WeekVolume,
+    DashboardSummary, ExerciseHistoryEntry, ExerciseOverloadSuggestion, ExerciseProgressResponse,
+    MuscleGroupData, MuscleGroupDistribution, OverloadSuggestionsResponse, PersonalRecordResponse,
+    SetHistoryEntry, StatisticsQuery, SuggestionConfidence, SuggestionType, WeekVolume,
     WeeklyVolumeResponse,
 };
 use crate::error::AppError;
-use crate::models::MuscleGroup;
-use crate::repositories::PersonalRecordRepository;
+use crate::models::{MuscleGroup, WeightUnit};
+use crate::repositories::{PersonalRecordRepository, SettingsRepository};
+
+fn is_large_muscle_group(mg: &MuscleGroup) -> bool {
+    matches!(
+        mg,
+        MuscleGroup::Chest
+            | MuscleGroup::Back
+            | MuscleGroup::Quads
+            | MuscleGroup::Hamstrings
+            | MuscleGroup::Glutes
+            | MuscleGroup::Lats
+    )
+}
 
 pub struct StatisticsService;
 
@@ -508,6 +521,301 @@ impl StatisticsService {
             personal_records,
         })
     }
+
+    #[instrument(skip(pool), fields(user_id = %user_id))]
+    pub async fn get_progressive_overload_suggestions(
+        pool: &PgPool,
+        user_id: Uuid,
+    ) -> Result<OverloadSuggestionsResponse, AppError> {
+        info!("Calculating progressive overload suggestions");
+
+        // Get user's weight unit
+        let settings = SettingsRepository::get_or_create(pool, user_id).await?;
+        let large_increment = match settings.weight_unit {
+            WeightUnit::Kg => 2.5,
+            WeightUnit::Lbs => 5.0,
+        };
+        let small_increment = match settings.weight_unit {
+            WeightUnit::Kg => 1.25,
+            WeightUnit::Lbs => 2.5,
+        };
+        let unit_label = match settings.weight_unit {
+            WeightUnit::Kg => "kg",
+            WeightUnit::Lbs => "lbs",
+        };
+
+        // Get all exercises the user has completed
+        let exercises = sqlx::query_as::<_, (String, String)>(
+            r#"
+            SELECT DISTINCT we.exercise_template_id, we.exercise_name
+            FROM workout_exercises we
+            JOIN workouts w ON w.id = we.workout_id
+            JOIN workout_sets ws ON ws.workout_exercise_id = we.id
+            WHERE w.user_id = $1
+                AND w.status = 'completed'
+                AND ws.is_completed = true
+                AND ws.is_warmup = false
+            ORDER BY we.exercise_name
+            "#,
+        )
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
+
+        let mut suggestions = Vec::new();
+
+        for (exercise_id, exercise_name) in exercises {
+            // Get muscle groups for this exercise
+            let muscle_groups = sqlx::query_scalar::<_, MuscleGroup>(
+                "SELECT muscle_group FROM exercise_muscle_groups WHERE exercise_id = $1",
+            )
+            .bind(&exercise_id)
+            .fetch_all(pool)
+            .await?;
+            let is_large = muscle_groups.iter().any(is_large_muscle_group);
+            let increment = if is_large { large_increment } else { small_increment };
+
+            // Get last 3 completed sessions for this exercise (most recent first)
+            let sessions = sqlx::query_as::<_, ExerciseHistoryRow>(
+                r#"
+                SELECT
+                    w.id as workout_id,
+                    w.started_at as date,
+                    we.id as workout_exercise_id
+                FROM workouts w
+                JOIN workout_exercises we ON we.workout_id = w.id
+                WHERE w.user_id = $1
+                    AND w.status = 'completed'
+                    AND we.exercise_template_id = $2
+                ORDER BY w.started_at DESC
+                LIMIT 3
+                "#,
+            )
+            .bind(user_id)
+            .bind(&exercise_id)
+            .fetch_all(pool)
+            .await?;
+
+            if sessions.is_empty() {
+                continue;
+            }
+
+            let session_count = sessions.len();
+
+            // For each session, get working sets
+            let mut session_data: Vec<SessionAnalysis> = Vec::new();
+            for session in &sessions {
+                let sets = sqlx::query_as::<_, SetRow>(
+                    r#"
+                    SELECT set_number, actual_reps, actual_weight, is_warmup
+                    FROM workout_sets
+                    WHERE workout_exercise_id = $1
+                        AND is_completed = true
+                        AND is_warmup = false
+                    ORDER BY set_number
+                    "#,
+                )
+                .bind(session.workout_exercise_id)
+                .fetch_all(pool)
+                .await?;
+
+                if sets.is_empty() {
+                    continue;
+                }
+
+                let max_weight = sets
+                    .iter()
+                    .filter_map(|s| s.actual_weight)
+                    .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .unwrap_or(0.0);
+
+                // Get sets at the max weight
+                let sets_at_max: Vec<&SetRow> = sets
+                    .iter()
+                    .filter(|s| s.actual_weight == Some(max_weight))
+                    .collect();
+
+                let avg_reps_at_max = if !sets_at_max.is_empty() {
+                    let total_reps: i32 = sets_at_max
+                        .iter()
+                        .filter_map(|s| s.actual_reps)
+                        .sum();
+                    total_reps / sets_at_max.len() as i32
+                } else {
+                    0
+                };
+
+                // Check if all sets met their target reps
+                // We consider targets met if all sets have actual reps > 0
+                let all_targets_met = sets
+                    .iter()
+                    .all(|s| s.actual_reps.unwrap_or(0) > 0);
+
+                session_data.push(SessionAnalysis {
+                    max_weight,
+                    avg_reps: avg_reps_at_max,
+                    all_targets_met,
+                });
+            }
+
+            if session_data.is_empty() {
+                continue;
+            }
+
+            let last = &session_data[0];
+            let current_weight = last.max_weight;
+            let current_reps = last.avg_reps;
+
+            let confidence = match session_count {
+                1 => SuggestionConfidence::Low,
+                2 => SuggestionConfidence::Medium,
+                _ => SuggestionConfidence::High,
+            };
+
+            let suggestion = if session_data.len() >= 2 {
+                let prev = &session_data[1];
+                // Check if last 2 sessions were at the same weight and both met targets
+                let consistent = last.all_targets_met
+                    && prev.all_targets_met
+                    && (last.max_weight - prev.max_weight).abs() < 0.01;
+
+                if is_large {
+                    // Large-muscle exercises: favor weight increases
+                    if consistent {
+                        let suggested = current_weight + increment;
+                        ExerciseOverloadSuggestion {
+                            exercise_template_id: exercise_id.clone(),
+                            exercise_name: exercise_name.clone(),
+                            suggestion_type: SuggestionType::IncreaseWeight,
+                            suggested_weight: Some(suggested),
+                            suggested_reps: None,
+                            current_weight,
+                            current_reps,
+                            reason: format!(
+                                "Completed all sets at {}{} in last 2 sessions. Try {}{}!",
+                                current_weight, unit_label, suggested, unit_label
+                            ),
+                            confidence,
+                        }
+                    } else if last.all_targets_met {
+                        let suggested_reps = (current_reps + 1).min(15);
+                        ExerciseOverloadSuggestion {
+                            exercise_template_id: exercise_id.clone(),
+                            exercise_name: exercise_name.clone(),
+                            suggestion_type: SuggestionType::IncreaseReps,
+                            suggested_weight: None,
+                            suggested_reps: Some(suggested_reps),
+                            current_weight,
+                            current_reps,
+                            reason: format!(
+                                "Good session! Try {} reps at {}{} next time.",
+                                suggested_reps, current_weight, unit_label
+                            ),
+                            confidence,
+                        }
+                    } else {
+                        ExerciseOverloadSuggestion {
+                            exercise_template_id: exercise_id.clone(),
+                            exercise_name: exercise_name.clone(),
+                            suggestion_type: SuggestionType::Maintain,
+                            suggested_weight: None,
+                            suggested_reps: None,
+                            current_weight,
+                            current_reps,
+                            reason: format!(
+                                "Keep working at {}{} x {} reps.",
+                                current_weight, unit_label, current_reps
+                            ),
+                            confidence,
+                        }
+                    }
+                } else {
+                    // Small-muscle exercises: favor rep increases first
+                    if consistent && current_reps < 15 {
+                        let suggested_reps = (current_reps + 1).min(15);
+                        ExerciseOverloadSuggestion {
+                            exercise_template_id: exercise_id.clone(),
+                            exercise_name: exercise_name.clone(),
+                            suggestion_type: SuggestionType::IncreaseReps,
+                            suggested_weight: None,
+                            suggested_reps: Some(suggested_reps),
+                            current_weight,
+                            current_reps,
+                            reason: format!(
+                                "Isolation exercise — build reps before adding weight. Try {} reps at {}{}.",
+                                suggested_reps, current_weight, unit_label
+                            ),
+                            confidence,
+                        }
+                    } else if consistent && current_reps >= 15 {
+                        let suggested = current_weight + increment;
+                        ExerciseOverloadSuggestion {
+                            exercise_template_id: exercise_id.clone(),
+                            exercise_name: exercise_name.clone(),
+                            suggestion_type: SuggestionType::IncreaseWeight,
+                            suggested_weight: Some(suggested),
+                            suggested_reps: None,
+                            current_weight,
+                            current_reps,
+                            reason: format!(
+                                "Hit {} reps consistently — time for a small weight jump. Try {}{}!",
+                                current_reps, suggested, unit_label
+                            ),
+                            confidence,
+                        }
+                    } else if last.all_targets_met {
+                        ExerciseOverloadSuggestion {
+                            exercise_template_id: exercise_id.clone(),
+                            exercise_name: exercise_name.clone(),
+                            suggestion_type: SuggestionType::Maintain,
+                            suggested_weight: None,
+                            suggested_reps: None,
+                            current_weight,
+                            current_reps,
+                            reason: format!(
+                                "Good session at {}{} x {} reps. Build more consistency before progressing.",
+                                current_weight, unit_label, current_reps
+                            ),
+                            confidence,
+                        }
+                    } else {
+                        ExerciseOverloadSuggestion {
+                            exercise_template_id: exercise_id.clone(),
+                            exercise_name: exercise_name.clone(),
+                            suggestion_type: SuggestionType::Maintain,
+                            suggested_weight: None,
+                            suggested_reps: None,
+                            current_weight,
+                            current_reps,
+                            reason: format!(
+                                "Keep working at {}{} x {} reps.",
+                                current_weight, unit_label, current_reps
+                            ),
+                            confidence,
+                        }
+                    }
+                }
+            } else {
+                // Only 1 session
+                ExerciseOverloadSuggestion {
+                    exercise_template_id: exercise_id.clone(),
+                    exercise_name: exercise_name.clone(),
+                    suggestion_type: SuggestionType::Maintain,
+                    suggested_weight: None,
+                    suggested_reps: None,
+                    current_weight,
+                    current_reps,
+                    reason: "Need more workout data for a suggestion.".to_string(),
+                    confidence,
+                }
+            };
+
+            suggestions.push(suggestion);
+        }
+
+        info!("Generated {} overload suggestions", suggestions.len());
+        Ok(OverloadSuggestionsResponse { suggestions })
+    }
 }
 
 #[derive(Debug, sqlx::FromRow)]
@@ -537,6 +845,12 @@ struct SetRow {
     actual_reps: Option<i32>,
     actual_weight: Option<f64>,
     is_warmup: bool,
+}
+
+struct SessionAnalysis {
+    max_weight: f64,
+    avg_reps: i32,
+    all_targets_met: bool,
 }
 
 #[cfg(test)]

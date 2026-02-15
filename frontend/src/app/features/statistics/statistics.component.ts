@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
 import { CardComponent, BadgeComponent, EmptyStateComponent, ButtonComponent, ProgressComponent } from '../../shared/components';
 import { StatisticsService, WorkoutService, SettingsService, ExerciseService, AuthService } from '../../core/services';
-import { ExerciseProgress, ExerciseWithHistory } from '../../core/services/statistics.service';
+import { ExerciseProgress, ExerciseWithHistory, ExerciseOverloadSuggestion } from '../../core/services/statistics.service';
 import { PersonalRecord } from '../../core/models';
 import { format, parseISO } from 'date-fns';
 
@@ -34,6 +34,9 @@ export class StatisticsComponent implements OnInit {
   private authService = inject(AuthService);
 
   muscleGroupData = computed(() => this.statisticsService.muscleGroupDistribution());
+  actionableSuggestions = computed(() =>
+    this.statisticsService.overloadSuggestions().filter(s => s.suggestionType !== 'maintain')
+  );
   volumeTrend: { label: string; volume: number }[] = [];
   frequencyTrend: { week: string; count: number }[] = [];
   maxVolume = 0;
@@ -250,5 +253,19 @@ export class StatisticsComponent implements OnInit {
 
   formatPrDate(dateString: string): string {
     return format(parseISO(dateString), 'MMM d, yyyy');
+  }
+
+  getSuggestionLabel(suggestion: ExerciseOverloadSuggestion): string {
+    if (suggestion.suggestionType === 'increase_weight' && suggestion.suggestedWeight) {
+      return `${suggestion.suggestedWeight} ${this.settingsService.weightUnit()}`;
+    }
+    if (suggestion.suggestionType === 'increase_reps' && suggestion.suggestedReps) {
+      return `${suggestion.suggestedReps} reps`;
+    }
+    return '';
+  }
+
+  getCurrentLabel(suggestion: ExerciseOverloadSuggestion): string {
+    return `${suggestion.currentWeight} ${this.settingsService.weightUnit()} x ${suggestion.currentReps}`;
   }
 }

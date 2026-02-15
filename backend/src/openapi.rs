@@ -81,6 +81,7 @@ use crate::models::{
         handlers::get_muscle_group_distribution,
         handlers::get_exercise_progress,
         handlers::get_exercises_with_history,
+        handlers::get_overload_suggestions,
         // Personal records
         handlers::get_personal_records,
         // Settings
@@ -117,6 +118,7 @@ use crate::models::{
             MuscleGroupDistribution, MuscleGroupData, ExerciseProgressResponse,
             ExerciseHistoryEntry, SetHistoryEntry, PersonalRecordsListResponse,
             ExercisesWithHistoryResponse, ExerciseWithHistorySummary,
+            OverloadSuggestionsResponse, ExerciseOverloadSuggestion, SuggestionType, SuggestionConfidence,
             // Settings
             SettingsResponse, UpdateSettingsRequest,
             // Model enums

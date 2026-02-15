@@ -197,6 +197,10 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
             "/statistics/exercises-with-history",
             get(handlers::get_exercises_with_history),
         )
+        .route(
+            "/statistics/progressive-overload",
+            get(handlers::get_overload_suggestions),
+        )
         // Personal Records
         .route("/personal-records", get(handlers::get_personal_records))
         // Settings

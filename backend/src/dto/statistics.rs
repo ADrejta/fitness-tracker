@@ -121,3 +121,41 @@ pub struct ExerciseWithHistorySummary {
     pub exercise_name: String,
     pub workout_count: i64,
 }
+
+// Progressive Overload DTOs
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum SuggestionType {
+    IncreaseWeight,
+    IncreaseReps,
+    Maintain,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, ToSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum SuggestionConfidence {
+    High,
+    Medium,
+    Low,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ExerciseOverloadSuggestion {
+    pub exercise_template_id: String,
+    pub exercise_name: String,
+    pub suggestion_type: SuggestionType,
+    pub suggested_weight: Option<f64>,
+    pub suggested_reps: Option<i32>,
+    pub current_weight: f64,
+    pub current_reps: i32,
+    pub reason: String,
+    pub confidence: SuggestionConfidence,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct OverloadSuggestionsResponse {
+    pub suggestions: Vec<ExerciseOverloadSuggestion>,
+}
