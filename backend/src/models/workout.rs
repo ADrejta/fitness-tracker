@@ -26,6 +26,7 @@ pub struct WorkoutSet {
     pub is_warmup: bool,
     pub is_completed: bool,
     pub completed_at: Option<DateTime<Utc>>,
+    pub rpe: Option<i16>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

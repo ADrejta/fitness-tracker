@@ -337,7 +337,7 @@ impl WorkoutRepository {
             r#"
             INSERT INTO workout_sets (id, workout_exercise_id, set_number, target_reps, target_weight, is_warmup, is_completed)
             VALUES ($1, $2, $3, $4, $5, $6, false)
-            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at
+            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
             "#,
         )
         .bind(Uuid::new_v4())
@@ -355,7 +355,7 @@ impl WorkoutRepository {
     pub async fn get_sets(pool: &PgPool, exercise_id: Uuid) -> Result<Vec<WorkoutSet>, AppError> {
         let sets = sqlx::query_as::<_, WorkoutSet>(
             r#"
-            SELECT id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at
+            SELECT id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
             FROM workout_sets
             WHERE workout_exercise_id = $1
             ORDER BY set_number
@@ -377,6 +377,7 @@ impl WorkoutRepository {
         actual_weight: Option<f64>,
         is_warmup: Option<bool>,
         is_completed: Option<bool>,
+        rpe: Option<i16>,
     ) -> Result<WorkoutSet, AppError> {
         let completed_at: Option<DateTime<Utc>> = if is_completed == Some(true) {
             Some(Utc::now())
@@ -402,9 +403,10 @@ impl WorkoutRepository {
                 actual_weight = COALESCE($5, actual_weight),
                 is_warmup = COALESCE($6, is_warmup),
                 is_completed = COALESCE($7, is_completed),
-                completed_at = $8
+                completed_at = $8,
+                rpe = COALESCE($9, rpe)
             WHERE id = $1
-            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at
+            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
             "#,
         )
         .bind(set_id)
@@ -415,6 +417,7 @@ impl WorkoutRepository {
         .bind(is_warmup)
         .bind(is_completed)
         .bind(completed_at)
+        .bind(rpe)
         .fetch_optional(pool)
         .await?
         .ok_or_else(|| AppError::NotFound("Set not found".to_string()))?;

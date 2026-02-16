@@ -61,6 +61,7 @@ impl WorkoutService {
                         is_warmup: s.is_warmup,
                         is_completed: s.is_completed,
                         completed_at: s.completed_at,
+                        rpe: s.rpe,
                     })
                     .collect(),
                 notes: exercise.notes,

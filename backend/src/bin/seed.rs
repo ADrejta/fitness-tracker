@@ -407,10 +407,12 @@ async fn seed_workouts(
                 let actual_reps = if set_num == num_sets { target_reps - 1 } else { *target_reps };
                 let weight_val = if *weight > 0.0 { Some(*weight) } else { None };
                 let set_completed_at = started_at + Duration::minutes((order_idx * 12 + set_num * 3) as i64);
+                // RPE increases with later sets to simulate fatigue (7-9 range)
+                let rpe: i16 = 7 + (set_num as i16 - 1).min(2);
 
                 sqlx::query(
-                    "INSERT INTO workout_sets (id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at)
-                     VALUES ($1, $2, $3, $4, $5, $6, $6, false, true, $7)"
+                    "INSERT INTO workout_sets (id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe)
+                     VALUES ($1, $2, $3, $4, $5, $6, $6, false, true, $7, $8)"
                 )
                 .bind(Uuid::new_v4())
                 .bind(exercise_id)
@@ -419,6 +421,7 @@ async fn seed_workouts(
                 .bind(actual_reps)
                 .bind(weight_val)
                 .bind(set_completed_at)
+                .bind(rpe)
                 .execute(&mut **tx)
                 .await?;
             }

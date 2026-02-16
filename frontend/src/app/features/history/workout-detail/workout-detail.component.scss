@@ -175,7 +175,7 @@
 .sets-table {
   &__header {
     display: grid;
-    grid-template-columns: 3rem 1fr 1fr;
+    grid-template-columns: 3rem 1fr 1fr 3rem;
     gap: var(--spacing-md);
     padding: var(--spacing-xs) 0;
     font-size: var(--font-size-xs);
@@ -187,7 +187,7 @@
 
   &__row {
     display: grid;
-    grid-template-columns: 3rem 1fr 1fr;
+    grid-template-columns: 3rem 1fr 1fr 3rem;
     gap: var(--spacing-md);
     padding: var(--spacing-sm) 0;
     font-size: var(--font-size-base);

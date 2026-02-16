@@ -5,11 +5,36 @@ import { PageContainerComponent } from '../../layout';
 import { CardComponent, BadgeComponent, EmptyStateComponent, ButtonComponent, SkeletonComponent } from '../../shared/components';
 import { WorkoutService, SettingsService } from '../../core/services';
 import { Workout } from '../../core/models';
-import { format, isToday, isYesterday, isThisWeek, isThisMonth, parseISO } from 'date-fns';
+import {
+  format,
+  isToday as isDateToday,
+  isYesterday,
+  isThisWeek,
+  isThisMonth,
+  parseISO,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths
+} from 'date-fns';
 
 interface WorkoutGroup {
   label: string;
   workouts: Workout[];
+}
+
+export interface CalendarDay {
+  date: Date;
+  dayNumber: number;
+  dateKey: string;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  workoutCount: number;
 }
 
 @Component({
@@ -41,6 +66,65 @@ export class HistoryComponent implements OnInit {
   isLoadingPage = signal(false);
 
   totalPages = computed(() => Math.ceil(this.totalWorkouts() / this.pageSize()) || 1);
+
+  // Calendar state
+  viewMode = signal<'list' | 'calendar'>('list');
+  selectedMonth = signal(new Date());
+  selectedDate = signal<string | null>(null);
+
+  readonly weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  selectedMonthLabel = computed(() => format(this.selectedMonth(), 'MMMM yyyy'));
+
+  private workoutCountMap = computed(() => {
+    const map = new Map<string, number>();
+    const workouts = this.workoutService.completedWorkouts();
+    workouts.forEach(w => {
+      if (!w.completedAt) return;
+      const key = format(parseISO(w.completedAt), 'yyyy-MM-dd');
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+    return map;
+  });
+
+  calendarWeeks = computed<CalendarDay[][]>(() => {
+    const month = this.selectedMonth();
+    const monthStart = startOfMonth(month);
+    const monthEnd = endOfMonth(month);
+    const calStart = startOfWeek(monthStart, { weekStartsOn: 1 });
+    const calEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
+
+    const days = eachDayOfInterval({ start: calStart, end: calEnd });
+    const countMap = this.workoutCountMap();
+    const today = new Date();
+
+    const calendarDays: CalendarDay[] = days.map(date => {
+      const dateKey = format(date, 'yyyy-MM-dd');
+      return {
+        date,
+        dayNumber: date.getDate(),
+        dateKey,
+        isCurrentMonth: isSameMonth(date, month),
+        isToday: isSameDay(date, today),
+        workoutCount: countMap.get(dateKey) || 0,
+      };
+    });
+
+    const weeks: CalendarDay[][] = [];
+    for (let i = 0; i < calendarDays.length; i += 7) {
+      weeks.push(calendarDays.slice(i, i + 7));
+    }
+    return weeks;
+  });
+
+  selectedDateWorkouts = computed<Workout[]>(() => {
+    const dateKey = this.selectedDate();
+    if (!dateKey) return [];
+    const targetDate = parseISO(dateKey);
+    return this.workoutService.completedWorkouts().filter(w =>
+      w.completedAt && isSameDay(parseISO(w.completedAt), targetDate)
+    );
+  });
 
   ngOnInit(): void {
     this.loadPage(1);
@@ -74,7 +158,7 @@ export class HistoryComponent implements OnInit {
 
     workouts.forEach(workout => {
       const date = parseISO(workout.completedAt!);
-      if (isToday(date)) {
+      if (isDateToday(date)) {
         today.push(workout);
       } else if (isYesterday(date)) {
         yesterday.push(workout);
@@ -96,11 +180,45 @@ export class HistoryComponent implements OnInit {
     this.workoutGroups.set(groups);
   }
 
+  toggleView(mode: 'list' | 'calendar'): void {
+    this.viewMode.set(mode);
+    if (mode === 'list') {
+      this.selectedDate.set(null);
+    }
+  }
+
+  previousMonth(): void {
+    this.selectedMonth.set(subMonths(this.selectedMonth(), 1));
+    this.selectedDate.set(null);
+  }
+
+  nextMonth(): void {
+    this.selectedMonth.set(addMonths(this.selectedMonth(), 1));
+    this.selectedDate.set(null);
+  }
+
+  goToToday(): void {
+    this.selectedMonth.set(new Date());
+    this.selectedDate.set(null);
+  }
+
+  selectDate(day: CalendarDay): void {
+    if (day.workoutCount > 0 && day.isCurrentMonth) {
+      this.selectedDate.set(
+        this.selectedDate() === day.dateKey ? null : day.dateKey
+      );
+    }
+  }
+
   formatDate(dateString: string): string {
     const date = parseISO(dateString);
-    if (isToday(date)) return format(date, 'h:mm a');
+    if (isDateToday(date)) return format(date, 'h:mm a');
     if (isYesterday(date)) return 'Yesterday';
     return format(date, 'MMM d');
+  }
+
+  formatSelectedDate(dateKey: string): string {
+    return format(parseISO(dateKey), 'EEEE, MMMM d, yyyy');
   }
 
   formatVolume(kg: number): string {

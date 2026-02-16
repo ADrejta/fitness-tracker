@@ -65,6 +65,7 @@ pub struct WorkoutSetResponse {
     pub is_warmup: bool,
     pub is_completed: bool,
     pub completed_at: Option<DateTime<Utc>>,
+    pub rpe: Option<i16>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
@@ -110,6 +111,8 @@ pub struct UpdateSetRequest {
     pub actual_weight: Option<f64>,
     pub is_warmup: Option<bool>,
     pub is_completed: Option<bool>,
+    #[validate(range(min = 1, max = 10))]
+    pub rpe: Option<i16>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

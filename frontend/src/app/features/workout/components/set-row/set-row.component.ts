@@ -35,6 +35,7 @@ export class SetRowComponent {
   showPlateCalculator = signal(false);
   weightValue: number | null = null;
   repsValue: number | null = null;
+  rpeValue: number | null = null;
 
   get estimated1RM(): number | null {
     const weight = this.weightValue ?? this.set.targetWeight;
@@ -66,6 +67,7 @@ export class SetRowComponent {
   ngOnInit(): void {
     this.weightValue = this.set.actualWeight ?? this.set.targetWeight ?? null;
     this.repsValue = this.set.actualReps ?? this.set.targetReps ?? null;
+    this.rpeValue = this.set.rpe ?? null;
   }
 
   onWeightChange(event: Event): void {
@@ -90,6 +92,12 @@ export class SetRowComponent {
     const value = (event.target as HTMLInputElement).value;
     this.repsValue = value ? parseInt(value, 10) : null;
     this.setUpdated.emit({ targetReps: this.repsValue ?? undefined });
+  }
+
+  onRpeChange(event: Event): void {
+    const value = (event.target as HTMLSelectElement).value;
+    this.rpeValue = value ? parseInt(value, 10) : null;
+    this.setUpdated.emit({ rpe: this.rpeValue ?? undefined });
   }
 
   toggleComplete(): void {

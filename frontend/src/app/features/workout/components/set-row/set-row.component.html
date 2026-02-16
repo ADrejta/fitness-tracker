@@ -14,7 +14,7 @@
   <div class="set-row__previous">
     @if (previousSet) {
       <span class="set-row__previous-value">
-        {{ previousSet.actualWeight || '-' }} × {{ previousSet.actualReps || '-' }}
+        {{ previousSet.actualWeight || '-' }} × {{ previousSet.actualReps || '-' }}@if (previousSet.rpe) { <span class="set-row__previous-rpe">&commat;{{ previousSet.rpe }}</span>}
       </span>
     } @else {
       <span class="set-row__previous-value set-row__previous-value--empty">—</span>
@@ -109,6 +109,21 @@
     <div class="set-row__e1rm">
       <span class="set-row__e1rm-value">{{ estimated1RM }}</span>
       <span class="set-row__e1rm-label">e1RM</span>
+    </div>
+  }
+
+  @if (set.isCompleted) {
+    <div class="set-row__rpe">
+      <select
+        class="set-row__rpe-select"
+        [value]="rpeValue ?? ''"
+        (change)="onRpeChange($event)"
+      >
+        <option value="">RPE</option>
+        @for (val of [1,2,3,4,5,6,7,8,9,10]; track val) {
+          <option [value]="val">{{ val }}</option>
+        }
+      </select>
     </div>
   }
 
