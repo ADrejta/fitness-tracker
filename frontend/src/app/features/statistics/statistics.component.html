@@ -95,6 +95,28 @@
       </div>
     }
 
+    <!-- Plateau Alerts -->
+    @if (plateauAlerts().length > 0) {
+      <div class="section overload-section">
+        <h3 class="section-title">Plateau Alerts</h3>
+        <div class="overload-grid">
+          @for (alert of plateauAlerts(); track alert.exerciseTemplateId) {
+            <div class="overload-card overload-card--warning">
+              <div class="overload-card__header">
+                <span class="overload-card__exercise">{{ alert.exerciseName }}</span>
+                <span class="overload-card__confidence overload-card__confidence--medium">{{ alert.weeksSinceProgress }}w</span>
+              </div>
+              <div class="overload-card__body">
+                <span class="overload-card__current">No progress in {{ alert.weeksSinceProgress }} weeks</span>
+                <span class="overload-card__suggested">{{ alert.currentMaxWeight }} {{ settingsService.weightUnit() }}</span>
+              </div>
+              <p class="overload-card__reason">{{ alert.suggestion }}</p>
+            </div>
+          }
+        </div>
+      </div>
+    }
+
     <!-- Weekly Volume Chart (Simple Bar Chart) -->
     <app-card class="chart-card">
       <h3 class="chart-title">Weekly Volume Trend</h3>

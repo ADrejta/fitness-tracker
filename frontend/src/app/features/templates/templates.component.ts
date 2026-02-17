@@ -5,9 +5,25 @@ import { Router } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
 import { CardComponent, ButtonComponent, BadgeComponent, EmptyStateComponent, ModalComponent, InputComponent } from '../../shared/components';
 import { TemplateService, ExerciseService, ToastService } from '../../core/services';
-import { WorkoutTemplate, TemplateExercise, TemplateSet, ExerciseTemplate } from '../../core/models';
+import { WorkoutTemplate, TemplateExercise, TemplateSet, ExerciseTemplate, MuscleGroup } from '../../core/models';
 import { ExercisePickerComponent } from '../workout/components/exercise-picker/exercise-picker.component';
 import { format, parseISO } from 'date-fns';
+
+const COMPLEMENTARY_PAIRS: [MuscleGroup, MuscleGroup][] = [
+  ['chest', 'back'],
+  ['biceps', 'triceps'],
+  ['quads', 'hamstrings'],
+  ['shoulders', 'lats'],
+  ['abs', 'lower-back'],
+];
+
+interface SupersetSuggestion {
+  exercise1Id: string;
+  exercise1Name: string;
+  exercise2Id: string;
+  exercise2Name: string;
+  reason: string;
+}
 
 interface EditableTemplateExercise extends TemplateExercise {
   isExpanded?: boolean;
@@ -52,6 +68,44 @@ export class TemplatesComponent {
   templateDescription = '';
   templateExercises = signal<EditableTemplateExercise[]>([]);
   selectedForSuperset = signal<string[]>([]);
+  dismissedSuggestions = signal<Set<string>>(new Set());
+
+  supersetSuggestions = computed((): SupersetSuggestion[] => {
+    const exercises = this.templateExercises();
+    const nonSupersetted = exercises.filter(e => !e.supersetId);
+    if (nonSupersetted.length < 2) return [];
+
+    const dismissed = this.dismissedSuggestions();
+    const suggestions: SupersetSuggestion[] = [];
+
+    for (let i = 0; i < nonSupersetted.length; i++) {
+      for (let j = i + 1; j < nonSupersetted.length; j++) {
+        const ex1 = nonSupersetted[i];
+        const ex2 = nonSupersetted[j];
+        const t1 = this.exerciseService.getExerciseById(ex1.exerciseTemplateId);
+        const t2 = this.exerciseService.getExerciseById(ex2.exerciseTemplateId);
+        if (!t1 || !t2) continue;
+
+        const match = COMPLEMENTARY_PAIRS.find(([a, b]) =>
+          (t1.muscleGroups.includes(a) && t2.muscleGroups.includes(b)) ||
+          (t1.muscleGroups.includes(b) && t2.muscleGroups.includes(a))
+        );
+        if (!match) continue;
+
+        const key = [ex1.id, ex2.id].sort().join(':');
+        if (dismissed.has(key)) continue;
+
+        suggestions.push({
+          exercise1Id: ex1.id,
+          exercise1Name: ex1.exerciseName,
+          exercise2Id: ex2.id,
+          exercise2Name: ex2.exerciseName,
+          reason: `${match[0]} + ${match[1]}`,
+        });
+      }
+    }
+    return suggestions;
+  });
 
   // Computed property to add superset position info
   groupedTemplateExercises = computed((): EditableTemplateExercise[] => {
@@ -336,6 +390,24 @@ export class TemplatesComponent {
     this.templateExercises.update(exercises =>
       exercises.map(e =>
         e.supersetId === supersetId ? { ...e, supersetId: undefined } : e
+      )
+    );
+  }
+
+  dismissSuggestion(ex1Id: string, ex2Id: string): void {
+    const key = [ex1Id, ex2Id].sort().join(':');
+    this.dismissedSuggestions.update(set => {
+      const next = new Set(set);
+      next.add(key);
+      return next;
+    });
+  }
+
+  applySuggestion(ex1Id: string, ex2Id: string): void {
+    const supersetId = crypto.randomUUID();
+    this.templateExercises.update(exercises =>
+      exercises.map(e =>
+        (e.id === ex1Id || e.id === ex2Id) ? { ...e, supersetId } : e
       )
     );
   }

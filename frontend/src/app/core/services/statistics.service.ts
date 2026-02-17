@@ -137,6 +137,20 @@ interface OverloadSuggestionsResponse {
   suggestions: ExerciseOverloadSuggestion[];
 }
 
+export interface ExercisePlateauAlert {
+  exerciseTemplateId: string;
+  exerciseName: string;
+  weeksSinceProgress: number;
+  lastMaxWeight: number;
+  currentMaxWeight: number;
+  lastProgressDate: string | null;
+  suggestion: string;
+}
+
+interface PlateauAlertResponse {
+  alerts: ExercisePlateauAlert[];
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -153,12 +167,14 @@ export class StatisticsService {
   private _exercisesWithHistory = signal<ExerciseWithHistory[]>([]);
   private _muscleGroupDistribution = signal<MuscleGroupData[]>([]);
   private _overloadSuggestions = signal<ExerciseOverloadSuggestion[]>([]);
+  private _plateauAlerts = signal<ExercisePlateauAlert[]>([]);
 
   readonly summary = this._summary.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
   readonly exercisesWithHistory = this._exercisesWithHistory.asReadonly();
   readonly muscleGroupDistribution = this._muscleGroupDistribution.asReadonly();
   readonly overloadSuggestions = this._overloadSuggestions.asReadonly();
+  readonly plateauAlerts = this._plateauAlerts.asReadonly();
 
   // Computed stats (local fallback)
   readonly totalWorkouts = computed(() =>
@@ -219,6 +235,7 @@ export class StatisticsService {
     this.loadExercisesWithHistory();
     this.loadMuscleGroupDistribution();
     this.loadOverloadSuggestions();
+    this.loadPlateauAlerts();
   }
 
   private loadSummary(): void {
@@ -298,6 +315,87 @@ export class StatisticsService {
     } else {
       this._overloadSuggestions.set(this.computeLocalOverloadSuggestions());
     }
+  }
+
+  private loadPlateauAlerts(): void {
+    if (this.authService.isAuthenticated()) {
+      this.http.get<PlateauAlertResponse>(`${environment.apiUrl}/statistics/plateau-alerts`)
+        .subscribe({
+          next: (response) => {
+            this._plateauAlerts.set(response.alerts);
+          },
+          error: () => {
+            this._plateauAlerts.set(this.computeLocalPlateauAlerts());
+          }
+        });
+    } else {
+      this._plateauAlerts.set(this.computeLocalPlateauAlerts());
+    }
+  }
+
+  private computeLocalPlateauAlerts(): ExercisePlateauAlert[] {
+    const alerts: ExercisePlateauAlert[] = [];
+    const exercises = this.exerciseService.exercises();
+    const now = new Date();
+    const threeWeeksAgo = subWeeks(now, 3);
+
+    for (const template of exercises) {
+      const workouts = this.workoutService.getWorkoutsForExercise(template.id);
+      if (workouts.length < 2) continue;
+
+      // Split into recent (last 3 weeks) and older
+      const recent = workouts.filter(w => w.completedAt && new Date(w.completedAt) >= threeWeeksAgo);
+      const older = workouts.filter(w => w.completedAt && new Date(w.completedAt) < threeWeeksAgo);
+
+      if (recent.length === 0 || older.length === 0) continue;
+
+      // Get max weight from recent sessions
+      let recentMax = 0;
+      for (const workout of recent) {
+        const exercise = (workout.exercises || []).find(e => e.exerciseTemplateId === template.id);
+        if (!exercise) continue;
+        const workingSets = exercise.sets.filter(s => !s.isWarmup && s.isCompleted);
+        const sessionMax = Math.max(...workingSets.map(s => s.actualWeight || 0), 0);
+        if (sessionMax > recentMax) recentMax = sessionMax;
+      }
+
+      // Get max weight and date from older sessions
+      let olderMax = 0;
+      let olderMaxDate: string | null = null;
+      for (const workout of older) {
+        const exercise = (workout.exercises || []).find(e => e.exerciseTemplateId === template.id);
+        if (!exercise) continue;
+        const workingSets = exercise.sets.filter(s => !s.isWarmup && s.isCompleted);
+        const sessionMax = Math.max(...workingSets.map(s => s.actualWeight || 0), 0);
+        if (sessionMax > olderMax) {
+          olderMax = sessionMax;
+          olderMaxDate = workout.completedAt || null;
+        }
+      }
+
+      if (recentMax <= olderMax && olderMax > 0) {
+        const daysSince = olderMaxDate
+          ? Math.floor((now.getTime() - new Date(olderMaxDate).getTime()) / (1000 * 60 * 60 * 24))
+          : 21;
+        const weeksSince = Math.max(3, Math.floor(daysSince / 7));
+
+        const suggestion = weeksSince >= 6
+          ? 'Consider a deload week or try a variation of this exercise.'
+          : 'Try adjusting rep ranges, adding pause reps, or changing tempo.';
+
+        alerts.push({
+          exerciseTemplateId: template.id,
+          exerciseName: template.name,
+          weeksSinceProgress: weeksSince,
+          lastMaxWeight: olderMax,
+          currentMaxWeight: recentMax,
+          lastProgressDate: olderMaxDate,
+          suggestion,
+        });
+      }
+    }
+
+    return alerts;
   }
 
   private isLargeMuscleExercise(muscleGroups: MuscleGroup[]): boolean {
@@ -673,6 +771,7 @@ export class StatisticsService {
     this.loadExercisesWithHistory();
     this.loadMuscleGroupDistribution();
     this.loadOverloadSuggestions();
+    this.loadPlateauAlerts();
   }
 
   async getExerciseProgressFromApi(exerciseId: string): Promise<ExerciseProgress | null> {

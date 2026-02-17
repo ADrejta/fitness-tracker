@@ -255,6 +255,24 @@
                 <app-button variant="ghost" size="sm" (clicked)="clearSupersetSelection()">Clear</app-button>
               </div>
             }
+
+            @for (tip of supersetSuggestions(); track tip.exercise1Id + tip.exercise2Id) {
+              <div class="superset-tip">
+                <svg class="superset-tip__icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18h6M10 22h4M12 2a7 7 0 0 1 4 12.7V17H8v-2.3A7 7 0 0 1 12 2z"></path>
+                </svg>
+                <span class="superset-tip__text">
+                  Try supersetting <strong>{{ tip.exercise1Name }}</strong> with <strong>{{ tip.exercise2Name }}</strong> — they target opposing muscles ({{ tip.reason }})
+                </span>
+                <button class="superset-tip__apply" (click)="applySuggestion(tip.exercise1Id, tip.exercise2Id)">Apply</button>
+                <button class="superset-tip__dismiss" (click)="dismissSuggestion(tip.exercise1Id, tip.exercise2Id)">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+            }
           </div>
         } @else {
           <div class="exercises-empty">

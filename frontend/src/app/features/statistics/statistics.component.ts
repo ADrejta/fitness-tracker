@@ -5,7 +5,7 @@ import { RouterLink } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
 import { CardComponent, BadgeComponent, EmptyStateComponent, ButtonComponent, ProgressComponent } from '../../shared/components';
 import { StatisticsService, WorkoutService, SettingsService, ExerciseService, AuthService } from '../../core/services';
-import { ExerciseProgress, ExerciseWithHistory, ExerciseOverloadSuggestion } from '../../core/services/statistics.service';
+import { ExerciseProgress, ExerciseWithHistory, ExerciseOverloadSuggestion, ExercisePlateauAlert } from '../../core/services/statistics.service';
 import { PersonalRecord } from '../../core/models';
 import { format, parseISO } from 'date-fns';
 
@@ -37,6 +37,7 @@ export class StatisticsComponent implements OnInit {
   actionableSuggestions = computed(() =>
     this.statisticsService.overloadSuggestions().filter(s => s.suggestionType !== 'maintain')
   );
+  plateauAlerts = computed(() => this.statisticsService.plateauAlerts());
   volumeTrend: { label: string; volume: number }[] = [];
   frequencyTrend: { week: string; count: number }[] = [];
   maxVolume = 0;

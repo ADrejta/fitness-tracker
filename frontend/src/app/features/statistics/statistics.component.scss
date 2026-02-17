@@ -516,6 +516,10 @@
     border-left: 3px solid var(--color-success-500);
   }
 
+  &--warning {
+    border-left: 3px solid var(--color-warning-500);
+  }
+
   &__header {
     display: flex;
     justify-content: space-between;

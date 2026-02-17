@@ -201,6 +201,10 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
             "/statistics/progressive-overload",
             get(handlers::get_overload_suggestions),
         )
+        .route(
+            "/statistics/plateau-alerts",
+            get(handlers::get_plateau_alerts),
+        )
         // Personal Records
         .route("/personal-records", get(handlers::get_personal_records))
         // Settings

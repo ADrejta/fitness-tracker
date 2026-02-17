@@ -82,6 +82,7 @@ use crate::models::{
         handlers::get_exercise_progress,
         handlers::get_exercises_with_history,
         handlers::get_overload_suggestions,
+        handlers::get_plateau_alerts,
         // Personal records
         handlers::get_personal_records,
         // Settings
@@ -119,6 +120,7 @@ use crate::models::{
             ExerciseHistoryEntry, SetHistoryEntry, PersonalRecordsListResponse,
             ExercisesWithHistoryResponse, ExerciseWithHistorySummary,
             OverloadSuggestionsResponse, ExerciseOverloadSuggestion, SuggestionType, SuggestionConfidence,
+            PlateauAlertResponse, ExercisePlateauAlert,
             // Settings
             SettingsResponse, UpdateSettingsRequest,
             // Model enums

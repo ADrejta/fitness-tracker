@@ -9,7 +9,8 @@ A full-stack web application for tracking workouts, monitoring body stats, and a
 - **Workout Templates** - Save and reuse workout routines
 - **Workout Programs** - Create multi-week training plans (e.g., PPL splits), track progress through weekly schedules, and start workouts directly from program slots
 - **Body Stats Tracking** - Monitor body measurements and set fitness goals with progress tracking
-- **Statistics & Analytics** - View personal records, weekly volume, muscle group distribution, and exercise progress over time
+- **Statistics & Analytics** - View personal records, weekly volume, muscle group distribution, exercise progress over time, and plateau detection alerts
+- **Plateau Detection** - Automatic alerts when an exercise hasn't progressed in 3+ weeks, with actionable suggestions
 - **Superset Support** - Group exercises into supersets within workouts and templates
 - **Plate Calculator** - Calculate barbell plate configurations with customizable available plates
 
@@ -127,6 +128,7 @@ Base URL: `/api/v1`
 | `GET /body-stats/measurements` | List body measurements |
 | `GET /body-stats/goals` | List body stats goals |
 | `GET /statistics/summary` | Get stats summary |
+| `GET /statistics/plateau-alerts` | Get plateau detection alerts |
 | `GET /personal-records` | Get personal records |
 
 ## License

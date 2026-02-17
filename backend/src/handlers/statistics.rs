@@ -9,7 +9,8 @@ use validator::Validate;
 use crate::dto::{
     DashboardSummary, ErrorResponse, ExerciseProgressResponse, ExercisesWithHistoryResponse,
     ExerciseWithHistorySummary, MuscleGroupDistribution, OverloadSuggestionsResponse,
-    PersonalRecordResponse, PersonalRecordsListResponse, StatisticsQuery, WeeklyVolumeResponse,
+    PersonalRecordResponse, PersonalRecordsListResponse, PlateauAlertResponse, StatisticsQuery,
+    WeeklyVolumeResponse,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
@@ -214,6 +215,27 @@ pub async fn get_overload_suggestions(
 
     let response =
         StatisticsService::get_progressive_overload_suggestions(&pool, auth_user.user_id).await?;
+
+    Ok(Json(response))
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/plateau-alerts",
+    tag = "Statistics",
+    responses(
+        (status = 200, description = "Plateau alerts for exercises with no progress", body = PlateauAlertResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
+#[instrument(skip(pool), fields(user_id = %auth_user.user_id))]
+pub async fn get_plateau_alerts(
+    State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
+) -> Result<Json<PlateauAlertResponse>, AppError> {
+    info!("Fetching plateau alerts");
+
+    let response = StatisticsService::get_plateau_alerts(&pool, auth_user.user_id).await?;
 
     Ok(Json(response))
 }

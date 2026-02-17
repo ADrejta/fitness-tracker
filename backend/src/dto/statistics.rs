@@ -159,3 +159,23 @@ pub struct ExerciseOverloadSuggestion {
 pub struct OverloadSuggestionsResponse {
     pub suggestions: Vec<ExerciseOverloadSuggestion>,
 }
+
+// Plateau Detection DTOs
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ExercisePlateauAlert {
+    pub exercise_template_id: String,
+    pub exercise_name: String,
+    pub weeks_since_progress: i32,
+    pub last_max_weight: f64,
+    pub current_max_weight: f64,
+    pub last_progress_date: Option<NaiveDate>,
+    pub suggestion: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct PlateauAlertResponse {
+    pub alerts: Vec<ExercisePlateauAlert>,
+}

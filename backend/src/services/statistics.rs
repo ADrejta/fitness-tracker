@@ -81,10 +81,10 @@ pub fn estimate_1rm(weight: f64, reps: i32) -> Option<f64> {
 }
 
 use crate::dto::{
-    DashboardSummary, ExerciseHistoryEntry, ExerciseOverloadSuggestion, ExerciseProgressResponse,
-    MuscleGroupData, MuscleGroupDistribution, OverloadSuggestionsResponse, PersonalRecordResponse,
-    SetHistoryEntry, StatisticsQuery, SuggestionConfidence, SuggestionType, WeekVolume,
-    WeeklyVolumeResponse,
+    DashboardSummary, ExerciseHistoryEntry, ExerciseOverloadSuggestion, ExercisePlateauAlert,
+    ExerciseProgressResponse, MuscleGroupData, MuscleGroupDistribution,
+    OverloadSuggestionsResponse, PersonalRecordResponse, PlateauAlertResponse, SetHistoryEntry,
+    StatisticsQuery, SuggestionConfidence, SuggestionType, WeekVolume, WeeklyVolumeResponse,
 };
 use crate::error::AppError;
 use crate::models::{MuscleGroup, WeightUnit};
@@ -815,6 +815,166 @@ impl StatisticsService {
 
         info!("Generated {} overload suggestions", suggestions.len());
         Ok(OverloadSuggestionsResponse { suggestions })
+    }
+
+    #[instrument(skip(pool), fields(user_id = %user_id))]
+    pub async fn get_plateau_alerts(
+        pool: &PgPool,
+        user_id: Uuid,
+    ) -> Result<PlateauAlertResponse, AppError> {
+        info!("Calculating plateau alerts");
+
+        let three_weeks_ago = Utc::now() - Duration::weeks(3);
+
+        // Get all exercises the user has completed
+        let exercises = sqlx::query_as::<_, (String, String)>(
+            r#"
+            SELECT DISTINCT we.exercise_template_id, we.exercise_name
+            FROM workout_exercises we
+            JOIN workouts w ON w.id = we.workout_id
+            JOIN workout_sets ws ON ws.workout_exercise_id = we.id
+            WHERE w.user_id = $1
+                AND w.status = 'completed'
+                AND ws.is_completed = true
+                AND ws.is_warmup = false
+            ORDER BY we.exercise_name
+            "#,
+        )
+        .bind(user_id)
+        .fetch_all(pool)
+        .await?;
+
+        let mut alerts = Vec::new();
+
+        for (exercise_id, exercise_name) in exercises {
+            // Get all sessions ordered by date (most recent first)
+            let sessions = sqlx::query_as::<_, ExerciseHistoryRow>(
+                r#"
+                SELECT
+                    w.id as workout_id,
+                    w.started_at as date,
+                    we.id as workout_exercise_id
+                FROM workouts w
+                JOIN workout_exercises we ON we.workout_id = w.id
+                WHERE w.user_id = $1
+                    AND w.status = 'completed'
+                    AND we.exercise_template_id = $2
+                ORDER BY w.started_at DESC
+                "#,
+            )
+            .bind(user_id)
+            .bind(&exercise_id)
+            .fetch_all(pool)
+            .await?;
+
+            if sessions.len() < 2 {
+                continue;
+            }
+
+            // Split into recent (last 3 weeks) and older
+            let mut recent_sessions = Vec::new();
+            let mut older_sessions = Vec::new();
+            for session in &sessions {
+                if session.date >= three_weeks_ago {
+                    recent_sessions.push(session);
+                } else {
+                    older_sessions.push(session);
+                }
+            }
+
+            if recent_sessions.is_empty() || older_sessions.is_empty() {
+                continue;
+            }
+
+            // Get max weight from recent sessions
+            let mut recent_max: f64 = 0.0;
+            for session in &recent_sessions {
+                let sets = sqlx::query_as::<_, SetRow>(
+                    r#"
+                    SELECT set_number, actual_reps, actual_weight, is_warmup
+                    FROM workout_sets
+                    WHERE workout_exercise_id = $1
+                        AND is_completed = true
+                        AND is_warmup = false
+                    ORDER BY set_number
+                    "#,
+                )
+                .bind(session.workout_exercise_id)
+                .fetch_all(pool)
+                .await?;
+
+                let session_max = sets
+                    .iter()
+                    .filter_map(|s| s.actual_weight)
+                    .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .unwrap_or(0.0);
+                if session_max > recent_max {
+                    recent_max = session_max;
+                }
+            }
+
+            // Get max weight and date from older sessions
+            let mut older_max: f64 = 0.0;
+            let mut older_max_date: Option<NaiveDate> = None;
+            for session in &older_sessions {
+                let sets = sqlx::query_as::<_, SetRow>(
+                    r#"
+                    SELECT set_number, actual_reps, actual_weight, is_warmup
+                    FROM workout_sets
+                    WHERE workout_exercise_id = $1
+                        AND is_completed = true
+                        AND is_warmup = false
+                    ORDER BY set_number
+                    "#,
+                )
+                .bind(session.workout_exercise_id)
+                .fetch_all(pool)
+                .await?;
+
+                let session_max = sets
+                    .iter()
+                    .filter_map(|s| s.actual_weight)
+                    .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .unwrap_or(0.0);
+                if session_max > older_max {
+                    older_max = session_max;
+                    older_max_date = Some(session.date.date_naive());
+                }
+            }
+
+            // Plateau: recent max hasn't exceeded older max
+            if recent_max <= older_max && older_max > 0.0 {
+                let weeks_since = older_max_date
+                    .map(|d| {
+                        let days = (Utc::now().date_naive() - d).num_days();
+                        (days / 7).max(3) as i32
+                    })
+                    .unwrap_or(3);
+
+                let suggestion = if weeks_since >= 6 {
+                    format!(
+                        "Consider a deload week or try a variation of this exercise."
+                    )
+                } else {
+                    format!(
+                        "Try adjusting rep ranges, adding pause reps, or changing tempo."
+                    )
+                };
+
+                alerts.push(ExercisePlateauAlert {
+                    exercise_template_id: exercise_id,
+                    exercise_name,
+                    weeks_since_progress: weeks_since,
+                    last_max_weight: older_max,
+                    current_max_weight: recent_max,
+                    last_progress_date: older_max_date,
+                    suggestion,
+                });
+            }
+        }
+
+        info!("Found {} plateau alerts", alerts.len());
+        Ok(PlateauAlertResponse { alerts })
     }
 }
 
