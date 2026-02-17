@@ -233,4 +233,50 @@ export class HistoryComponent implements OnInit {
     const hours = Math.floor(minutes / 60);
     return `${hours}h ${minutes % 60}m`;
   }
+
+  exportCsv(): void {
+    const workouts = this.workoutService.completedWorkouts();
+    if (!workouts.length) return;
+
+    const unit = this.settingsService.weightUnit();
+    const rows: string[] = [`Date,Workout,Exercise,Set,Reps,Weight (${unit}),RPE,Notes`];
+
+    for (const workout of workouts) {
+      const date = workout.completedAt ? format(parseISO(workout.completedAt), 'yyyy-MM-dd') : '';
+      const workoutName = this.escapeCsvField(workout.name);
+
+      for (const exercise of workout.exercises) {
+        const exerciseName = this.escapeCsvField(exercise.exerciseName);
+
+        for (const set of exercise.sets) {
+          rows.push([
+            date,
+            workoutName,
+            exerciseName,
+            set.setNumber,
+            set.actualReps ?? '',
+            set.actualWeight ?? '',
+            set.rpe ?? '',
+            this.escapeCsvField(exercise.notes ?? ''),
+          ].join(','));
+        }
+      }
+    }
+
+    const csv = rows.join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `workout-history-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  private escapeCsvField(value: string): string {
+    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+      return `"${value.replace(/"/g, '""')}"`;
+    }
+    return value;
+  }
 }
