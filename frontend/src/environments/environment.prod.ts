@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api/v1',
+  apiUrl: 'https://fitness-tracker-39io.onrender.com/api/v1',
 };
