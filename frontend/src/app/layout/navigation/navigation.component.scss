@@ -63,17 +63,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
 
   ::ng-deep svg {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
   }
 }
 
 .nav__label {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: var(--font-weight-medium);
 }
 
