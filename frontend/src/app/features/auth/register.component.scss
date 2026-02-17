@@ -12,13 +12,15 @@
   max-width: 400px;
   padding: 2rem;
   background: var(--bg-secondary);
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-xl);
+  border: 2px solid var(--border-color);
+  box-shadow: var(--shadow-md);
 }
 
 h1 {
   margin: 0 0 0.5rem;
   font-size: 1.75rem;
+  font-family: var(--font-family-display);
   text-align: center;
   color: var(--text-primary);
 }
@@ -34,7 +36,7 @@ h1 {
   margin-bottom: 1rem;
   background: var(--error-bg, #fee);
   color: var(--error-text, #c00);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   text-align: center;
 }
 
@@ -52,8 +54,8 @@ label {
 input {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
+  border: 2px solid var(--border-color);
+  border-radius: var(--radius-md);
   font-size: 1rem;
   background: var(--bg-primary);
   color: var(--text-primary);
@@ -72,7 +74,7 @@ input:focus {
   background: var(--primary-color);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;

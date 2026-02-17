@@ -100,7 +100,7 @@
       width: 20px;
       left: 2px;
       bottom: 2px;
-      background: white;
+      background: var(--color-surface-raised);
       border-radius: var(--radius-full);
       transition: all var(--transition-fast);
     }
