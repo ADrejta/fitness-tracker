@@ -48,6 +48,7 @@ export class WorkoutComponent implements OnInit {
   showCancelModal = false;
   showWorkoutMenu = false;
   showNotes = false;
+  tagInput = '';
 
   elapsedTime = signal('0:00');
   private timerInterval: number | null = null;
@@ -151,6 +152,37 @@ export class WorkoutComponent implements OnInit {
   updateWorkoutNotes(event: Event): void {
     const notes = (event.target as HTMLTextAreaElement).value;
     this.workoutService.updateWorkoutNotes(notes);
+  }
+
+  onTagInputKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      this.addTagFromInput();
+    }
+  }
+
+  addTagFromInput(): void {
+    const tag = this.tagInput.trim().toLowerCase();
+    if (tag) {
+      this.addTag(tag);
+      this.tagInput = '';
+    }
+  }
+
+  addTag(tag: string): void {
+    const workout = this.workoutService.activeWorkout();
+    if (!workout) return;
+    const currentTags = workout.tags ?? [];
+    if (!currentTags.includes(tag)) {
+      this.workoutService.updateWorkoutTags([...currentTags, tag]);
+    }
+  }
+
+  removeTag(tag: string): void {
+    const workout = this.workoutService.activeWorkout();
+    if (!workout) return;
+    const currentTags = workout.tags ?? [];
+    this.workoutService.updateWorkoutTags(currentTags.filter(t => t !== tag));
   }
 
   async addExercise(exercise: any): Promise<void> {

@@ -5,4 +5,6 @@ module.exports = {
   testEnvironment: 'jsdom',
   coverageReporters: ['html', 'text-summary'],
   collectCoverageFrom: ['src/app/**/*.ts', '!src/app/**/*.d.ts'],
+  // Extend preset default to also transform uuid (ships as ESM)
+  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$|@angular/common/locales/.*\\.js$|uuid))'],
 };

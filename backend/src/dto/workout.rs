@@ -23,6 +23,7 @@ pub struct UpdateWorkoutRequest {
     pub name: Option<String>,
     #[validate(length(max = 2000))]
     pub notes: Option<String>,
+    pub tags: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -40,6 +41,7 @@ pub struct WorkoutResponse {
     pub status: WorkoutStatus,
     pub template_id: Option<Uuid>,
     pub notes: Option<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -135,6 +137,7 @@ pub struct WorkoutSummaryResponse {
     pub duration: Option<i32>,
     pub status: WorkoutStatus,
     pub exercise_count: i32,
+    pub tags: Vec<String>,
 }
 
 #[derive(Debug, Deserialize, Validate, IntoParams)]

@@ -68,6 +68,15 @@
         </div>
       </div>
 
+      <!-- Tags -->
+      @if (workout()!.tags?.length) {
+        <div class="tags-section">
+          @for (tag of workout()!.tags!; track tag) {
+            <span class="detail-tag">{{ tag }}</span>
+          }
+        </div>
+      }
+
       <!-- Notes -->
       @if (workout()!.notes) {
         <div class="notes-section">
@@ -93,6 +102,10 @@
                     }
                   </div>
                 </div>
+
+                @if (exercise.notes) {
+                  <p class="exercise-detail__notes">{{ exercise.notes }}</p>
+                }
 
                 <div class="sets-table">
                   <div class="sets-table__header">

@@ -83,6 +83,7 @@ impl WorkoutService {
             status: workout.status,
             template_id: workout.template_id,
             notes: workout.notes,
+            tags: workout.tags,
         })
     }
 

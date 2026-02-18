@@ -21,6 +21,7 @@
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
+    "@angular/service-worker": "^21.1.4",
     "chart.js": "^4.5.1",
     "date-fns": "^4.1.0",
     "lucide-angular": "^0.314.0",

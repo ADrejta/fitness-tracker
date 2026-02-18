@@ -86,6 +86,7 @@ pub async fn list_workouts(
                 duration: w.duration,
                 status: w.status,
                 exercise_count: w.exercise_count,
+                tags: w.tags,
             })
             .collect(),
         total,
@@ -139,6 +140,7 @@ pub async fn update_workout(
         auth_user.user_id,
         req.name.as_deref(),
         req.notes.as_deref(),
+        req.tags.as_deref(),
     )
     .await?;
 

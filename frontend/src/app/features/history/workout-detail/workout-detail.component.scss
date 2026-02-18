@@ -137,6 +137,23 @@
   margin: 0 0 var(--spacing-md);
 }
 
+.tags-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+}
+
+.detail-tag {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary-700);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-full, 9999px);
+}
+
 .notes-text {
   font-size: var(--font-size-base);
   color: var(--color-text-secondary);
@@ -169,6 +186,14 @@
   &__tags {
     display: flex;
     gap: var(--spacing-xs);
+  }
+
+  &__notes {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    font-style: italic;
+    margin: 0 0 var(--spacing-md);
+    line-height: 1.5;
   }
 }
 

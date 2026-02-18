@@ -39,6 +39,22 @@
               rows="2"
             ></textarea>
           }
+          <div class="workout__tags-row">
+            @for (tag of workoutService.activeWorkout()?.tags ?? []; track tag) {
+              <span class="workout-tag">
+                {{ tag }}
+                <button class="workout-tag__remove" (click)="removeTag(tag)" type="button">×</button>
+              </span>
+            }
+            <input
+              class="workout-tag-input"
+              [value]="tagInput"
+              (input)="tagInput = $any($event.target).value"
+              (keydown)="onTagInputKeydown($event)"
+              placeholder="Add tag..."
+              type="text"
+            />
+          </div>
         </div>
         <button class="workout__menu-btn" (click)="showWorkoutMenu = !showWorkoutMenu">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -35,6 +35,7 @@ export interface Workout {
   status: WorkoutStatus;
   templateId?: string;
   notes?: string;
+  tags?: string[];
   exerciseCount?: number; // From list API (summary response)
 }
 

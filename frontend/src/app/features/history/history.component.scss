@@ -32,6 +32,54 @@
   }
 }
 
+.tag-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.tag-filter-chip {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full, 9999px);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary-600);
+    border-color: var(--color-primary-300);
+  }
+
+  &--active {
+    color: var(--color-primary-700);
+    background: var(--color-primary-50);
+    border-color: var(--color-primary-400);
+  }
+}
+
+.workout-item__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+}
+
+.workout-item-tag {
+  display: inline-block;
+  padding: 1px var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary-700);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-full, 9999px);
+}
+
 // Toolbar
 .toolbar {
   display: flex;

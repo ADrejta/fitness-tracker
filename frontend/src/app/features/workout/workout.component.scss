@@ -97,6 +97,67 @@
   }
 }
 
+.workout__tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-sm);
+}
+
+.workout-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary-700);
+  background: var(--color-primary-50);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-full, 9999px);
+
+  &__remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    color: var(--color-primary-500);
+    background: none;
+    border: none;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--color-primary-700);
+    }
+  }
+}
+
+.workout-tag-input {
+  min-width: 80px;
+  flex: 1;
+  max-width: 140px;
+  padding: 2px var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  color: var(--color-text);
+  background: none;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-full, 9999px);
+  outline: none;
+
+  &::placeholder {
+    color: var(--color-text-tertiary);
+  }
+
+  &:focus {
+    border-color: var(--color-primary-400);
+  }
+}
+
 .workout__menu-btn {
   display: flex;
   align-items: center;

@@ -56,5 +56,6 @@ pub struct Workout {
     pub status: WorkoutStatus,
     pub template_id: Option<Uuid>,
     pub notes: Option<String>,
+    pub tags: Vec<String>,
 }
 

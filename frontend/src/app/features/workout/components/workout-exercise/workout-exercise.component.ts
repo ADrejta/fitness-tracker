@@ -29,8 +29,10 @@ export class WorkoutExerciseComponent implements OnInit {
   private statisticsService = inject(StatisticsService);
 
   showMenu = false;
+  showNotes = false;
   showWarmupCalculator = signal(false);
   workingWeight = signal(0);
+  notesValue = signal('');
   private _progressionSuggestion = signal<ProgressionSuggestion | undefined>(undefined);
 
   warmupSets = computed((): WarmupSet[] => {
@@ -41,6 +43,7 @@ export class WorkoutExerciseComponent implements OnInit {
 
   ngOnInit(): void {
     this._progressionSuggestion.set(this.calculateProgressionSuggestion());
+    this.notesValue.set(this.exercise.notes ?? '');
   }
 
   get progressionSuggestion(): ProgressionSuggestion | undefined {
@@ -76,6 +79,15 @@ export class WorkoutExerciseComponent implements OnInit {
       type: suggestion.suggestionType,
       reason: suggestion.reason,
     };
+  }
+
+  toggleNotes(): void {
+    this.showMenu = false;
+    this.showNotes = !this.showNotes;
+  }
+
+  saveNotes(): void {
+    this.workoutService.updateExerciseNotes(this.exercise.id, this.notesValue());
   }
 
   addSet(): void {

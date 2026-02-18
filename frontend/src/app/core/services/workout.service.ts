@@ -407,6 +407,36 @@ export class WorkoutService {
     });
   }
 
+  async updateExerciseNotes(exerciseId: string, notes: string): Promise<void> {
+    const workout = this._activeWorkout();
+    if (!workout) return;
+
+    this._activeWorkout.update((w) =>
+      w
+        ? {
+            ...w,
+            exercises: w.exercises.map((e) =>
+              e.id === exerciseId ? { ...e, notes } : e
+            ),
+          }
+        : null
+    );
+
+    if (this.authService.isAuthenticated()) {
+      try {
+        await firstValueFrom(
+          this.http.patch(
+            `${environment.apiUrl}/workouts/${workout.id}/exercises/${exerciseId}`,
+            { notes }
+          )
+        );
+      } catch (error) {
+        console.error('Failed to update exercise notes via API:', error);
+        this.toastService.error('Failed to update exercise notes');
+      }
+    }
+  }
+
   async updateWorkoutNotes(notes: string): Promise<void> {
     const workout = this._activeWorkout();
     if (!workout) return;
@@ -426,6 +456,36 @@ export class WorkoutService {
       }
     }
   }
+
+  async updateWorkoutTags(tags: string[]): Promise<void> {
+    const workout = this._activeWorkout();
+    if (!workout) return;
+
+    this._activeWorkout.update((w) => (w ? { ...w, tags } : null));
+
+    if (this.authService.isAuthenticated()) {
+      try {
+        await firstValueFrom(
+          this.http.patch(`${environment.apiUrl}/workouts/${workout.id}`, {
+            tags,
+          })
+        );
+      } catch (error) {
+        console.error('Failed to update workout tags via API:', error);
+        this.toastService.error('Failed to update workout tags');
+      }
+    }
+  }
+
+  readonly allTags = computed(() => {
+    const tags = new Set<string>();
+    for (const workout of this.completedWorkouts()) {
+      for (const tag of workout.tags ?? []) {
+        tags.add(tag);
+      }
+    }
+    return [...tags].sort();
+  });
 
   async updateWorkoutName(name: string): Promise<void> {
     const workout = this._activeWorkout();

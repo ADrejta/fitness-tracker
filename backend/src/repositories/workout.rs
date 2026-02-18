@@ -20,7 +20,7 @@ impl WorkoutRepository {
             r#"
             INSERT INTO workouts (id, user_id, name, started_at, total_volume, total_sets, total_reps, status, template_id, notes)
             VALUES ($1, $2, $3, NOW(), 0, 0, 0, 'in-progress', $4, $5)
-            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes
+            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
             "#,
         )
         .bind(Uuid::new_v4())
@@ -41,7 +41,7 @@ impl WorkoutRepository {
     ) -> Result<Option<Workout>, AppError> {
         let workout = sqlx::query_as::<_, Workout>(
             r#"
-            SELECT id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes
+            SELECT id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
             FROM workouts
             WHERE id = $1 AND user_id = $2
             "#,
@@ -83,7 +83,7 @@ impl WorkoutRepository {
                 SELECT
                     w.id, w.user_id, w.name, w.started_at, w.completed_at,
                     w.total_volume, w.total_sets, w.total_reps, w.duration,
-                    w.status, w.template_id, w.notes,
+                    w.status, w.template_id, w.notes, w.tags,
                     (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
                 FROM workouts w
                 WHERE w.user_id = $1 AND w.status = $2
@@ -103,7 +103,7 @@ impl WorkoutRepository {
                 SELECT
                     w.id, w.user_id, w.name, w.started_at, w.completed_at,
                     w.total_volume, w.total_sets, w.total_reps, w.duration,
-                    w.status, w.template_id, w.notes,
+                    w.status, w.template_id, w.notes, w.tags,
                     (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
                 FROM workouts w
                 WHERE w.user_id = $1
@@ -127,6 +127,7 @@ impl WorkoutRepository {
         user_id: Uuid,
         name: Option<&str>,
         notes: Option<&str>,
+        tags: Option<&[String]>,
     ) -> Result<Workout, AppError> {
         if let Some(name) = name {
             sqlx::query("UPDATE workouts SET name = $1 WHERE id = $2 AND user_id = $3")
@@ -140,6 +141,15 @@ impl WorkoutRepository {
         if let Some(notes) = notes {
             sqlx::query("UPDATE workouts SET notes = $1 WHERE id = $2 AND user_id = $3")
                 .bind(notes)
+                .bind(id)
+                .bind(user_id)
+                .execute(pool)
+                .await?;
+        }
+
+        if let Some(tags) = tags {
+            sqlx::query("UPDATE workouts SET tags = $1 WHERE id = $2 AND user_id = $3")
+                .bind(tags)
                 .bind(id)
                 .bind(user_id)
                 .execute(pool)
@@ -196,7 +206,7 @@ impl WorkoutRepository {
                 total_reps = $5,
                 duration = EXTRACT(EPOCH FROM (NOW() - started_at))::int
             WHERE id = $1 AND user_id = $2
-            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes
+            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
             "#,
         )
         .bind(id)
@@ -218,7 +228,7 @@ impl WorkoutRepository {
             SET status = 'cancelled',
                 duration = EXTRACT(EPOCH FROM (NOW() - started_at))::int
             WHERE id = $1 AND user_id = $2
-            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes
+            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
             "#,
         )
         .bind(id)
@@ -637,6 +647,7 @@ pub struct WorkoutWithCount {
     pub status: WorkoutStatus,
     pub template_id: Option<Uuid>,
     pub notes: Option<String>,
+    pub tags: Vec<String>,
     pub exercise_count: i32,
 }
 

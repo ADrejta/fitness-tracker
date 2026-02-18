@@ -65,6 +65,18 @@
       </button>
     </div>
 
+    @if (allHistoryTags().length > 0) {
+      <div class="tag-filter-row">
+        @for (tag of allHistoryTags(); track tag) {
+          <button
+            class="tag-filter-chip"
+            [class.tag-filter-chip--active]="activeTagFilter() === tag"
+            (click)="toggleTagFilter(tag)"
+          >{{ tag }}</button>
+        }
+      </div>
+    }
+
     @if (viewMode() === 'calendar') {
       <!-- Calendar View -->
       <div class="calendar">
@@ -162,7 +174,7 @@
     } @else {
       <!-- List View -->
       <div class="workout-groups">
-        @for (group of workoutGroups(); track group.label) {
+        @for (group of filteredWorkoutGroups(); track group.label) {
           <div class="workout-group">
             <h3 class="workout-group__title">{{ group.label }}</h3>
             <div class="workout-group__list">
@@ -198,6 +210,13 @@
                         }
                         @if (workout.exercises.length > 3) {
                           <app-badge [size]="'sm'" [variant]="'default'">+{{ workout.exercises.length - 3 }}</app-badge>
+                        }
+                      </div>
+                    }
+                    @if (workout.tags?.length) {
+                      <div class="workout-item__tags">
+                        @for (tag of workout.tags!; track tag) {
+                          <span class="workout-item-tag">{{ tag }}</span>
                         }
                       </div>
                     }

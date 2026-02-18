@@ -58,6 +58,30 @@ export class HistoryComponent implements OnInit {
   settingsService = inject(SettingsService);
 
   workoutGroups = signal<WorkoutGroup[]>([]);
+  activeTagFilter = signal<string | null>(null);
+
+  filteredWorkoutGroups = computed(() => {
+    const filter = this.activeTagFilter();
+    if (!filter) return this.workoutGroups();
+    return this.workoutGroups()
+      .map(group => ({
+        ...group,
+        workouts: group.workouts.filter(w => w.tags?.includes(filter)),
+      }))
+      .filter(group => group.workouts.length > 0);
+  });
+
+  allHistoryTags = computed(() => {
+    const tags = new Set<string>();
+    for (const group of this.workoutGroups()) {
+      for (const workout of group.workouts) {
+        for (const tag of workout.tags ?? []) {
+          tags.add(tag);
+        }
+      }
+    }
+    return [...tags].sort();
+  });
 
   // Pagination state
   currentPage = signal(1);
@@ -178,6 +202,10 @@ export class HistoryComponent implements OnInit {
     if (older.length) groups.push({ label: 'Older', workouts: older });
 
     this.workoutGroups.set(groups);
+  }
+
+  toggleTagFilter(tag: string): void {
+    this.activeTagFilter.set(this.activeTagFilter() === tag ? null : tag);
   }
 
   toggleView(mode: 'list' | 'calendar'): void {
