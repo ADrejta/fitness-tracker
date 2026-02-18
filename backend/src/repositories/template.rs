@@ -4,7 +4,7 @@ use uuid::Uuid;
 
 use crate::dto::CreateTemplateExerciseRequest;
 use crate::error::AppError;
-use crate::models::{TemplateExercise, TemplateExerciseRow, TemplateSet, WorkoutTemplate};
+use crate::models::{TemplateExercise, TemplateSet, WorkoutTemplate};
 
 pub struct TemplateRepository;
 
@@ -270,50 +270,52 @@ impl TemplateRepository {
         pool: &PgPool,
         template_id: Uuid,
     ) -> Result<Vec<TemplateExercise>, AppError> {
-        let exercise_rows = sqlx::query_as::<_, TemplateExerciseRow>(
+        // Single JOIN query instead of N+1
+        let rows = sqlx::query_as::<_, TemplateExerciseWithSetRow>(
             r#"
-            SELECT id, template_id, exercise_template_id, exercise_name, notes, rest_seconds, order_index, superset_id
-            FROM template_exercises
-            WHERE template_id = $1
-            ORDER BY order_index
+            SELECT
+                te.id as exercise_id, te.template_id, te.exercise_template_id, te.exercise_name,
+                te.notes, te.rest_seconds, te.order_index, te.superset_id,
+                ts.set_number, ts.target_reps, ts.target_weight, ts.is_warmup
+            FROM template_exercises te
+            LEFT JOIN template_sets ts ON ts.template_exercise_id = te.id
+            WHERE te.template_id = $1
+            ORDER BY te.order_index, ts.set_number
             "#,
         )
         .bind(template_id)
         .fetch_all(pool)
         .await?;
 
-        let mut exercises = Vec::new();
+        // Group flat rows into exercises with nested sets
+        let mut exercises: Vec<TemplateExercise> = Vec::new();
+        let mut current_exercise_id: Option<Uuid> = None;
 
-        for row in exercise_rows {
-            let sets = sqlx::query_as::<_, TemplateSetRow>(
-                r#"
-                SELECT set_number, target_reps, target_weight, is_warmup
-                FROM template_sets
-                WHERE template_exercise_id = $1
-                ORDER BY set_number
-                "#,
-            )
-            .bind(row.id)
-            .fetch_all(pool)
-            .await?;
+        for row in rows {
+            if current_exercise_id != Some(row.exercise_id) {
+                current_exercise_id = Some(row.exercise_id);
+                exercises.push(TemplateExercise {
+                    id: row.exercise_id,
+                    exercise_template_id: row.exercise_template_id.clone(),
+                    exercise_name: row.exercise_name.clone(),
+                    sets: Vec::new(),
+                    notes: row.notes.clone(),
+                    rest_seconds: row.rest_seconds,
+                    superset_id: row.superset_id,
+                });
+            }
 
-            exercises.push(TemplateExercise {
-                id: row.id,
-                exercise_template_id: row.exercise_template_id,
-                exercise_name: row.exercise_name,
-                sets: sets
-                    .into_iter()
-                    .map(|s| TemplateSet {
-                        set_number: s.set_number,
-                        target_reps: s.target_reps,
-                        target_weight: s.target_weight,
-                        is_warmup: s.is_warmup,
-                    })
-                    .collect(),
-                notes: row.notes,
-                rest_seconds: row.rest_seconds,
-                superset_id: row.superset_id,
-            });
+            // If there's a set (LEFT JOIN may produce NULL for exercises with no sets)
+            if let Some(set_number) = row.set_number {
+                if let Some(exercise) = exercises.last_mut() {
+                    exercise.sets.push(TemplateSet {
+                        set_number,
+                        target_reps: row.target_reps.unwrap_or(0),
+                        target_weight: row.target_weight,
+                        is_warmup: row.is_warmup.unwrap_or(false),
+                    });
+                }
+            }
         }
 
         Ok(exercises)
@@ -357,10 +359,21 @@ pub struct TemplateSummary {
     pub exercise_count: i32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, sqlx::FromRow)]
-struct TemplateSetRow {
-    set_number: i32,
-    target_reps: i32,
+struct TemplateExerciseWithSetRow {
+    // Exercise fields
+    exercise_id: Uuid,
+    template_id: Uuid,
+    exercise_template_id: String,
+    exercise_name: String,
+    notes: Option<String>,
+    rest_seconds: Option<i32>,
+    order_index: i32,
+    superset_id: Option<Uuid>,
+    // Set fields (nullable due to LEFT JOIN)
+    set_number: Option<i32>,
+    target_reps: Option<i32>,
     target_weight: Option<f64>,
-    is_warmup: bool,
+    is_warmup: Option<bool>,
 }

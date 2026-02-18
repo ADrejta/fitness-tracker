@@ -66,6 +66,52 @@ The seed script (`cargo run --bin seed`) creates a fully-featured demo user (dem
 
 The demo user currently has: workout templates, workout history, personal records, body measurements, body stats goals, workout programs, and user settings.
 
+### Database Query Rules — Avoid N+1
+
+**Never query inside a loop.** Every loop that calls a repository function is an N+1 bug.
+
+**The pattern to avoid:**
+```rust
+let exercises = repo::get_exercises(pool, workout_id).await?;
+for exercise in exercises {
+    let sets = repo::get_sets(pool, exercise.id).await?; // ❌ N+1
+}
+```
+
+**The correct patterns:**
+
+1. **JOIN** — when loading a parent with its children (exercises + sets for one workout):
+```sql
+SELECT we.id as exercise_id, ..., ws.id as set_id, ...
+FROM workout_exercises we
+LEFT JOIN workout_sets ws ON ws.workout_exercise_id = we.id
+WHERE we.workout_id = $1
+ORDER BY we.order_index, ws.set_number
+```
+Then group the flat rows into the nested structure in Rust using a `current_id` sentinel or `HashMap`.
+
+2. **`= ANY($1)` batch fetch** — when loading children for multiple parents (sets for N exercises across different workouts):
+```sql
+SELECT * FROM workout_sets
+WHERE workout_exercise_id = ANY($1)   -- $1 is &[Uuid]
+ORDER BY workout_exercise_id, set_number
+```
+Then group into a `HashMap<Uuid, Vec<_>>` and look up per parent.
+
+3. **Window function** — when you need the top-N rows per group (last 3 sessions per exercise):
+```sql
+SELECT * FROM (
+    SELECT ..., ROW_NUMBER() OVER (PARTITION BY exercise_id ORDER BY date DESC) as rn
+    FROM ...
+) sub WHERE rn <= 3
+```
+
+**Existing batch helpers** (use these, don't add new loops):
+- `WorkoutRepository::get_exercises_with_sets(pool, workout_id)` — JOIN for one workout
+- `WorkoutRepository::get_sets_batch(pool, &[Uuid])` — ANY batch for sets
+- `ProgramRepository::find_workouts_batch(pool, &[Uuid])` — ANY batch for program workouts
+- `StatisticsService::batch_fetch_completed_sets` / `batch_fetch_working_sets` — ANY batch for stats
+
 ### README
 
 **When adding a new user-facing feature, always update `README.md`** to reflect the change:

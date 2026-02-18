@@ -210,6 +210,27 @@ impl ProgramRepository {
         Ok(workouts)
     }
 
+    /// Batch-fetch workouts for multiple program IDs in a single query.
+    pub async fn find_workouts_batch(
+        pool: &PgPool,
+        program_ids: &[Uuid],
+    ) -> Result<std::collections::HashMap<Uuid, Vec<ProgramWorkout>>, AppError> {
+        let workouts = sqlx::query_as::<_, ProgramWorkout>(
+            "SELECT * FROM program_workouts WHERE program_id = ANY($1) ORDER BY program_id, week_number, day_number",
+        )
+        .bind(program_ids)
+        .fetch_all(pool)
+        .await?;
+
+        let mut map: std::collections::HashMap<Uuid, Vec<ProgramWorkout>> =
+            std::collections::HashMap::new();
+        for w in workouts {
+            map.entry(w.program_id).or_default().push(w);
+        }
+
+        Ok(map)
+    }
+
     pub async fn find_workout_by_id(
         pool: &PgPool,
         id: Uuid,

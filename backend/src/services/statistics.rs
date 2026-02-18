@@ -440,19 +440,16 @@ impl StatisticsService {
         .fetch_all(pool)
         .await?;
 
+        // Batch-fetch all sets for all history rows in a single query
+        let exercise_ids: Vec<Uuid> = history_rows.iter().map(|r| r.workout_exercise_id).collect();
+        let all_sets = Self::batch_fetch_completed_sets(pool, &exercise_ids).await?;
+
         let mut history = Vec::new();
         for row in history_rows {
-            let sets = sqlx::query_as::<_, SetRow>(
-                r#"
-                SELECT set_number, actual_reps, actual_weight, is_warmup
-                FROM workout_sets
-                WHERE workout_exercise_id = $1 AND is_completed = true
-                ORDER BY set_number
-                "#,
-            )
-            .bind(row.workout_exercise_id)
-            .fetch_all(pool)
-            .await?;
+            let sets = all_sets
+                .get(&row.workout_exercise_id)
+                .cloned()
+                .unwrap_or_default();
 
             let working_sets: Vec<_> = sets.iter().filter(|s| !s.is_warmup).collect();
 
@@ -564,37 +561,70 @@ impl StatisticsService {
 
         let mut suggestions = Vec::new();
 
-        for (exercise_id, exercise_name) in exercises {
-            // Get muscle groups for this exercise
-            let muscle_groups = sqlx::query_scalar::<_, MuscleGroup>(
-                "SELECT muscle_group FROM exercise_muscle_groups WHERE exercise_id = $1",
-            )
-            .bind(&exercise_id)
-            .fetch_all(pool)
-            .await?;
-            let is_large = muscle_groups.iter().any(is_large_muscle_group);
-            let increment = if is_large { large_increment } else { small_increment };
+        // Batch-fetch muscle groups for all exercises
+        let all_exercise_ids: Vec<String> = exercises.iter().map(|(id, _)| id.clone()).collect();
+        let muscle_group_rows = sqlx::query_as::<_, (String, MuscleGroup)>(
+            "SELECT exercise_id, muscle_group FROM exercise_muscle_groups WHERE exercise_id = ANY($1)",
+        )
+        .bind(&all_exercise_ids)
+        .fetch_all(pool)
+        .await?;
+        let mut muscle_group_map: std::collections::HashMap<String, Vec<MuscleGroup>> =
+            std::collections::HashMap::new();
+        for (eid, mg) in muscle_group_rows {
+            muscle_group_map.entry(eid).or_default().push(mg);
+        }
 
-            // Get last 3 completed sessions for this exercise (most recent first)
-            let sessions = sqlx::query_as::<_, ExerciseHistoryRow>(
-                r#"
+        // Batch-fetch last 3 sessions for all exercises using a window function
+        let all_sessions = sqlx::query_as::<_, ExerciseHistoryRowWithTemplate>(
+            r#"
+            SELECT workout_id, date, workout_exercise_id, exercise_template_id
+            FROM (
                 SELECT
                     w.id as workout_id,
                     w.started_at as date,
-                    we.id as workout_exercise_id
+                    we.id as workout_exercise_id,
+                    we.exercise_template_id,
+                    ROW_NUMBER() OVER (PARTITION BY we.exercise_template_id ORDER BY w.started_at DESC) as rn
                 FROM workouts w
                 JOIN workout_exercises we ON we.workout_id = w.id
                 WHERE w.user_id = $1
                     AND w.status = 'completed'
-                    AND we.exercise_template_id = $2
-                ORDER BY w.started_at DESC
-                LIMIT 3
-                "#,
-            )
-            .bind(user_id)
-            .bind(&exercise_id)
-            .fetch_all(pool)
-            .await?;
+                    AND we.exercise_template_id = ANY($2)
+            ) sub
+            WHERE rn <= 3
+            "#,
+        )
+        .bind(user_id)
+        .bind(&all_exercise_ids)
+        .fetch_all(pool)
+        .await?;
+
+        // Group sessions by exercise template id
+        let mut sessions_by_exercise: std::collections::HashMap<String, Vec<ExerciseHistoryRow>> =
+            std::collections::HashMap::new();
+        let mut all_session_exercise_ids: Vec<Uuid> = Vec::new();
+        for s in &all_sessions {
+            all_session_exercise_ids.push(s.workout_exercise_id);
+            sessions_by_exercise
+                .entry(s.exercise_template_id.clone())
+                .or_default()
+                .push(ExerciseHistoryRow {
+                    workout_id: s.workout_id,
+                    date: s.date,
+                    workout_exercise_id: s.workout_exercise_id,
+                });
+        }
+
+        // Batch-fetch all working sets for all sessions in one query
+        let all_sets_map = Self::batch_fetch_working_sets(pool, &all_session_exercise_ids).await?;
+
+        for (exercise_id, exercise_name) in exercises {
+            let muscle_groups = muscle_group_map.get(&exercise_id).cloned().unwrap_or_default();
+            let is_large = muscle_groups.iter().any(is_large_muscle_group);
+            let increment = if is_large { large_increment } else { small_increment };
+
+            let sessions = sessions_by_exercise.get(&exercise_id).cloned().unwrap_or_default();
 
             if sessions.is_empty() {
                 continue;
@@ -602,22 +632,13 @@ impl StatisticsService {
 
             let session_count = sessions.len();
 
-            // For each session, get working sets
+            // For each session, use pre-fetched working sets
             let mut session_data: Vec<SessionAnalysis> = Vec::new();
             for session in &sessions {
-                let sets = sqlx::query_as::<_, SetRow>(
-                    r#"
-                    SELECT set_number, actual_reps, actual_weight, is_warmup
-                    FROM workout_sets
-                    WHERE workout_exercise_id = $1
-                        AND is_completed = true
-                        AND is_warmup = false
-                    ORDER BY set_number
-                    "#,
-                )
-                .bind(session.workout_exercise_id)
-                .fetch_all(pool)
-                .await?;
+                let sets = all_sets_map
+                    .get(&session.workout_exercise_id)
+                    .cloned()
+                    .unwrap_or_default();
 
                 if sets.is_empty() {
                     continue;
@@ -844,28 +865,51 @@ impl StatisticsService {
         .fetch_all(pool)
         .await?;
 
+        // Batch-fetch all sessions for all exercises
+        let all_exercise_ids: Vec<String> = exercises.iter().map(|(id, _)| id.clone()).collect();
+        let all_sessions = sqlx::query_as::<_, ExerciseHistoryRowWithTemplate>(
+            r#"
+            SELECT
+                w.id as workout_id,
+                w.started_at as date,
+                we.id as workout_exercise_id,
+                we.exercise_template_id
+            FROM workouts w
+            JOIN workout_exercises we ON we.workout_id = w.id
+            WHERE w.user_id = $1
+                AND w.status = 'completed'
+                AND we.exercise_template_id = ANY($2)
+            ORDER BY w.started_at DESC
+            "#,
+        )
+        .bind(user_id)
+        .bind(&all_exercise_ids)
+        .fetch_all(pool)
+        .await?;
+
+        // Group sessions by exercise template id
+        let mut sessions_by_exercise: std::collections::HashMap<String, Vec<ExerciseHistoryRow>> =
+            std::collections::HashMap::new();
+        let mut all_workout_exercise_ids: Vec<Uuid> = Vec::new();
+        for s in &all_sessions {
+            all_workout_exercise_ids.push(s.workout_exercise_id);
+            sessions_by_exercise
+                .entry(s.exercise_template_id.clone())
+                .or_default()
+                .push(ExerciseHistoryRow {
+                    workout_id: s.workout_id,
+                    date: s.date,
+                    workout_exercise_id: s.workout_exercise_id,
+                });
+        }
+
+        // Batch-fetch all working sets in one query
+        let all_sets_map = Self::batch_fetch_working_sets(pool, &all_workout_exercise_ids).await?;
+
         let mut alerts = Vec::new();
 
         for (exercise_id, exercise_name) in exercises {
-            // Get all sessions ordered by date (most recent first)
-            let sessions = sqlx::query_as::<_, ExerciseHistoryRow>(
-                r#"
-                SELECT
-                    w.id as workout_id,
-                    w.started_at as date,
-                    we.id as workout_exercise_id
-                FROM workouts w
-                JOIN workout_exercises we ON we.workout_id = w.id
-                WHERE w.user_id = $1
-                    AND w.status = 'completed'
-                    AND we.exercise_template_id = $2
-                ORDER BY w.started_at DESC
-                "#,
-            )
-            .bind(user_id)
-            .bind(&exercise_id)
-            .fetch_all(pool)
-            .await?;
+            let sessions = sessions_by_exercise.get(&exercise_id).cloned().unwrap_or_default();
 
             if sessions.len() < 2 {
                 continue;
@@ -886,22 +930,13 @@ impl StatisticsService {
                 continue;
             }
 
-            // Get max weight from recent sessions
+            // Get max weight from recent sessions (using pre-fetched sets)
             let mut recent_max: f64 = 0.0;
             for session in &recent_sessions {
-                let sets = sqlx::query_as::<_, SetRow>(
-                    r#"
-                    SELECT set_number, actual_reps, actual_weight, is_warmup
-                    FROM workout_sets
-                    WHERE workout_exercise_id = $1
-                        AND is_completed = true
-                        AND is_warmup = false
-                    ORDER BY set_number
-                    "#,
-                )
-                .bind(session.workout_exercise_id)
-                .fetch_all(pool)
-                .await?;
+                let sets = all_sets_map
+                    .get(&session.workout_exercise_id)
+                    .cloned()
+                    .unwrap_or_default();
 
                 let session_max = sets
                     .iter()
@@ -913,23 +948,14 @@ impl StatisticsService {
                 }
             }
 
-            // Get max weight and date from older sessions
+            // Get max weight and date from older sessions (using pre-fetched sets)
             let mut older_max: f64 = 0.0;
             let mut older_max_date: Option<NaiveDate> = None;
             for session in &older_sessions {
-                let sets = sqlx::query_as::<_, SetRow>(
-                    r#"
-                    SELECT set_number, actual_reps, actual_weight, is_warmup
-                    FROM workout_sets
-                    WHERE workout_exercise_id = $1
-                        AND is_completed = true
-                        AND is_warmup = false
-                    ORDER BY set_number
-                    "#,
-                )
-                .bind(session.workout_exercise_id)
-                .fetch_all(pool)
-                .await?;
+                let sets = all_sets_map
+                    .get(&session.workout_exercise_id)
+                    .cloned()
+                    .unwrap_or_default();
 
                 let session_max = sets
                     .iter()
@@ -976,6 +1002,80 @@ impl StatisticsService {
         info!("Found {} plateau alerts", alerts.len());
         Ok(PlateauAlertResponse { alerts })
     }
+
+    /// Batch-fetch completed sets for multiple workout_exercise_ids (includes warmup sets).
+    /// Used by get_exercise_progress which needs all completed sets including warmups.
+    async fn batch_fetch_completed_sets(
+        pool: &PgPool,
+        exercise_ids: &[Uuid],
+    ) -> Result<std::collections::HashMap<Uuid, Vec<SetRow>>, AppError> {
+        if exercise_ids.is_empty() {
+            return Ok(std::collections::HashMap::new());
+        }
+
+        let rows = sqlx::query_as::<_, SetRowWithExerciseId>(
+            r#"
+            SELECT workout_exercise_id, set_number, actual_reps, actual_weight, is_warmup
+            FROM workout_sets
+            WHERE workout_exercise_id = ANY($1) AND is_completed = true
+            ORDER BY workout_exercise_id, set_number
+            "#,
+        )
+        .bind(exercise_ids)
+        .fetch_all(pool)
+        .await?;
+
+        let mut map: std::collections::HashMap<Uuid, Vec<SetRow>> =
+            std::collections::HashMap::new();
+        for row in rows {
+            map.entry(row.workout_exercise_id).or_default().push(SetRow {
+                set_number: row.set_number,
+                actual_reps: row.actual_reps,
+                actual_weight: row.actual_weight,
+                is_warmup: row.is_warmup,
+            });
+        }
+
+        Ok(map)
+    }
+
+    /// Batch-fetch completed working (non-warmup) sets for multiple workout_exercise_ids.
+    /// Used by overload suggestions and plateau alerts.
+    async fn batch_fetch_working_sets(
+        pool: &PgPool,
+        exercise_ids: &[Uuid],
+    ) -> Result<std::collections::HashMap<Uuid, Vec<SetRow>>, AppError> {
+        if exercise_ids.is_empty() {
+            return Ok(std::collections::HashMap::new());
+        }
+
+        let rows = sqlx::query_as::<_, SetRowWithExerciseId>(
+            r#"
+            SELECT workout_exercise_id, set_number, actual_reps, actual_weight, is_warmup
+            FROM workout_sets
+            WHERE workout_exercise_id = ANY($1)
+                AND is_completed = true
+                AND is_warmup = false
+            ORDER BY workout_exercise_id, set_number
+            "#,
+        )
+        .bind(exercise_ids)
+        .fetch_all(pool)
+        .await?;
+
+        let mut map: std::collections::HashMap<Uuid, Vec<SetRow>> =
+            std::collections::HashMap::new();
+        for row in rows {
+            map.entry(row.workout_exercise_id).or_default().push(SetRow {
+                set_number: row.set_number,
+                actual_reps: row.actual_reps,
+                actual_weight: row.actual_weight,
+                is_warmup: row.is_warmup,
+            });
+        }
+
+        Ok(map)
+    }
 }
 
 #[derive(Debug, sqlx::FromRow)]
@@ -992,14 +1092,14 @@ struct MuscleGroupRow {
     volume: f64,
 }
 
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 struct ExerciseHistoryRow {
     workout_id: Uuid,
     date: chrono::DateTime<Utc>,
     workout_exercise_id: Uuid,
 }
 
-#[derive(Debug, sqlx::FromRow)]
+#[derive(Debug, Clone, sqlx::FromRow)]
 struct SetRow {
     set_number: i32,
     actual_reps: Option<i32>,
@@ -1011,6 +1111,23 @@ struct SessionAnalysis {
     max_weight: f64,
     avg_reps: i32,
     all_targets_met: bool,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct SetRowWithExerciseId {
+    workout_exercise_id: Uuid,
+    set_number: i32,
+    actual_reps: Option<i32>,
+    actual_weight: Option<f64>,
+    is_warmup: bool,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct ExerciseHistoryRowWithTemplate {
+    workout_id: Uuid,
+    date: chrono::DateTime<Utc>,
+    workout_exercise_id: Uuid,
+    exercise_template_id: String,
 }
 
 #[cfg(test)]

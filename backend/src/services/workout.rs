@@ -40,12 +40,13 @@ impl WorkoutService {
             .await?
             .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
 
-        let exercises = WorkoutRepository::get_exercises(pool, workout_id).await?;
+        // Single JOIN query instead of N+1
+        let exercises_with_sets =
+            WorkoutRepository::get_exercises_with_sets(pool, workout_id).await?;
 
-        let mut exercise_responses = Vec::new();
-        for exercise in exercises {
-            let sets = WorkoutRepository::get_sets(pool, exercise.id).await?;
-            exercise_responses.push(WorkoutExerciseResponse {
+        let exercise_responses = exercises_with_sets
+            .into_iter()
+            .map(|(exercise, sets)| WorkoutExerciseResponse {
                 id: exercise.id,
                 exercise_template_id: exercise.exercise_template_id,
                 exercise_name: exercise.exercise_name,
@@ -66,8 +67,8 @@ impl WorkoutService {
                     .collect(),
                 notes: exercise.notes,
                 superset_id: exercise.superset_id,
-            });
-        }
+            })
+            .collect();
 
         Ok(WorkoutResponse {
             id: workout.id,
@@ -165,11 +166,11 @@ impl WorkoutService {
         workout_id: Uuid,
         user_id: Uuid,
     ) -> Result<(), AppError> {
-        let exercises = WorkoutRepository::get_exercises(pool, workout_id).await?;
+        // Single JOIN query to get all exercises with their sets
+        let exercises_with_sets =
+            WorkoutRepository::get_exercises_with_sets(pool, workout_id).await?;
 
-        for exercise in exercises {
-            let sets = WorkoutRepository::get_sets(pool, exercise.id).await?;
-
+        for (exercise, sets) in exercises_with_sets {
             // Filter completed, non-warmup sets
             let working_sets: Vec<_> = sets
                 .iter()

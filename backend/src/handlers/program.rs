@@ -79,30 +79,41 @@ pub async fn list_programs(
 ) -> Result<Json<ProgramListResponse>, AppError> {
     let programs = ProgramRepository::find_all(&pool, auth_user.user_id).await?;
 
-    let mut summaries = Vec::new();
-    for program in programs {
-        let workouts = ProgramRepository::find_workouts(&pool, program.id).await?;
-        let total_workouts = workouts.iter().filter(|w| !w.is_rest_day).count() as i32;
-        let completed_workouts = workouts
-            .iter()
-            .filter(|w| !w.is_rest_day && w.completed_workout_id.is_some())
-            .count() as i32;
+    // Batch-fetch all workouts for all programs in a single query
+    let program_ids: Vec<uuid::Uuid> = programs.iter().map(|p| p.id).collect();
+    let workouts_by_program = ProgramRepository::find_workouts_batch(&pool, &program_ids).await?;
 
-        summaries.push(ProgramSummaryResponse {
-            id: program.id,
-            name: program.name,
-            description: program.description,
-            duration_weeks: program.duration_weeks,
-            is_active: program.is_active,
-            current_week: program.current_week,
-            current_day: program.current_day,
-            started_at: program.started_at,
-            completed_at: program.completed_at,
-            created_at: program.created_at,
-            total_workouts,
-            completed_workouts,
-        });
-    }
+    let summaries = programs
+        .into_iter()
+        .map(|program| {
+            let workouts = workouts_by_program.get(&program.id);
+            let total_workouts = workouts
+                .map(|ws| ws.iter().filter(|w| !w.is_rest_day).count() as i32)
+                .unwrap_or(0);
+            let completed_workouts = workouts
+                .map(|ws| {
+                    ws.iter()
+                        .filter(|w| !w.is_rest_day && w.completed_workout_id.is_some())
+                        .count() as i32
+                })
+                .unwrap_or(0);
+
+            ProgramSummaryResponse {
+                id: program.id,
+                name: program.name,
+                description: program.description,
+                duration_weeks: program.duration_weeks,
+                is_active: program.is_active,
+                current_week: program.current_week,
+                current_day: program.current_day,
+                started_at: program.started_at,
+                completed_at: program.completed_at,
+                created_at: program.created_at,
+                total_workouts,
+                completed_workouts,
+            }
+        })
+        .collect();
 
     Ok(Json(ProgramListResponse {
         programs: summaries,

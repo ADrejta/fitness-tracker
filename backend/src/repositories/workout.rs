@@ -285,6 +285,102 @@ impl WorkoutRepository {
         Ok(exercises)
     }
 
+    /// Fetch all exercises and their sets for a workout in a single JOIN query.
+    /// Returns exercises with sets pre-loaded, avoiding N+1 queries.
+    pub async fn get_exercises_with_sets(
+        pool: &PgPool,
+        workout_id: Uuid,
+    ) -> Result<Vec<(WorkoutExercise, Vec<WorkoutSet>)>, AppError> {
+        let rows = sqlx::query_as::<_, ExerciseWithSetRow>(
+            r#"
+            SELECT
+                we.id as exercise_id, we.workout_id, we.exercise_template_id, we.exercise_name,
+                we.notes as exercise_notes, we.order_index, we.superset_id,
+                ws.id as set_id, ws.workout_exercise_id, ws.set_number, ws.target_reps,
+                ws.actual_reps, ws.target_weight, ws.actual_weight, ws.is_warmup,
+                ws.is_completed, ws.completed_at, ws.rpe
+            FROM workout_exercises we
+            LEFT JOIN workout_sets ws ON ws.workout_exercise_id = we.id
+            WHERE we.workout_id = $1
+            ORDER BY we.order_index, ws.set_number
+            "#,
+        )
+        .bind(workout_id)
+        .fetch_all(pool)
+        .await?;
+
+        // Group flat rows into exercises with nested sets
+        let mut exercises: Vec<(WorkoutExercise, Vec<WorkoutSet>)> = Vec::new();
+        let mut current_exercise_id: Option<Uuid> = None;
+
+        for row in rows {
+            if current_exercise_id != Some(row.exercise_id) {
+                current_exercise_id = Some(row.exercise_id);
+                exercises.push((
+                    WorkoutExercise {
+                        id: row.exercise_id,
+                        workout_id: row.workout_id,
+                        exercise_template_id: row.exercise_template_id.clone(),
+                        exercise_name: row.exercise_name.clone(),
+                        notes: row.exercise_notes.clone(),
+                        order_index: row.order_index,
+                        superset_id: row.superset_id,
+                    },
+                    Vec::new(),
+                ));
+            }
+
+            // If there's a set (LEFT JOIN may produce NULL set_id for exercises with no sets)
+            if let Some(set_id) = row.set_id {
+                if let Some((_, sets)) = exercises.last_mut() {
+                    sets.push(WorkoutSet {
+                        id: set_id,
+                        workout_exercise_id: row.workout_exercise_id.unwrap_or(row.exercise_id),
+                        set_number: row.set_number.unwrap_or(0),
+                        target_reps: row.target_reps,
+                        actual_reps: row.actual_reps,
+                        target_weight: row.target_weight,
+                        actual_weight: row.actual_weight,
+                        is_warmup: row.is_warmup.unwrap_or(false),
+                        is_completed: row.is_completed.unwrap_or(false),
+                        completed_at: row.completed_at,
+                        rpe: row.rpe,
+                    });
+                }
+            }
+        }
+
+        Ok(exercises)
+    }
+
+    /// Batch-fetch sets for multiple workout_exercise_ids in a single query.
+    /// Returns a HashMap keyed by workout_exercise_id.
+    pub async fn get_sets_batch(
+        pool: &PgPool,
+        exercise_ids: &[Uuid],
+    ) -> Result<std::collections::HashMap<Uuid, Vec<WorkoutSet>>, AppError> {
+        let sets = sqlx::query_as::<_, WorkoutSet>(
+            r#"
+            SELECT id, workout_exercise_id, set_number, target_reps, actual_reps,
+                   target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
+            FROM workout_sets
+            WHERE workout_exercise_id = ANY($1)
+            ORDER BY workout_exercise_id, set_number
+            "#,
+        )
+        .bind(exercise_ids)
+        .fetch_all(pool)
+        .await?;
+
+        let mut map: std::collections::HashMap<Uuid, Vec<WorkoutSet>> =
+            std::collections::HashMap::new();
+        for set in sets {
+            map.entry(set.workout_exercise_id).or_default().push(set);
+        }
+
+        Ok(map)
+    }
+
     pub async fn update_exercise(
         pool: &PgPool,
         exercise_id: Uuid,
@@ -549,4 +645,28 @@ struct WorkoutStats {
     total_volume: f64,
     total_sets: i32,
     total_reps: i32,
+}
+
+#[derive(Debug, sqlx::FromRow)]
+struct ExerciseWithSetRow {
+    // Exercise fields
+    exercise_id: Uuid,
+    workout_id: Uuid,
+    exercise_template_id: String,
+    exercise_name: String,
+    exercise_notes: Option<String>,
+    order_index: i32,
+    superset_id: Option<Uuid>,
+    // Set fields (nullable due to LEFT JOIN)
+    set_id: Option<Uuid>,
+    workout_exercise_id: Option<Uuid>,
+    set_number: Option<i32>,
+    target_reps: Option<i32>,
+    actual_reps: Option<i32>,
+    target_weight: Option<f64>,
+    actual_weight: Option<f64>,
+    is_warmup: Option<bool>,
+    is_completed: Option<bool>,
+    completed_at: Option<DateTime<Utc>>,
+    rpe: Option<i16>,
 }
