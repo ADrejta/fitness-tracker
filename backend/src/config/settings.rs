@@ -40,8 +40,8 @@ pub struct CorsSettings {
 impl Settings {
     pub fn new() -> Result<Self, ConfigError> {
         let config = Config::builder()
-            .set_default("database.min_connections", 1)?
-            .set_default("database.max_connections", 10)?
+            .set_default("database.min_connections", 5)?
+            .set_default("database.max_connections", 25)?
             .set_default("database.acquire_timeout_secs", 30)?
             .set_default("database.idle_timeout_secs", 600)?
             .set_default("database.max_lifetime_secs", 1800)?
