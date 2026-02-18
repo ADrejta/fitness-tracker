@@ -46,12 +46,12 @@ impl KeyExtractor for SmartIpKeyExtractor {
 /// Type alias for our rate limiter layer
 pub type RateLimitLayer = GovernorLayer<SmartIpKeyExtractor, NoOpMiddleware, axum::body::Body>;
 
-/// Creates a general rate limiter: ~100 requests per minute per IP
-/// Allows burst of 20 requests
+/// Creates a general rate limiter: 20 requests per second per IP
+/// Allows burst of 40 requests
 pub fn general_rate_limiter() -> RateLimitLayer {
     let config = GovernorConfigBuilder::default()
-        .per_second(2) // ~120 per minute
-        .burst_size(20)
+        .per_millisecond(50) // 1 token per 50ms = 20 req/s
+        .burst_size(40)
         .key_extractor(SmartIpKeyExtractor)
         .finish()
         .expect("Failed to build general rate limiter config");
