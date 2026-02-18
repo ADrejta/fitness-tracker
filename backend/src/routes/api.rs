@@ -6,6 +6,7 @@ use axum::{
 };
 use sqlx::PgPool;
 use axum::http::{header, Method};
+use tower_http::compression::CompressionLayer;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::Level;
@@ -239,5 +240,6 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
         )
         .layer(middleware::from_fn(request_id_middleware))
         .layer(cors)
+        .layer(CompressionLayer::new())
         .with_state(state)
 }
