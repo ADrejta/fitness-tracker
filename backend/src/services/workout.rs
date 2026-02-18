@@ -170,116 +170,123 @@ impl WorkoutService {
         let exercises_with_sets =
             WorkoutRepository::get_exercises_with_sets(pool, workout_id).await?;
 
+        // Process all exercises in parallel
+        let pool = pool.clone();
+        let mut join_set = tokio::task::JoinSet::new();
         for (exercise, sets) in exercises_with_sets {
-            // Filter completed, non-warmup sets
-            let working_sets: Vec<_> = sets
-                .iter()
-                .filter(|s| s.is_completed && !s.is_warmup)
-                .collect();
+            let pool = pool.clone();
+            join_set.spawn(async move {
+                // Collect owned working sets to avoid borrow issues across awaits
+                let working_sets: Vec<_> = sets
+                    .into_iter()
+                    .filter(|s| s.is_completed && !s.is_warmup)
+                    .collect();
 
-            if working_sets.is_empty() {
-                continue;
-            }
-
-            // Max weight PR
-            if let Some(max_weight_set) = working_sets
-                .iter()
-                .filter_map(|s| s.actual_weight.map(|w| (w, s)))
-                .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))
-            {
-                let current_max = PersonalRecordRepository::get_current_record(
-                    pool,
-                    user_id,
-                    &exercise.exercise_template_id,
-                    &RecordType::MaxWeight,
-                )
-                .await?;
-
-                if current_max.map_or(true, |r| max_weight_set.0 > r.value) {
-                    PersonalRecordRepository::create(
-                        pool,
-                        user_id,
-                        &exercise.exercise_template_id,
-                        &exercise.exercise_name,
-                        &RecordType::MaxWeight,
-                        max_weight_set.0,
-                        max_weight_set.1.actual_reps,
-                        Utc::now(),
-                        workout_id,
-                    )
-                    .await?;
+                if working_sets.is_empty() {
+                    return Ok::<(), AppError>(());
                 }
-            }
 
-            // Max reps PR (for bodyweight exercises or highest reps at any weight)
-            if let Some(max_reps_set) = working_sets
-                .iter()
-                .filter_map(|s| s.actual_reps.map(|r| (r, s)))
-                .max_by_key(|a| a.0)
-            {
-                let current_max = PersonalRecordRepository::get_current_record(
-                    pool,
-                    user_id,
-                    &exercise.exercise_template_id,
-                    &RecordType::MaxReps,
-                )
-                .await?;
+                // Compute PR candidates synchronously before any await
+                let max_weight_candidate: Option<(f64, Option<i32>)> = working_sets
+                    .iter()
+                    .filter_map(|s| s.actual_weight.map(|w| (w, s.actual_reps)))
+                    .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
-                if current_max.map_or(true, |r| max_reps_set.0 as f64 > r.value) {
-                    PersonalRecordRepository::create(
-                        pool,
-                        user_id,
-                        &exercise.exercise_template_id,
-                        &exercise.exercise_name,
-                        &RecordType::MaxReps,
-                        max_reps_set.0 as f64,
-                        Some(max_reps_set.0),
-                        Utc::now(),
-                        workout_id,
-                    )
-                    .await?;
-                }
-            }
+                let max_reps_candidate: Option<i32> =
+                    working_sets.iter().filter_map(|s| s.actual_reps).max();
 
-            // Estimated 1RM PR (Brzycki formula)
-            if let Some(best_1rm) = working_sets
-                .iter()
-                .filter_map(|s| {
-                    match (s.actual_weight, s.actual_reps) {
+                let e1rm_candidate: Option<(f64, i32)> = working_sets
+                    .iter()
+                    .filter_map(|s| match (s.actual_weight, s.actual_reps) {
                         (Some(weight), Some(reps)) => {
-                            calculate_estimated_1rm(weight, reps)
-                                .map(|e1rm| (e1rm, weight, reps))
+                            calculate_estimated_1rm(weight, reps).map(|e1rm| (e1rm, reps))
                         }
                         _ => None,
-                    }
-                })
-                .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))
-            {
-                let current_max = PersonalRecordRepository::get_current_record(
-                    pool,
-                    user_id,
-                    &exercise.exercise_template_id,
-                    &RecordType::Estimated1rm,
-                )
-                .await?;
+                    })
+                    .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
 
-                if current_max.map_or(true, |r| best_1rm.0 > r.value) {
-                    PersonalRecordRepository::create(
-                        pool,
+                // Max weight PR
+                if let Some((weight, actual_reps)) = max_weight_candidate {
+                    let current_max = PersonalRecordRepository::get_current_record(
+                        &pool,
                         user_id,
                         &exercise.exercise_template_id,
-                        &exercise.exercise_name,
-                        &RecordType::Estimated1rm,
-                        best_1rm.0,
-                        Some(best_1rm.2),
-                        Utc::now(),
-                        workout_id,
+                        &RecordType::MaxWeight,
                     )
                     .await?;
+                    if current_max.map_or(true, |r| weight > r.value) {
+                        PersonalRecordRepository::create(
+                            &pool,
+                            user_id,
+                            &exercise.exercise_template_id,
+                            &exercise.exercise_name,
+                            &RecordType::MaxWeight,
+                            weight,
+                            actual_reps,
+                            Utc::now(),
+                            workout_id,
+                        )
+                        .await?;
+                    }
                 }
-            }
+
+                // Max reps PR
+                if let Some(max_reps) = max_reps_candidate {
+                    let current_max = PersonalRecordRepository::get_current_record(
+                        &pool,
+                        user_id,
+                        &exercise.exercise_template_id,
+                        &RecordType::MaxReps,
+                    )
+                    .await?;
+                    if current_max.map_or(true, |r| max_reps as f64 > r.value) {
+                        PersonalRecordRepository::create(
+                            &pool,
+                            user_id,
+                            &exercise.exercise_template_id,
+                            &exercise.exercise_name,
+                            &RecordType::MaxReps,
+                            max_reps as f64,
+                            Some(max_reps),
+                            Utc::now(),
+                            workout_id,
+                        )
+                        .await?;
+                    }
+                }
+
+                // Estimated 1RM PR (Brzycki formula)
+                if let Some((e1rm, reps)) = e1rm_candidate {
+                    let current_max = PersonalRecordRepository::get_current_record(
+                        &pool,
+                        user_id,
+                        &exercise.exercise_template_id,
+                        &RecordType::Estimated1rm,
+                    )
+                    .await?;
+                    if current_max.map_or(true, |r| e1rm > r.value) {
+                        PersonalRecordRepository::create(
+                            &pool,
+                            user_id,
+                            &exercise.exercise_template_id,
+                            &exercise.exercise_name,
+                            &RecordType::Estimated1rm,
+                            e1rm,
+                            Some(reps),
+                            Utc::now(),
+                            workout_id,
+                        )
+                        .await?;
+                    }
+                }
+
+                Ok::<(), AppError>(())
+            });
         }
 
+        while let Some(res) = join_set.join_next().await {
+            res.map_err(|e| AppError::Internal(e.to_string()))??;
+        }
         Ok(())
     }
 }

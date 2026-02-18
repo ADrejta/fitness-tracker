@@ -114,96 +114,60 @@ impl StatisticsService {
 
         let now = Utc::now();
         let week_start = now - Duration::days(now.weekday().num_days_from_monday() as i64);
-        debug!("Week start calculated as: {}", week_start);
 
-        // Total workouts
-        debug!("Querying total workouts count");
-        let total_workouts = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND status = 'completed'",
-        )
-        .bind(user_id)
-        .fetch_one(pool)
-        .await
-        .map_err(|e| {
-            error!("Failed to query total workouts: {:?}", e);
-            e
-        })?;
-        debug!("Total workouts: {}", total_workouts);
+        // Run all 6 independent queries in parallel
+        let (
+            total_workouts_r,
+            workouts_this_week_r,
+            volume_r,
+            sets_reps_r,
+            streaks_r,
+            recent_prs_r,
+        ) = tokio::join!(
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND status = 'completed'",
+            )
+            .bind(user_id)
+            .fetch_one(pool),
+            sqlx::query_scalar::<_, i64>(
+                "SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND status = 'completed' AND started_at >= $2",
+            )
+            .bind(user_id)
+            .bind(week_start)
+            .fetch_one(pool),
+            sqlx::query_as::<_, (f64, f64)>(
+                r#"
+                SELECT
+                    COALESCE(SUM(total_volume), 0),
+                    COALESCE(SUM(CASE WHEN started_at >= $2 THEN total_volume ELSE 0 END), 0)
+                FROM workouts
+                WHERE user_id = $1 AND status = 'completed'
+                "#,
+            )
+            .bind(user_id)
+            .bind(week_start)
+            .fetch_one(pool),
+            sqlx::query_as::<_, (i64, i64)>(
+                r#"
+                SELECT
+                    COALESCE(SUM(total_sets), 0)::bigint,
+                    COALESCE(SUM(total_reps), 0)::bigint
+                FROM workouts
+                WHERE user_id = $1 AND status = 'completed'
+                "#,
+            )
+            .bind(user_id)
+            .fetch_one(pool),
+            Self::calculate_streaks(pool, user_id),
+            PersonalRecordRepository::find_recent(pool, user_id, 5),
+        );
 
-        // Workouts this week
-        debug!("Querying workouts this week");
-        let workouts_this_week = sqlx::query_scalar::<_, i64>(
-            "SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND status = 'completed' AND started_at >= $2",
-        )
-        .bind(user_id)
-        .bind(week_start)
-        .fetch_one(pool)
-        .await
-        .map_err(|e| {
-            error!("Failed to query workouts this week: {:?}", e);
-            e
-        })?;
-        debug!("Workouts this week: {}", workouts_this_week);
-
-        // Total and weekly volume
-        debug!("Querying volume data");
-        let (total_volume, volume_this_week) = sqlx::query_as::<_, (f64, f64)>(
-            r#"
-            SELECT
-                COALESCE(SUM(total_volume), 0),
-                COALESCE(SUM(CASE WHEN started_at >= $2 THEN total_volume ELSE 0 END), 0)
-            FROM workouts
-            WHERE user_id = $1 AND status = 'completed'
-            "#,
-        )
-        .bind(user_id)
-        .bind(week_start)
-        .fetch_one(pool)
-        .await
-        .map_err(|e| {
-            error!("Failed to query volume data: {:?}", e);
-            e
-        })?;
-        debug!("Total volume: {}, Volume this week: {}", total_volume, volume_this_week);
-
-        // Total sets and reps
-        debug!("Querying sets and reps");
-        let (total_sets, total_reps) = sqlx::query_as::<_, (i64, i64)>(
-            r#"
-            SELECT
-                COALESCE(SUM(total_sets), 0)::bigint,
-                COALESCE(SUM(total_reps), 0)::bigint
-            FROM workouts
-            WHERE user_id = $1 AND status = 'completed'
-            "#,
-        )
-        .bind(user_id)
-        .fetch_one(pool)
-        .await
-        .map_err(|e| {
-            error!("Failed to query sets and reps: {:?}", e);
-            e
-        })?;
-        debug!("Total sets: {}, Total reps: {}", total_sets, total_reps);
-
-        // Streaks
-        debug!("Calculating streaks");
-        let (current_streak, longest_streak) = Self::calculate_streaks(pool, user_id).await
-            .map_err(|e| {
-                error!("Failed to calculate streaks: {:?}", e);
-                e
-            })?;
-        debug!("Current streak: {}, Longest streak: {}", current_streak, longest_streak);
-
-        // Recent PRs
-        debug!("Fetching recent PRs");
-        let recent_prs = PersonalRecordRepository::find_recent(pool, user_id, 5).await
-            .map_err(|e| {
-                error!("Failed to fetch recent PRs: {:?}", e);
-                e
-            })?;
-        debug!("Found {} recent PRs", recent_prs.len());
-        let recent_prs = recent_prs
+        let total_workouts = total_workouts_r?;
+        let workouts_this_week = workouts_this_week_r?;
+        let (total_volume, volume_this_week) = volume_r?;
+        let (total_sets, total_reps) = sets_reps_r?;
+        let (current_streak, longest_streak) = streaks_r?;
+        let recent_prs = recent_prs_r?
             .into_iter()
             .map(|pr| PersonalRecordResponse {
                 id: pr.id,
@@ -410,14 +374,20 @@ impl StatisticsService {
         user_id: Uuid,
         exercise_id: &str,
     ) -> Result<ExerciseProgressResponse, AppError> {
-        // Get exercise name
-        let exercise_name = sqlx::query_scalar::<_, String>(
-            "SELECT name FROM exercise_templates WHERE id = $1",
-        )
-        .bind(exercise_id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound("Exercise not found".to_string()))?;
+        // Get exercise name (cached — exercise templates are static)
+        let exercise_name = if let Some(cached) = crate::cache::get_exercise_name(exercise_id) {
+            cached
+        } else {
+            let name = sqlx::query_scalar::<_, String>(
+                "SELECT name FROM exercise_templates WHERE id = $1",
+            )
+            .bind(exercise_id)
+            .fetch_optional(pool)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Exercise not found".to_string()))?;
+            crate::cache::set_exercise_name(exercise_id.to_string(), name.clone());
+            name
+        };
 
         // Get workout history for this exercise (ordered oldest to newest for chart display)
         let history_rows = sqlx::query_as::<_, ExerciseHistoryRow>(
@@ -526,8 +496,14 @@ impl StatisticsService {
     ) -> Result<OverloadSuggestionsResponse, AppError> {
         info!("Calculating progressive overload suggestions");
 
-        // Get user's weight unit
-        let settings = SettingsRepository::get_or_create(pool, user_id).await?;
+        // Get user's weight unit (cached with 60s TTL)
+        let settings = if let Some(cached) = crate::cache::get_settings(user_id) {
+            cached
+        } else {
+            let s = SettingsRepository::get_or_create(pool, user_id).await?;
+            crate::cache::set_settings(user_id, s.clone());
+            s
+        };
         let large_increment = match settings.weight_unit {
             WeightUnit::Kg => 2.5,
             WeightUnit::Lbs => 5.0,

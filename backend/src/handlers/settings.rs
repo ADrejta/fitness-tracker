@@ -21,7 +21,13 @@ pub async fn get_settings(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
 ) -> Result<Json<SettingsResponse>, AppError> {
-    let settings = SettingsRepository::get_or_create(&pool, auth_user.user_id).await?;
+    let settings = if let Some(cached) = crate::cache::get_settings(auth_user.user_id) {
+        cached
+    } else {
+        let s = SettingsRepository::get_or_create(&pool, auth_user.user_id).await?;
+        crate::cache::set_settings(auth_user.user_id, s.clone());
+        s
+    };
 
     Ok(Json(SettingsResponse {
         weight_unit: settings.weight_unit,
@@ -69,6 +75,8 @@ pub async fn update_settings(
         req.plate_calculator.as_ref(),
     )
     .await?;
+
+    crate::cache::set_settings(auth_user.user_id, settings.clone());
 
     Ok(Json(SettingsResponse {
         weight_unit: settings.weight_unit,
