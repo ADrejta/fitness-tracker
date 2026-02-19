@@ -165,6 +165,7 @@ Do **not** suggest these as new features — they are fully built:
 - **Weight unit** — kg or lbs; stored in settings; all weight display and plate calculator respect the unit
 - **Demo mode** — seed script (`cargo run --bin seed`) creates `demo@example.com / demo1234` with full realistic data for every feature
 - **PWA / offline support** — `@angular/service-worker` with `ngsw-config.json`; app shell prefetched; API cached with freshness strategy; `manifest.webmanifest` with theme color and icons
+- **Offline sync queue** — `SyncQueueService` + `offlineSyncInterceptor`; failed mutations (POST/PUT/PATCH/DELETE to `/api/v1/`) with status 0 are queued in localStorage (`fitness_tracker_syncQueue`); replayed automatically on reconnect via `HttpBackend` (bypasses interceptors) with a fresh token; amber badge in header shows pending count and triggers manual replay on click; online/offline dot in header reflects `navigator.onLine` in real time
 
 ### Infrastructure
 - **JWT authentication** — access + refresh token pair; refresh endpoint; auth middleware on all protected routes

@@ -118,6 +118,36 @@
   }
 }
 
+.header__sync-badge {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: #92400e;
+  background: #fef3c7;
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  animation: pulse 2s infinite;
+
+  &:hover {
+    background: #fde68a;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.header__sync-count {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xs);
+  min-width: 1ch;
+}
+
 .header__settings {
   display: flex;
   align-items: center;
