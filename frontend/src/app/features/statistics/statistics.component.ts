@@ -4,10 +4,24 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
 import { CardComponent, BadgeComponent, EmptyStateComponent, ButtonComponent, ProgressComponent } from '../../shared/components';
-import { StatisticsService, WorkoutService, SettingsService, ExerciseService, AuthService } from '../../core/services';
+import { StatisticsService, WorkoutService, SettingsService, ExerciseService, AuthService, BodyStatsService } from '../../core/services';
 import { ExerciseProgress, ExerciseWithHistory, ExerciseOverloadSuggestion, ExercisePlateauAlert } from '../../core/services/statistics.service';
 import { PersonalRecord } from '../../core/models';
-import { format, parseISO } from 'date-fns';
+import { format, parseISO, startOfWeek, startOfMonth } from 'date-fns';
+
+const HEATMAP_MUSCLE_KEYS = ['chest','back','shoulders','biceps','triceps','quads','hamstrings','glutes','abs','calves'] as const;
+const HEATMAP_MUSCLE_LABELS: Record<string, string> = {
+  chest: 'Chest', back: 'Back', shoulders: 'Shoulders', biceps: 'Biceps',
+  triceps: 'Triceps', quads: 'Quads', hamstrings: 'Hamstrings',
+  glutes: 'Glutes', abs: 'Abs', calves: 'Calves',
+};
+const STRENGTH_STANDARDS = [
+  { name: 'Bench Press',    keywords: ['bench press'],                          excludes: [],                                  benchmarks: [0.5, 1.0, 1.5, 2.0]  as [number,number,number,number] },
+  { name: 'Back Squat',     keywords: ['squat'],                                excludes: ['goblet','hack','front'],            benchmarks: [0.75,1.25,1.75,2.25] as [number,number,number,number] },
+  { name: 'Deadlift',       keywords: ['deadlift'],                             excludes: ['romanian','rdl','stiff'],           benchmarks: [1.0, 1.5, 2.0, 2.75] as [number,number,number,number] },
+  { name: 'Overhead Press', keywords: ['overhead press','shoulder press','ohp','military press'], excludes: [], benchmarks: [0.35,0.65,1.0,1.35] as [number,number,number,number] },
+  { name: 'Barbell Row',    keywords: ['barbell row','bent-over row','bent over row','pendlay'],  excludes: [], benchmarks: [0.5, 0.9, 1.3, 1.75] as [number,number,number,number] },
+] as const;
 
 @Component({
   selector: 'app-statistics',
@@ -31,6 +45,7 @@ export class StatisticsComponent implements OnInit {
   workoutService = inject(WorkoutService);
   settingsService = inject(SettingsService);
   exerciseService = inject(ExerciseService);
+  bodyStatsService = inject(BodyStatsService);
   private authService = inject(AuthService);
 
   muscleGroupData = computed(() => this.statisticsService.muscleGroupDistribution());
@@ -48,6 +63,74 @@ export class StatisticsComponent implements OnInit {
   chartType = signal<'weight' | 'e1rm' | 'volume'>('weight');
   showAllPRs = false;
   private _selectedExerciseProgress = signal<ExerciseProgress | null>(null);
+
+  // Heatmap
+  HEATMAP_MUSCLE_KEYS = HEATMAP_MUSCLE_KEYS;
+  HEATMAP_MUSCLE_LABELS = HEATMAP_MUSCLE_LABELS;
+  heatmapPeriod = signal<'weekly' | 'monthly'>('weekly');
+
+  heatmapData = computed(() => {
+    const rows = this.statisticsService.muscleHeatmapRows();
+    const monthly = this.heatmapPeriod() === 'monthly';
+
+    // Collect unique sorted periods
+    const periodSet = new Set<string>();
+    rows.forEach(r => periodSet.add(r.periodStart));
+    const periods = Array.from(periodSet).sort();
+
+    // Format period labels
+    const labels = periods.map(p => {
+      const d = new Date(p + 'T00:00:00');
+      return monthly ? format(d, 'MMM') : format(d, 'MMM d');
+    });
+
+    // Build [muscleIdx][periodIdx] count grid
+    const periodIndex = new Map(periods.map((p, i) => [p, i]));
+    const cells: number[][] = HEATMAP_MUSCLE_KEYS.map(() => new Array(periods.length).fill(0));
+
+    for (const row of rows) {
+      const mi = HEATMAP_MUSCLE_KEYS.indexOf(row.muscleGroup as any);
+      const pi = periodIndex.get(row.periodStart) ?? -1;
+      if (mi !== -1 && pi !== -1) cells[mi][pi] += row.setCount;
+    }
+
+    const maxCount = Math.max(...cells.flat(), 1);
+    return { labels, cells, maxCount, empty: periods.length === 0 };
+  });
+
+  // Strength Standards
+  strengthStandards = computed(() => {
+    const prs = this.workoutService.personalRecords().filter(pr => pr.type === 'max-weight');
+    const bwKg = this.bodyStatsService.latestMeasurement()?.weight ?? null;
+    const unit = this.settingsService.weightUnit();
+    const bwInUnit = bwKg !== null ? (unit === 'lbs' ? bwKg * 2.20462 : bwKg) : null;
+
+    return STRENGTH_STANDARDS.map(std => {
+      const matching = prs.filter(pr => {
+        const n = pr.exerciseName.toLowerCase();
+        return std.keywords.some(k => n.includes(k)) && !std.excludes.some(k => n.includes(k));
+      });
+      const bestLift = matching.length > 0 ? Math.max(...matching.map(pr => pr.value)) : null;
+      const ratio = bestLift !== null && bwInUnit !== null ? bestLift / bwInUnit : null;
+
+      const level = ratio === null ? null
+        : ratio >= std.benchmarks[3] ? 'elite'
+        : ratio >= std.benchmarks[2] ? 'advanced'
+        : ratio >= std.benchmarks[1] ? 'intermediate'
+        : ratio >= std.benchmarks[0] ? 'beginner'
+        : 'none';
+
+      const maxVal = std.benchmarks[3] * 1.1;
+      const markerPct = ratio !== null ? Math.min(97, (ratio / maxVal) * 100) : null;
+      const ticks = std.benchmarks.map((v, i) => ({
+        pct: (v / maxVal) * 100,
+        label: ['Beg', 'Int', 'Adv', 'Elite'][i],
+        value: v,
+      }));
+
+      return { name: std.name, bestLift, bodyweight: bwInUnit, ratio, level, markerPct, ticks };
+    });
+  });
 
   selectedExerciseProgress = this._selectedExerciseProgress.asReadonly();
 
@@ -221,6 +304,30 @@ export class StatisticsComponent implements OnInit {
     const values = this.getChartValues();
     if (values.length === 0) return 0;
     return Math.round(Math.max(...values) * 10) / 10;
+  }
+
+  // Heatmap helpers
+  getHeatmapColorClass(count: number, maxCount: number): string {
+    if (count === 0) return 'heat-0';
+    const r = count / maxCount;
+    if (r < 0.25) return 'heat-1';
+    if (r < 0.5)  return 'heat-2';
+    if (r < 0.75) return 'heat-3';
+    return 'heat-4';
+  }
+
+  onHeatmapPeriodChange(period: 'weekly' | 'monthly'): void {
+    this.heatmapPeriod.set(period);
+    this.statisticsService.loadMuscleHeatmap(period === 'monthly' ? 6 : 8, period === 'monthly');
+  }
+
+  // Strength standards helpers
+  getLevelVariant(level: string | null): 'default' | 'success' | 'warning' | 'primary' | 'danger' {
+    if (level === 'elite') return 'primary';
+    if (level === 'advanced') return 'success';
+    if (level === 'intermediate') return 'warning';
+    if (level === 'beginner') return 'default';
+    return 'default';
   }
 
   // PR Methods

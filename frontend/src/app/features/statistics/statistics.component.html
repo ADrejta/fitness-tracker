@@ -172,6 +172,98 @@
       </div>
     </app-card>
 
+    <!-- Muscle Group Volume Heatmap -->
+    <app-card class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">Volume Heatmap</h3>
+        <div class="chart-type-toggle">
+          <button class="toggle-btn" [class.toggle-btn--active]="heatmapPeriod() === 'weekly'"  (click)="onHeatmapPeriodChange('weekly')">Weekly</button>
+          <button class="toggle-btn" [class.toggle-btn--active]="heatmapPeriod() === 'monthly'" (click)="onHeatmapPeriodChange('monthly')">Monthly</button>
+        </div>
+      </div>
+      @if (heatmapData().empty) {
+        <p class="no-data">Log more workouts to see your volume heatmap.</p>
+      } @else {
+        <div class="heatmap-scroll">
+          <div class="heatmap" [style.gridTemplateColumns]="'6rem repeat(' + heatmapData().labels.length + ', 1fr)'">
+            <!-- Header row: empty corner + period labels -->
+            <div class="heatmap__corner"></div>
+            @for (label of heatmapData().labels; track label) {
+              <div class="heatmap__period-label">{{ label }}</div>
+            }
+            <!-- Muscle rows -->
+            @for (key of HEATMAP_MUSCLE_KEYS; track key; let mi = $index) {
+              <div class="heatmap__muscle-label">{{ HEATMAP_MUSCLE_LABELS[key] }}</div>
+              @for (count of heatmapData().cells[mi]; track $index) {
+                <div
+                  class="heatmap__cell"
+                  [class]="getHeatmapColorClass(count, heatmapData().maxCount)"
+                  [title]="count + ' sets'"
+                >{{ count > 0 ? count : '' }}</div>
+              }
+            }
+          </div>
+          <!-- Legend -->
+          <div class="heatmap__legend">
+            <span class="heatmap__legend-label">Less</span>
+            <div class="heatmap__cell heat-0 heatmap__legend-cell"></div>
+            <div class="heatmap__cell heat-1 heatmap__legend-cell"></div>
+            <div class="heatmap__cell heat-2 heatmap__legend-cell"></div>
+            <div class="heatmap__cell heat-3 heatmap__legend-cell"></div>
+            <div class="heatmap__cell heat-4 heatmap__legend-cell"></div>
+            <span class="heatmap__legend-label">More</span>
+          </div>
+        </div>
+      }
+    </app-card>
+
+    <!-- Strength Standards -->
+    <app-card class="chart-card">
+      <h3 class="chart-title">Strength Standards</h3>
+      <p class="chart-subtitle">Approximate unisex benchmarks relative to bodyweight</p>
+      @if (!bodyStatsService.latestMeasurement()?.weight) {
+        <p class="no-data">Log your bodyweight in Body Stats to compare your lifts to standards.</p>
+      }
+      <div class="standards-list">
+        @for (std of strengthStandards(); track std.name) {
+          <div class="standard-item">
+            <div class="standard-item__header">
+              <span class="standard-item__name">{{ std.name }}</span>
+              @if (std.level && std.level !== 'none') {
+                <app-badge [variant]="getLevelVariant(std.level)" [size]="'sm'">{{ std.level | titlecase }}</app-badge>
+              }
+              @if (std.ratio !== null) {
+                <span class="standard-item__ratio">{{ std.ratio.toFixed(2) }}× BW</span>
+              }
+            </div>
+            @if (std.bestLift !== null) {
+              <p class="standard-item__current">Best: {{ std.bestLift }} {{ settingsService.weightUnit() }}</p>
+            } @else {
+              <p class="standard-item__current standard-item__current--none">No data yet</p>
+            }
+            <div class="standard-bar">
+              <div class="standard-bar__track">
+                @if (std.markerPct !== null) {
+                  <div class="standard-bar__fill standard-bar__fill--{{ std.level }}" [style.width.%]="std.markerPct"></div>
+                  <div class="standard-bar__marker" [style.left.%]="std.markerPct"></div>
+                }
+                @for (tick of std.ticks; track tick.label) {
+                  <div class="standard-bar__tick" [style.left.%]="tick.pct">
+                    <span class="standard-bar__tick-val">{{ tick.value }}×</span>
+                  </div>
+                }
+              </div>
+            </div>
+            <div class="standard-bar__level-labels">
+              @for (tick of std.ticks; track tick.label; let last = $last) {
+                <span class="standard-bar__level-label" [style.left.%]="tick.pct">{{ tick.label }}</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </app-card>
+
     <!-- Exercise Progress Chart -->
     <app-card class="chart-card">
       <div class="exercise-progress-header">

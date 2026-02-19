@@ -168,6 +168,7 @@ export class StatisticsService {
   private _muscleGroupDistribution = signal<MuscleGroupData[]>([]);
   private _overloadSuggestions = signal<ExerciseOverloadSuggestion[]>([]);
   private _plateauAlerts = signal<ExercisePlateauAlert[]>([]);
+  private _muscleHeatmapRows = signal<{ periodStart: string; muscleGroup: string; setCount: number }[]>([]);
 
   readonly summary = this._summary.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
@@ -175,6 +176,7 @@ export class StatisticsService {
   readonly muscleGroupDistribution = this._muscleGroupDistribution.asReadonly();
   readonly overloadSuggestions = this._overloadSuggestions.asReadonly();
   readonly plateauAlerts = this._plateauAlerts.asReadonly();
+  readonly muscleHeatmapRows = this._muscleHeatmapRows.asReadonly();
 
   // Computed stats (local fallback)
   readonly totalWorkouts = computed(() =>
@@ -236,6 +238,18 @@ export class StatisticsService {
     this.loadMuscleGroupDistribution();
     this.loadOverloadSuggestions();
     this.loadPlateauAlerts();
+    this.loadMuscleHeatmap(8, false);
+  }
+
+  loadMuscleHeatmap(count: number, monthly: boolean): void {
+    if (!this.authService.isAuthenticated()) return;
+    const params = `count=${count}&monthly=${monthly}`;
+    this.http.get<{ rows: { periodStart: string; muscleGroup: string; setCount: number }[] }>(
+      `${environment.apiUrl}/statistics/muscle-heatmap?${params}`
+    ).subscribe({
+      next: (res) => this._muscleHeatmapRows.set(res.rows),
+      error: () => {}
+    });
   }
 
   private loadSummary(): void {

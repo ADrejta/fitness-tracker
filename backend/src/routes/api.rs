@@ -206,6 +206,10 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
             "/statistics/plateau-alerts",
             get(handlers::get_plateau_alerts),
         )
+        .route(
+            "/statistics/muscle-heatmap",
+            get(handlers::get_muscle_heatmap),
+        )
         // Personal Records
         .route("/personal-records", get(handlers::get_personal_records))
         // Settings

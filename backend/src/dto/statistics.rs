@@ -160,6 +160,31 @@ pub struct OverloadSuggestionsResponse {
     pub suggestions: Vec<ExerciseOverloadSuggestion>,
 }
 
+// Muscle Heatmap DTOs
+
+#[derive(Debug, Deserialize, Validate, IntoParams)]
+#[serde(rename_all = "camelCase")]
+#[into_params(rename_all = "camelCase")]
+pub struct HeatmapQuery {
+    #[validate(range(min = 1, max = 24))]
+    pub count: Option<i32>,
+    pub monthly: Option<bool>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MuscleHeatmapResponse {
+    pub rows: Vec<MuscleHeatmapRow>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MuscleHeatmapRow {
+    pub period_start: NaiveDate,
+    pub muscle_group: MuscleGroup,
+    pub set_count: i64,
+}
+
 // Plateau Detection DTOs
 
 #[derive(Debug, Serialize, ToSchema)]

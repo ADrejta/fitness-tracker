@@ -153,6 +153,8 @@ Do **not** suggest these as new features — they are fully built:
 - **Dashboard summary** — weekly volume, sets, workout count, streak; recent workouts; muscle group breakdown; all 6 queries run in parallel via `tokio::join!`
 - **Workout streak** — current streak and longest streak computed from completed workout history
 - **CSV export** — exports full workout history (date, workout, exercise, set, reps, weight, RPE, notes)
+- **Muscle group volume heatmap** — weekly/monthly grid (10 muscles × N periods) with heat-0–heat-4 color intensity; backend `GET /statistics/muscle-heatmap?count=N&monthly=bool` returns flat rows; shown in Statistics page with period toggle
+- **Strength standards** — compare best PRs to beginner/intermediate/advanced/elite benchmarks (relative to bodyweight) for Bench Press, Back Squat, Deadlift, Overhead Press, Barbell Row; visual progress bar with benchmark ticks; requires body weight logged in Body Stats
 
 ### Body Stats
 - **Body measurements** — log weight, body fat %, and 10+ measurement types (chest, waist, hips, etc.); full history with trend charts

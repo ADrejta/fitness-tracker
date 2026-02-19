@@ -598,3 +598,197 @@
   color: var(--color-text-secondary);
   padding: var(--spacing-lg);
 }
+
+// Chart header with inline controls (e.g. heatmap period toggle)
+.chart-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+
+  .chart-title {
+    margin: 0;
+  }
+}
+
+.chart-subtitle {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin: calc(-1 * var(--spacing-sm)) 0 var(--spacing-md);
+  font-style: italic;
+}
+
+// Muscle Group Volume Heatmap
+.heatmap-scroll {
+  overflow-x: auto;
+}
+
+.heatmap {
+  display: grid;
+  gap: 3px;
+  min-width: 360px;
+}
+
+.heatmap__corner {
+  // empty spacer for top-left grid cell
+}
+
+.heatmap__period-label {
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  text-align: center;
+  padding-bottom: var(--spacing-xs);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heatmap__muscle-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  padding-right: var(--spacing-xs);
+}
+
+.heatmap__cell {
+  height: 1.5rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: var(--font-weight-medium);
+  cursor: default;
+  transition: opacity var(--transition-fast);
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+// Heat intensity color scale
+.heat-0 { background: var(--color-gray-100); color: transparent; }
+.heat-1 { background: var(--color-primary-100); color: var(--color-primary-600); }
+.heat-2 { background: var(--color-primary-200); color: var(--color-primary-700); }
+.heat-3 { background: var(--color-primary-400); color: var(--color-text-inverse); }
+.heat-4 { background: var(--color-primary-600); color: var(--color-text-inverse); }
+
+.heatmap__legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  justify-content: flex-end;
+  margin-top: var(--spacing-sm);
+}
+
+.heatmap__legend-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+}
+
+.heatmap__legend-cell {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+}
+
+// Strength Standards
+.standards-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-sm);
+}
+
+.standard-item {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: 4px;
+  }
+
+  &__name {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+    flex: 1;
+  }
+
+  &__ratio {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-secondary);
+    font-weight: var(--font-weight-medium);
+    flex-shrink: 0;
+  }
+
+  &__current {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-tertiary);
+    margin: 0 0 var(--spacing-sm);
+
+    &--none {
+      font-style: italic;
+    }
+  }
+}
+
+.standard-bar {
+  &__track {
+    position: relative;
+    height: 8px;
+    background: var(--color-gray-200);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  &__fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: var(--radius-full);
+    transition: width var(--transition-slow);
+
+    &--beginner     { background: var(--color-gray-400); }
+    &--intermediate { background: var(--color-warning-400); }
+    &--advanced     { background: var(--color-success-400); }
+    &--elite        { background: var(--color-primary-500); }
+    &--none         { background: var(--color-gray-300); }
+  }
+
+  // Marker circle is hidden — fill communicates position inside clipped track
+  &__marker { display: none; }
+
+  // Tick dividers appear as thin white lines within the track bar
+  &__tick {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 2px;
+    background: var(--color-surface);
+    transform: translateX(-50%);
+    opacity: 0.6;
+  }
+
+  &__tick-val { display: none; } // Level labels below convey the same info
+
+  &__level-labels {
+    position: relative;
+    height: 1.25rem;
+    margin-top: 4px;
+  }
+
+  &__level-label {
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 9px;
+    color: var(--color-text-tertiary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+}
