@@ -341,45 +341,133 @@
     (closed)="closeDetail()"
   >
     @if (detailProgram(); as program) {
-      <div class="program-detail">
-        @if (program.description) {
-          <p class="program-detail__description">{{ program.description }}</p>
-        }
-        <div class="program-detail__meta">
-          <span>{{ program.durationWeeks }} weeks</span>
-          @if (program.isActive) {
-            <app-badge [variant]="'success'" [size]="'sm'">Active - Week {{ program.currentWeek }}</app-badge>
+      <!-- View toggle -->
+      <div class="detail-view-toggle">
+        <button
+          class="detail-view-toggle__btn"
+          [class.detail-view-toggle__btn--active]="detailView() === 'schedule'"
+          (click)="detailView.set('schedule')"
+        >Schedule</button>
+        <button
+          class="detail-view-toggle__btn"
+          [class.detail-view-toggle__btn--active]="detailView() === 'progress'"
+          (click)="detailView.set('progress')"
+        >Progress</button>
+      </div>
+
+      @if (detailView() === 'schedule') {
+        <div class="program-detail">
+          @if (program.description) {
+            <p class="program-detail__description">{{ program.description }}</p>
+          }
+          <div class="program-detail__meta">
+            <span>{{ program.durationWeeks }} weeks</span>
+            @if (program.isActive) {
+              <app-badge [variant]="'success'" [size]="'sm'">Active - Week {{ program.currentWeek }}</app-badge>
+            }
+          </div>
+          @for (week of program.weeks; track week.weekNumber) {
+            <div class="program-detail__week">
+              <h4 class="program-detail__week-title">Week {{ week.weekNumber }}</h4>
+              <div class="program-detail__workout-list">
+                @for (workout of week.workouts; track workout.id) {
+                  <div
+                    class="workout-slot"
+                    [class.workout-slot--rest]="workout.isRestDay"
+                    [class.workout-slot--completed]="workout.completedWorkoutId"
+                    [class.workout-slot--clickable]="program.isActive && !workout.isRestDay && !workout.completedWorkoutId"
+                    (click)="program.isActive ? startProgramWorkout(program.id, workout) : null"
+                  >
+                    <div class="workout-slot__day">Day {{ workout.dayNumber }}</div>
+                    <div class="workout-slot__name">{{ workout.name }}</div>
+                    <div class="workout-slot__status">
+                      @if (workout.completedWorkoutId) {
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success-500)" stroke-width="2">
+                          <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                      } @else if (workout.isRestDay) {
+                        <span class="workout-slot__rest-label">Rest</span>
+                      }
+                    </div>
+                  </div>
+                }
+              </div>
+            </div>
           }
         </div>
-        @for (week of program.weeks; track week.weekNumber) {
-          <div class="program-detail__week">
-            <h4 class="program-detail__week-title">Week {{ week.weekNumber }}</h4>
-            <div class="program-detail__workout-list">
-              @for (workout of week.workouts; track workout.id) {
-                <div
-                  class="workout-slot"
-                  [class.workout-slot--rest]="workout.isRestDay"
-                  [class.workout-slot--completed]="workout.completedWorkoutId"
-                  [class.workout-slot--clickable]="program.isActive && !workout.isRestDay && !workout.completedWorkoutId"
-                  (click)="program.isActive ? startProgramWorkout(program.id, workout) : null"
-                >
-                  <div class="workout-slot__day">Day {{ workout.dayNumber }}</div>
-                  <div class="workout-slot__name">{{ workout.name }}</div>
-                  <div class="workout-slot__status">
-                    @if (workout.completedWorkoutId) {
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--color-success-500)" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    } @else if (workout.isRestDay) {
-                      <span class="workout-slot__rest-label">Rest</span>
-                    }
-                  </div>
-                </div>
-              }
+      }
+
+      @if (detailView() === 'progress') {
+        <div class="progress-tracker">
+          <!-- Overall adherence -->
+          <div class="progress-tracker__overall">
+            <div class="progress-tracker__overall-stats">
+              <span class="progress-tracker__stat-value">{{ detailAdherence().completed }}/{{ detailAdherence().total }}</span>
+              <span class="progress-tracker__stat-label">workouts completed</span>
             </div>
+            <span class="progress-tracker__pct">{{ detailAdherence().pct }}%</span>
           </div>
-        }
-      </div>
+          <app-progress
+            [value]="detailAdherence().completed"
+            [max]="detailAdherence().total"
+            [variant]="'primary'"
+            [size]="'sm'"
+            [showValue]="false"
+          ></app-progress>
+
+          <!-- Week rows -->
+          <div class="progress-weeks">
+            @for (week of program.weeks; track week.weekNumber) {
+              <div
+                class="progress-week"
+                [class.progress-week--current]="program.isActive && week.weekNumber === program.currentWeek"
+                [class.progress-week--past]="week.weekNumber < program.currentWeek"
+              >
+                <div class="progress-week__header">
+                  <span class="progress-week__label">Week {{ week.weekNumber }}</span>
+                  @if (program.isActive && week.weekNumber === program.currentWeek) {
+                    <app-badge [variant]="'primary'" [size]="'sm'">Current</app-badge>
+                  } @else if (weekCompletedCount(week) === weekWorkoutCount(week) && weekWorkoutCount(week) > 0) {
+                    <app-badge [variant]="'success'" [size]="'sm'">Done</app-badge>
+                  }
+                  <span class="progress-week__count">{{ weekCompletedCount(week) }}/{{ weekWorkoutCount(week) }}</span>
+                </div>
+                <div class="progress-week__days">
+                  @for (workout of week.workouts; track workout.id) {
+                    <div
+                      class="adherence-day adherence-day--{{ getDayStatus(workout, week.weekNumber, program) }}"
+                      [title]="workout.isRestDay ? 'Rest Day' : workout.name"
+                    >
+                      <span class="adherence-day__label">{{ DAY_ABBR[workout.dayNumber - 1] }}</span>
+                      <div class="adherence-day__indicator">
+                        @switch (getDayStatus(workout, week.weekNumber, program)) {
+                          @case ('completed') {
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                          }
+                          @case ('rest') {
+                            <span>–</span>
+                          }
+                          @case ('current') {
+                            <div class="adherence-day__pulse"></div>
+                          }
+                          @case ('skipped') {
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                              <line x1="18" y1="6" x2="6" y2="18"></line>
+                              <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
     }
   </app-modal>
 

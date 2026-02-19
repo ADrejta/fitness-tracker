@@ -9,11 +9,12 @@ import {
 } from '../../shared/components';
 import { Tab } from '../../shared/components/tabs/tabs.component';
 import { ProgramService, TemplateService, ToastService } from '../../core/services';
-import { ProgramSummary, WorkoutProgram, ProgramWorkout, WorkoutTemplate } from '../../core/models';
+import { ProgramSummary, WorkoutProgram, ProgramWorkout, ProgramWeek, WorkoutTemplate } from '../../core/models';
 import { format, parseISO } from 'date-fns';
 import { PROGRAM_PRESETS, ProgramPreset, PresetDaySlot } from './program-presets';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const DAY_ABBR = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su'];
 
 interface DaySlot {
   dayNumber: number;
@@ -66,7 +67,26 @@ export class ProgramsComponent {
 
   selectedProgram: ProgramSummary | null = null;
   detailProgram = signal<WorkoutProgram | null>(null);
+  detailView = signal<'schedule' | 'progress'>('schedule');
   isEditing = false;
+
+  DAY_ABBR = DAY_ABBR;
+
+  detailAdherence = computed(() => {
+    const program = this.detailProgram();
+    if (!program) return { completed: 0, total: 0, pct: 0 };
+    let total = 0, completed = 0;
+    for (const week of program.weeks) {
+      for (const wo of week.workouts) {
+        if (!wo.isRestDay) {
+          total++;
+          if (wo.completedWorkoutId) completed++;
+        }
+      }
+    }
+    const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
+    return { completed, total, pct };
+  });
   editingProgramId: string | null = null;
 
   // Form state
@@ -308,6 +328,28 @@ export class ProgramsComponent {
   closeDetail(): void {
     this.showDetailModal = false;
     this.detailProgram.set(null);
+    this.detailView.set('schedule');
+  }
+
+  weekWorkoutCount(week: ProgramWeek): number {
+    return week.workouts.filter(w => !w.isRestDay).length;
+  }
+
+  weekCompletedCount(week: ProgramWeek): number {
+    return week.workouts.filter(w => !!w.completedWorkoutId).length;
+  }
+
+  getDayStatus(workout: ProgramWorkout, weekNumber: number, program: WorkoutProgram): 'completed' | 'rest' | 'current' | 'skipped' | 'upcoming' {
+    if (workout.completedWorkoutId) return 'completed';
+    if (workout.isRestDay) return 'rest';
+    if (program.isActive) {
+      if (weekNumber < program.currentWeek) return 'skipped';
+      if (weekNumber === program.currentWeek) {
+        if (workout.dayNumber < program.currentDay) return 'skipped';
+        if (workout.dayNumber === program.currentDay) return 'current';
+      }
+    }
+    return 'upcoming';
   }
 
   startProgram(program: ProgramSummary): void {
