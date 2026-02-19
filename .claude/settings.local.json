@@ -26,7 +26,11 @@
       "Bash(npm uninstall:*)",
       "Bash(npm install:*)",
       "Bash(npm test:*)",
-      "Bash(npx jest --no-coverage)"
+      "Bash(npx jest --no-coverage)",
+      "Bash(git -C /home/aureldrejta/projects/fitness-tracker show 1302671 --stat)",
+      "Bash(node -e:*)",
+      "Bash(python3:*)",
+      "Bash(npx jest:*)"
     ]
   }
 }

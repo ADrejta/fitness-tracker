@@ -119,3 +119,54 @@ SELECT * FROM (
 1. Add or update the feature description in the **Features** list.
 2. Add any new API endpoints to the **API Overview** table.
 3. Update any other sections affected (e.g., Getting Started, Configuration).
+
+---
+
+## Already-Implemented Features
+
+Do **not** suggest these as new features — they are fully built:
+
+### Workout Experience
+- **Rest timer** — global default duration, auto-start after set completion, vibration on end (`vibrate_on_timer_end` setting; `RestTimerComponent`)
+- **Warm-up calculator** — per-exercise, calculates warm-up sets from working weight for kg or lbs (`calculateWarmupSets` util; `WorkoutExerciseComponent`)
+- **Plate calculator** — given target weight + bar type, shows exact plates per side; customizable bars and plate sets in settings (`PlateCalculatorComponent`; `plate_calculator` JSONB in `user_settings`)
+- **Supersets** — group exercises into supersets during a workout; backend stores `superset_id` on `workout_exercises`; frontend renders grouped UI with label and dissolve button
+- **Exercise progression suggestions** — per-exercise overload recommendations (increase weight / increase reps / maintain) computed from recent history (`StatisticsService::get_overload_suggestions`; shown in `SetRowComponent` as `ProgressionSuggestion`)
+- **Exercise notes** — per-exercise free-text notes saved via `PATCH /workouts/{id}/exercises/{id}`; shown in history detail view
+- **Workout notes** — free-text notes on a workout, shown in history detail view
+- **Workout tags** — `TEXT[]` tags on workouts; chip input during active workout; filter row + badges in history list; tags shown in workout detail
+
+### Templates & Programs
+- **Workout templates** — full CRUD; exercise + set configuration; `last_used_at` tracking; recent templates shown on workout start screen
+- **Workout programs** — multi-week programs with ordered workout days; `current_week`/`current_day` progress tracking; preset programs included
+- **Program progress tracker** — Schedule | Progress toggle in program detail modal; week-by-week adherence grid showing per-day status (completed ✓, rest –, current ●, skipped ✗, upcoming ○); overall adherence %, per-week counts, Done/Current badges
+- **Start workout from template** — copies exercises and sets, increments template usage counter
+- **Repeat workout** — re-creates a completed workout as a new active workout with the same exercises and target weights/reps
+- **Save workout as template** — (UI stub present in workout menu)
+
+### History & Analytics
+- **Paginated workout history** — list view with date grouping (Today / Yesterday / This Week / This Month / Older); 20-per-page with prev/next pagination
+- **Calendar history view** — monthly calendar with dot indicators on workout days; click a day to see workouts
+- **Workout detail** — full breakdown of exercises, sets (weight × reps, RPE, warmup flag), duration, volume, notes, tags, exercise notes
+- **Personal records** — tracked for max weight, max reps, estimated 1RM (Brzycki); detected automatically on workout completion; PR list view with filtering
+- **Exercise statistics** — per-exercise progress charts (volume, max weight, estimated 1RM over time); recent sessions; progression suggestion (`StatisticsService`)
+- **Dashboard summary** — weekly volume, sets, workout count, streak; recent workouts; muscle group breakdown; all 6 queries run in parallel via `tokio::join!`
+- **Workout streak** — current streak and longest streak computed from completed workout history
+- **CSV export** — exports full workout history (date, workout, exercise, set, reps, weight, RPE, notes)
+
+### Body Stats
+- **Body measurements** — log weight, body fat %, and 10+ measurement types (chest, waist, hips, etc.); full history with trend charts
+- **Body stats goals** — set target values for any measurement type; progress % computed against latest measurement
+
+### Settings & UX
+- **Dark / light / system theme** — full CSS variable theming; theme applied immediately on load to prevent flash (`data-theme` attribute on `<html>`)
+- **Weight unit** — kg or lbs; stored in settings; all weight display and plate calculator respect the unit
+- **Demo mode** — seed script (`cargo run --bin seed`) creates `demo@example.com / demo1234` with full realistic data for every feature
+- **PWA / offline support** — `@angular/service-worker` with `ngsw-config.json`; app shell prefetched; API cached with freshness strategy; `manifest.webmanifest` with theme color and icons
+
+### Infrastructure
+- **JWT authentication** — access + refresh token pair; refresh endpoint; auth middleware on all protected routes
+- **Rate limiting** — 20 req/s general, 5/min on auth endpoints (`middleware/rate_limit.rs`)
+- **Response compression** — `CompressionLayer` on all API responses
+- **In-memory caching** — exercise names (never-expiring) and user settings (60 s TTL) via `OnceLock<RwLock<HashMap>>` in `cache.rs`
+- **Composite DB indexes** — on frequently-queried columns (workout_id + order_index, exercise_template_id + completed_at, etc.)
