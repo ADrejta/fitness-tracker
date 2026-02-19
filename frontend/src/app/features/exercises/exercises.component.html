@@ -5,7 +5,8 @@
       type="search"
       placeholder="Search exercises..."
       [clearable]="true"
-      [(ngModel)]="searchQuery"
+      [ngModel]="searchQuery()"
+      (ngModelChange)="searchQuery.set($event)"
     />
   </div>
 

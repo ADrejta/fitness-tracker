@@ -25,7 +25,7 @@ import { ExerciseTemplate, MuscleGroup } from '../../core/models';
 export class ExercisesComponent {
   exerciseService = inject(ExerciseService);
 
-  searchQuery = '';
+  searchQuery = signal('');
   selectedMuscle = signal<MuscleGroup | null>(null);
   showDetailModal = false;
   showAddModal = false;
@@ -40,7 +40,7 @@ export class ExercisesComponent {
 
   filteredExercises = computed(() => {
     let exercises = this.exerciseService.exercises();
-    const query = this.searchQuery.toLowerCase();
+    const query = this.searchQuery().toLowerCase();
     const muscle = this.selectedMuscle();
 
     if (query) {
