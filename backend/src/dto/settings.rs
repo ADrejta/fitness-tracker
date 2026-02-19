@@ -16,6 +16,7 @@ pub struct SettingsResponse {
     pub vibrate_on_timer_end: bool,
     pub sound_on_timer_end: bool,
     pub plate_calculator: PlateCalculatorSettings,
+    pub compact_mode: bool,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
@@ -31,4 +32,5 @@ pub struct UpdateSettingsRequest {
     pub vibrate_on_timer_end: Option<bool>,
     pub sound_on_timer_end: Option<bool>,
     pub plate_calculator: Option<PlateCalculatorSettings>,
+    pub compact_mode: Option<bool>,
 }

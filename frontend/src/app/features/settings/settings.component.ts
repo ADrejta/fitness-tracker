@@ -80,6 +80,11 @@ export class SettingsComponent {
     this.settingsService.updateSettings({ vibrateOnTimerEnd: checked });
   }
 
+  toggleCompactMode(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    this.settingsService.setCompactMode(checked);
+  }
+
   setDefaultBarbell(event: Event): void {
     const value = (event.target as HTMLSelectElement).value as BarbellType;
     this.settingsService.updatePlateCalculatorSettings({ selectedBarbell: value });

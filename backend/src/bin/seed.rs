@@ -767,9 +767,9 @@ async fn seed_user_settings(
     });
 
     sqlx::query(
-        "INSERT INTO user_settings (user_id, weight_unit, theme, default_rest_timer, auto_start_rest_timer, plate_calculator)
-         VALUES ($1, 'kg', 'system', 90, true, $2)
-         ON CONFLICT (user_id) DO UPDATE SET plate_calculator = $2"
+        "INSERT INTO user_settings (user_id, weight_unit, theme, default_rest_timer, auto_start_rest_timer, plate_calculator, compact_mode)
+         VALUES ($1, 'kg', 'system', 90, true, $2, false)
+         ON CONFLICT (user_id) DO UPDATE SET plate_calculator = $2, compact_mode = false"
     )
     .bind(user_id)
     .bind(&plate_calculator_json)

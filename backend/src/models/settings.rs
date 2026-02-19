@@ -96,6 +96,7 @@ pub struct UserSettings {
     pub sound_on_timer_end: bool,
     #[sqlx(json)]
     pub plate_calculator: PlateCalculatorSettings,
+    pub compact_mode: bool,
 }
 
 impl Default for UserSettings {
@@ -111,6 +112,7 @@ impl Default for UserSettings {
             vibrate_on_timer_end: true,
             sound_on_timer_end: true,
             plate_calculator: PlateCalculatorSettings::default(),
+            compact_mode: false,
         }
     }
 }

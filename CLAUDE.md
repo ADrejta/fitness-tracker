@@ -162,6 +162,7 @@ Do **not** suggest these as new features — they are fully built:
 
 ### Settings & UX
 - **Dark / light / system theme** — full CSS variable theming; theme applied immediately on load to prevent flash (`data-theme` attribute on `<html>`)
+- **Compact / dense mode** — `[data-compact='true']` on `<html>` tightens spacing, font sizes, and header/nav height; toggle in Settings → Appearance; persisted to DB (`compact_mode` boolean column) and localStorage; applied via Angular effect same pattern as theme
 - **Weight unit** — kg or lbs; stored in settings; all weight display and plate calculator respect the unit
 - **Demo mode** — seed script (`cargo run --bin seed`) creates `demo@example.com / demo1234` with full realistic data for every feature
 - **PWA / offline support** — `@angular/service-worker` with `ngsw-config.json`; app shell prefetched; API cached with freshness strategy; `manifest.webmanifest` with theme color and icons

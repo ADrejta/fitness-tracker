@@ -28,8 +28,8 @@ impl SettingsRepository {
 
         let settings = sqlx::query_as::<_, UserSettings>(
             r#"
-            INSERT INTO user_settings (user_id, weight_unit, measurement_unit, theme, default_rest_timer, auto_start_rest_timer, show_warmup_sets, vibrate_on_timer_end, sound_on_timer_end, plate_calculator)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+            INSERT INTO user_settings (user_id, weight_unit, measurement_unit, theme, default_rest_timer, auto_start_rest_timer, show_warmup_sets, vibrate_on_timer_end, sound_on_timer_end, plate_calculator, compact_mode)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
             RETURNING *
             "#,
         )
@@ -43,6 +43,7 @@ impl SettingsRepository {
         .bind(default.vibrate_on_timer_end)
         .bind(default.sound_on_timer_end)
         .bind(Json(&default.plate_calculator))
+        .bind(default.compact_mode)
         .fetch_one(pool)
         .await?;
 
@@ -61,6 +62,7 @@ impl SettingsRepository {
         vibrate_on_timer_end: Option<bool>,
         sound_on_timer_end: Option<bool>,
         plate_calculator: Option<&PlateCalculatorSettings>,
+        compact_mode: Option<bool>,
     ) -> Result<UserSettings, AppError> {
         // Ensure settings exist
         Self::get_or_create(pool, user_id).await?;
@@ -76,7 +78,8 @@ impl SettingsRepository {
                 show_warmup_sets = COALESCE($7, show_warmup_sets),
                 vibrate_on_timer_end = COALESCE($8, vibrate_on_timer_end),
                 sound_on_timer_end = COALESCE($9, sound_on_timer_end),
-                plate_calculator = COALESCE($10, plate_calculator)
+                plate_calculator = COALESCE($10, plate_calculator),
+                compact_mode = COALESCE($11, compact_mode)
             WHERE user_id = $1
             RETURNING *
             "#,
@@ -91,6 +94,7 @@ impl SettingsRepository {
         .bind(vibrate_on_timer_end)
         .bind(sound_on_timer_end)
         .bind(plate_calculator.map(Json))
+        .bind(compact_mode)
         .fetch_one(pool)
         .await?;
 

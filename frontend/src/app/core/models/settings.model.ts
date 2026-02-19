@@ -69,6 +69,7 @@ export interface UserSettings {
   vibrateOnTimerEnd: boolean;
   soundOnTimerEnd: boolean;
   plateCalculator: PlateCalculatorSettings;
+  compactMode: boolean;
 }
 
 export const DEFAULT_SETTINGS: UserSettings = {
@@ -81,4 +82,5 @@ export const DEFAULT_SETTINGS: UserSettings = {
   vibrateOnTimerEnd: true,
   soundOnTimerEnd: true,
   plateCalculator: DEFAULT_PLATE_CALCULATOR_SETTINGS,
+  compactMode: false,
 };

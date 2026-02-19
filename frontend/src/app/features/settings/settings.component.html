@@ -60,6 +60,23 @@
           </select>
         </div>
       </div>
+
+      <div class="setting-row">
+        <div class="setting-row__info">
+          <span class="setting-row__label">Compact Mode</span>
+          <span class="setting-row__description">Tighter spacing for small screens or power users</span>
+        </div>
+        <div class="setting-row__control">
+          <label class="toggle">
+            <input
+              type="checkbox"
+              [checked]="settingsService.compactMode()"
+              (change)="toggleCompactMode($event)"
+            />
+            <span class="toggle__slider"></span>
+          </label>
+        </div>
+      </div>
     </app-card>
   </section>
 

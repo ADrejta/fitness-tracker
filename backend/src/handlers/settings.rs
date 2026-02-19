@@ -39,6 +39,7 @@ pub async fn get_settings(
         vibrate_on_timer_end: settings.vibrate_on_timer_end,
         sound_on_timer_end: settings.sound_on_timer_end,
         plate_calculator: settings.plate_calculator,
+        compact_mode: settings.compact_mode,
     }))
 }
 
@@ -73,6 +74,7 @@ pub async fn update_settings(
         req.vibrate_on_timer_end,
         req.sound_on_timer_end,
         req.plate_calculator.as_ref(),
+        req.compact_mode,
     )
     .await?;
 
@@ -88,5 +90,6 @@ pub async fn update_settings(
         vibrate_on_timer_end: settings.vibrate_on_timer_end,
         sound_on_timer_end: settings.sound_on_timer_end,
         plate_calculator: settings.plate_calculator,
+        compact_mode: settings.compact_mode,
     }))
 }

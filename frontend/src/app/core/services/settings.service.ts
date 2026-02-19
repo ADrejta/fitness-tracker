@@ -35,6 +35,7 @@ export class SettingsService {
   readonly theme = computed(() => this._settings().theme);
   readonly defaultRestTimer = computed(() => this._settings().defaultRestTimer);
   readonly plateCalculatorSettings = computed(() => this._settings().plateCalculator);
+  readonly compactMode = computed(() => this._settings().compactMode);
 
   constructor() {
     // Auto-save settings when they change
@@ -46,6 +47,11 @@ export class SettingsService {
     // Apply theme on init and changes
     effect(() => {
       this.applyTheme(this._settings().theme);
+    });
+
+    // Apply compact mode on init and changes
+    effect(() => {
+      this.applyCompactMode(this._settings().compactMode);
     });
 
     // Load from API if authenticated
@@ -118,6 +124,10 @@ export class SettingsService {
     this.updateSettings({ defaultRestTimer: Math.max(0, seconds) });
   }
 
+  setCompactMode(value: boolean): void {
+    this.updateSettings({ compactMode: value });
+  }
+
   getSelectedBarbellWeight(): number {
     const settings = this.plateCalculatorSettings();
     const unit = this.weightUnit();
@@ -155,6 +165,10 @@ export class SettingsService {
     if (this.authService.isAuthenticated()) {
       this.updateSettings(DEFAULT_SETTINGS);
     }
+  }
+
+  private applyCompactMode(compact: boolean): void {
+    document.documentElement.setAttribute('data-compact', String(compact));
   }
 
   private applyTheme(theme: Theme): void {
