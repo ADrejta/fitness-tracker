@@ -43,8 +43,8 @@ export class BodyStatsService {
     )
   );
 
-  readonly latestMeasurement = computed(() =>
-    this.sortedMeasurements()[0] || null
+  readonly latestMeasurement = computed<BodyMeasurement | null>(() =>
+    this.sortedMeasurements()[0] ?? null
   );
 
   readonly activeGoals = computed(() =>
