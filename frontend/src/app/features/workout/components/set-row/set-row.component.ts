@@ -122,6 +122,10 @@ export class SetRowComponent {
     this.setUpdated.emit({ rpe: this.rpeValue ?? undefined });
   }
 
+  toggleWarmup(): void {
+    this.setUpdated.emit({ isWarmup: !this.set.isWarmup });
+  }
+
   toggleComplete(): void {
     if (this.set.isCompleted) {
       this.setUncompleted.emit();

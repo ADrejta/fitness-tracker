@@ -95,6 +95,16 @@ export class WorkoutExerciseComponent implements OnInit {
     this.setAdded.emit({ isWarmup: false });
   }
 
+  addWarmupSet(): void {
+    // Pre-fill weight from last working set if available
+    const lastWorkingSet = [...this.exercise.sets].reverse().find(s => !s.isWarmup);
+    this.setAdded.emit({
+      isWarmup: true,
+      targetReps: 10,
+      targetWeight: lastWorkingSet?.targetWeight,
+    });
+  }
+
   openWarmupCalculator(): void {
     this.showMenu = false;
     this.showWarmupCalculator.set(true);
