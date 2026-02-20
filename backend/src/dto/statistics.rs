@@ -185,6 +185,21 @@ pub struct MuscleHeatmapRow {
     pub set_count: i64,
 }
 
+// Consistency Heatmap DTOs
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsistencyHeatmapResponse {
+    pub days: Vec<ConsistencyDay>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ConsistencyDay {
+    pub date: NaiveDate,
+    pub count: i64,
+}
+
 // Plateau Detection DTOs
 
 #[derive(Debug, Serialize, ToSchema)]

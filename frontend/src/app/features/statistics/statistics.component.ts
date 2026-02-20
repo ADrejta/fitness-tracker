@@ -7,7 +7,7 @@ import { CardComponent, BadgeComponent, EmptyStateComponent, ButtonComponent, Pr
 import { StatisticsService, WorkoutService, SettingsService, ExerciseService, AuthService, BodyStatsService } from '../../core/services';
 import { ExerciseProgress, ExerciseWithHistory, ExerciseOverloadSuggestion, ExercisePlateauAlert } from '../../core/services/statistics.service';
 import { PersonalRecord } from '../../core/models';
-import { format, parseISO, startOfWeek, startOfMonth } from 'date-fns';
+import { format, parseISO, startOfWeek, startOfMonth, addDays, subDays } from 'date-fns';
 
 const HEATMAP_MUSCLE_KEYS = ['chest','back','shoulders','biceps','triceps','quads','hamstrings','glutes','abs','calves'] as const;
 const HEATMAP_MUSCLE_LABELS: Record<string, string> = {
@@ -96,6 +96,46 @@ export class StatisticsComponent implements OnInit {
 
     const maxCount = Math.max(...cells.flat(), 1);
     return { labels, cells, maxCount, empty: periods.length === 0 };
+  });
+
+  // Consistency Heatmap (52-week GitHub-style grid)
+  consistencyGrid = computed(() => {
+    const days = this.statisticsService.consistencyDays();
+    const today = new Date();
+    // Align grid end to the Monday of the week after today so current week is fully shown
+    const endOfGrid = startOfWeek(addDays(today, 7), { weekStartsOn: 1 });
+    const startOfGrid = subDays(endOfGrid, 52 * 7);
+
+    const countMap = new Map(days.map(d => [d.date, d.count]));
+
+    // Build flat array of 52*7 cells (Mon-Sun columns)
+    const cells: { date: Date; count: number; isFuture: boolean }[] = [];
+    for (let i = 0; i < 52 * 7; i++) {
+      const d = addDays(startOfGrid, i);
+      const isFuture = d > today;
+      const key = format(d, 'yyyy-MM-dd');
+      cells.push({ date: d, count: countMap.get(key) ?? 0, isFuture });
+    }
+
+    // Group into 52 week columns of 7 days each
+    const weeks: { date: Date; count: number; isFuture: boolean }[][] = [];
+    for (let w = 0; w < 52; w++) {
+      weeks.push(cells.slice(w * 7, w * 7 + 7));
+    }
+
+    // Month labels: show label on first week of each new month
+    const monthLabels: (string | null)[] = weeks.map((week, wi) => {
+      const firstDay = week[0].date;
+      if (wi === 0) return format(firstDay, 'MMM');
+      const prevFirstDay = weeks[wi - 1][0].date;
+      return format(firstDay, 'MMM') !== format(prevFirstDay, 'MMM')
+        ? format(firstDay, 'MMM')
+        : null;
+    });
+
+    const totalWorkouts = days.reduce((s, d) => s + d.count, 0);
+    const activeDays = days.filter(d => d.count > 0).length;
+    return { weeks, monthLabels, totalWorkouts, activeDays, empty: days.length === 0 };
   });
 
   // Strength Standards
@@ -313,6 +353,13 @@ export class StatisticsComponent implements OnInit {
     if (r < 0.25) return 'heat-1';
     if (r < 0.5)  return 'heat-2';
     if (r < 0.75) return 'heat-3';
+    return 'heat-4';
+  }
+
+  getConsistencyColorClass(count: number, isFuture: boolean): string {
+    if (isFuture || count === 0) return 'heat-0';
+    if (count === 1) return 'heat-2';
+    if (count === 2) return 'heat-3';
     return 'heat-4';
   }
 

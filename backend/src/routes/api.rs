@@ -215,6 +215,10 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
             "/statistics/muscle-heatmap",
             get(handlers::get_muscle_heatmap),
         )
+        .route(
+            "/statistics/consistency-heatmap",
+            get(handlers::get_consistency_heatmap),
+        )
         // Personal Records
         .route("/personal-records", get(handlers::get_personal_records))
         // Settings

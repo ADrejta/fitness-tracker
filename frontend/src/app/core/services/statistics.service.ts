@@ -169,6 +169,7 @@ export class StatisticsService {
   private _overloadSuggestions = signal<ExerciseOverloadSuggestion[]>([]);
   private _plateauAlerts = signal<ExercisePlateauAlert[]>([]);
   private _muscleHeatmapRows = signal<{ periodStart: string; muscleGroup: string; setCount: number }[]>([]);
+  private _consistencyDays = signal<{ date: string; count: number }[]>([]);
 
   readonly summary = this._summary.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
@@ -177,6 +178,7 @@ export class StatisticsService {
   readonly overloadSuggestions = this._overloadSuggestions.asReadonly();
   readonly plateauAlerts = this._plateauAlerts.asReadonly();
   readonly muscleHeatmapRows = this._muscleHeatmapRows.asReadonly();
+  readonly consistencyDays = this._consistencyDays.asReadonly();
 
   // Computed stats (local fallback)
   readonly totalWorkouts = computed(() =>
@@ -239,6 +241,17 @@ export class StatisticsService {
     this.loadOverloadSuggestions();
     this.loadPlateauAlerts();
     this.loadMuscleHeatmap(8, false);
+    this.loadConsistencyHeatmap();
+  }
+
+  loadConsistencyHeatmap(): void {
+    if (!this.authService.isAuthenticated()) return;
+    this.http.get<{ days: { date: string; count: number }[] }>(
+      `${environment.apiUrl}/statistics/consistency-heatmap`
+    ).subscribe({
+      next: (res) => this._consistencyDays.set(res.days),
+      error: () => {}
+    });
   }
 
   loadMuscleHeatmap(count: number, monthly: boolean): void {

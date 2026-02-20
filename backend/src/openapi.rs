@@ -85,6 +85,7 @@ use crate::models::{
         handlers::get_overload_suggestions,
         handlers::get_plateau_alerts,
         handlers::get_muscle_heatmap,
+        handlers::get_consistency_heatmap,
         // Personal records
         handlers::get_personal_records,
         // Settings
@@ -125,6 +126,7 @@ use crate::models::{
             OverloadSuggestionsResponse, ExerciseOverloadSuggestion, SuggestionType, SuggestionConfidence,
             PlateauAlertResponse, ExercisePlateauAlert,
             MuscleHeatmapResponse, MuscleHeatmapRow,
+            ConsistencyHeatmapResponse, ConsistencyDay,
             // Settings
             SettingsResponse, UpdateSettingsRequest,
             // Model enums

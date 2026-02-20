@@ -695,6 +695,77 @@
   flex-shrink: 0;
 }
 
+// Consistency Heatmap (GitHub-style 52-week grid)
+.consistency-scroll {
+  overflow-x: auto;
+}
+
+.consistency-grid {
+  display: flex;
+  gap: 4px;
+  min-width: 560px;
+}
+
+.consistency-day-labels {
+  display: grid;
+  grid-template-rows: 1.2rem repeat(7, 11px);
+  gap: 2px;
+  padding-top: 1.2rem;
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  text-align: right;
+  padding-right: 4px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.consistency-columns {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.consistency-month-row {
+  display: flex;
+  height: 1.2rem;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.consistency-month-label {
+  width: 11px;
+  font-size: 10px;
+  color: var(--color-text-tertiary);
+  white-space: nowrap;
+  overflow: visible;
+}
+
+.consistency-weeks {
+  display: flex;
+  gap: 2px;
+}
+
+.consistency-week {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.consistency-cell {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  cursor: default;
+  flex-shrink: 0;
+  transition: opacity var(--transition-fast);
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
 // Strength Standards
 .standards-list {
   display: flex;

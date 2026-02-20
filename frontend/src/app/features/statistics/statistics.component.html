@@ -172,6 +172,63 @@
       </div>
     </app-card>
 
+    <!-- Training Consistency Heatmap (52-week GitHub-style) -->
+    <app-card class="chart-card">
+      <div class="chart-header">
+        <h3 class="chart-title">Training Consistency</h3>
+        @if (!consistencyGrid().empty) {
+          <span class="chart-subtitle">{{ consistencyGrid().activeDays }} active days &middot; {{ consistencyGrid().totalWorkouts }} workouts</span>
+        }
+      </div>
+      @if (consistencyGrid().empty) {
+        <p class="no-data">Log workouts to see your training consistency.</p>
+      } @else {
+        <div class="consistency-scroll">
+          <div class="consistency-grid">
+            <!-- Day-of-week labels -->
+            <div class="consistency-day-labels">
+              <span></span>
+              <span>Mon</span>
+              <span></span>
+              <span>Wed</span>
+              <span></span>
+              <span>Fri</span>
+              <span></span>
+            </div>
+            <!-- Week columns + month labels -->
+            <div class="consistency-columns">
+              <div class="consistency-month-row">
+                @for (label of consistencyGrid().monthLabels; track $index) {
+                  <div class="consistency-month-label">{{ label ?? '' }}</div>
+                }
+              </div>
+              <div class="consistency-weeks">
+                @for (week of consistencyGrid().weeks; track $index) {
+                  <div class="consistency-week">
+                    @for (cell of week; track $index) {
+                      <div
+                        class="consistency-cell"
+                        [class]="getConsistencyColorClass(cell.count, cell.isFuture)"
+                        [title]="cell.count > 0 ? (cell.count + ' workout' + (cell.count !== 1 ? 's' : '') + ' — ' + (cell.date | date:'MMM d, y')) : (cell.date | date:'MMM d, y')"
+                      ></div>
+                    }
+                  </div>
+                }
+              </div>
+            </div>
+          </div>
+          <div class="heatmap__legend">
+            <span class="heatmap__legend-label">Less</span>
+            <div class="heatmap__cell heat-0 heatmap__legend-cell"></div>
+            <div class="heatmap__cell heat-2 heatmap__legend-cell"></div>
+            <div class="heatmap__cell heat-3 heatmap__legend-cell"></div>
+            <div class="heatmap__cell heat-4 heatmap__legend-cell"></div>
+            <span class="heatmap__legend-label">More</span>
+          </div>
+        </div>
+      }
+    </app-card>
+
     <!-- Muscle Group Volume Heatmap -->
     <app-card class="chart-card">
       <div class="chart-header">

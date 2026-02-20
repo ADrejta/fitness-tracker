@@ -10,10 +10,11 @@ use validator::Validate;
 use crate::models::MuscleGroup;
 
 use crate::dto::{
-    DashboardSummary, ErrorResponse, ExerciseProgressResponse, ExercisesWithHistoryResponse,
-    ExerciseWithHistorySummary, HeatmapQuery, MuscleGroupDistribution, MuscleHeatmapResponse,
-    MuscleHeatmapRow, OverloadSuggestionsResponse, PersonalRecordResponse,
-    PersonalRecordsListResponse, PlateauAlertResponse, StatisticsQuery, WeeklyVolumeResponse,
+    ConsistencyDay, ConsistencyHeatmapResponse, DashboardSummary, ErrorResponse,
+    ExerciseProgressResponse, ExercisesWithHistoryResponse, ExerciseWithHistorySummary,
+    HeatmapQuery, MuscleGroupDistribution, MuscleHeatmapResponse, MuscleHeatmapRow,
+    OverloadSuggestionsResponse, PersonalRecordResponse, PersonalRecordsListResponse,
+    PlateauAlertResponse, StatisticsQuery, WeeklyVolumeResponse,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
@@ -314,6 +315,56 @@ pub async fn get_muscle_heatmap(
                 period_start: r.period_start,
                 muscle_group: r.muscle_group,
                 set_count: r.set_count,
+            })
+            .collect(),
+    }))
+}
+
+#[derive(sqlx::FromRow)]
+struct ConsistencyRow {
+    workout_date: chrono::NaiveDate,
+    count: i64,
+}
+
+#[utoipa::path(
+    get,
+    path = "/api/v1/statistics/consistency-heatmap",
+    tag = "Statistics",
+    responses(
+        (status = 200, description = "52-week training frequency heatmap", body = ConsistencyHeatmapResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn get_consistency_heatmap(
+    State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
+) -> Result<Json<ConsistencyHeatmapResponse>, AppError> {
+    let start_date = chrono::Utc::now().date_naive() - Duration::weeks(52);
+
+    let rows = sqlx::query_as::<_, ConsistencyRow>(
+        r#"
+        SELECT
+            DATE(w.started_at) as workout_date,
+            COUNT(*)::bigint as count
+        FROM workouts w
+        WHERE w.user_id = $1
+            AND w.status = 'completed'
+            AND DATE(w.started_at) >= $2
+        GROUP BY DATE(w.started_at)
+        ORDER BY workout_date
+        "#,
+    )
+    .bind(auth_user.user_id)
+    .bind(start_date)
+    .fetch_all(&pool)
+    .await?;
+
+    Ok(Json(ConsistencyHeatmapResponse {
+        days: rows
+            .into_iter()
+            .map(|r| ConsistencyDay {
+                date: r.workout_date,
+                count: r.count,
             })
             .collect(),
     }))
