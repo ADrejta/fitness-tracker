@@ -206,6 +206,10 @@ export class WorkoutComponent implements OnInit {
     await this.workoutService.removeExerciseFromWorkout(exerciseId);
   }
 
+  async removeSet(exerciseId: string, setId: string): Promise<void> {
+    await this.workoutService.removeSet(exerciseId, setId);
+  }
+
   async addSet(exerciseId: string, event: { isWarmup: boolean; targetWeight?: number; targetReps?: number }): Promise<void> {
     await this.workoutService.addSetToExercise(exerciseId, {
       isWarmup: event.isWarmup,

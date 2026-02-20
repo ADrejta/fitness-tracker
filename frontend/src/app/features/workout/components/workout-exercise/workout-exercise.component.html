@@ -123,6 +123,7 @@
         (setUpdated)="onSetUpdated(set.id, $event)"
         (setCompleted)="onSetCompleted(set.id, $event)"
         (setUncompleted)="onSetUncompleted(set.id)"
+        (setDeleted)="setRemoved.emit(set.id)"
       />
     }
   </div>

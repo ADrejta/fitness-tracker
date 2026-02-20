@@ -28,6 +28,7 @@ export class SetRowComponent {
   @Output() setUpdated = new EventEmitter<Partial<WorkoutSet>>();
   @Output() setCompleted = new EventEmitter<{ reps: number; weight: number }>();
   @Output() setUncompleted = new EventEmitter<void>();
+  @Output() setDeleted = new EventEmitter<void>();
 
   settingsService = inject(SettingsService);
   private router = inject(Router);

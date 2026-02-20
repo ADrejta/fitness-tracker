@@ -311,7 +311,35 @@
 
 .set-row__actions {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
+  gap: 2px;
+}
+
+.set-row__delete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  opacity: 0;
+  transition: all var(--transition-fast);
+
+  .set-row:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    background: var(--color-danger-50, #fef2f2);
+    color: var(--color-danger-500);
+    opacity: 1;
+  }
 }
 
 .set-row__check {
