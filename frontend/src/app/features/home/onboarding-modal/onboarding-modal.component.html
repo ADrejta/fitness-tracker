@@ -13,53 +13,147 @@
     </svg>
   </button>
 
-  <!-- Step icon -->
-  <div class="onboarding__icon">
-    @switch (currentStepData.icon) {
-      @case ('dumbbell') {
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M14.4 14.4 9.6 9.6"></path>
-          <path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"></path>
-          <path d="m21.5 21.5-1.4-1.4"></path>
-          <path d="M3.9 3.9 2.5 2.5"></path>
-          <path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"></path>
-        </svg>
-      }
-      @case ('play') {
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polygon points="10 8 16 12 10 16 10 8"></polygon>
-        </svg>
-      }
-      @case ('check') {
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M9 11l3 3L22 4"></path>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-        </svg>
-      }
-      @case ('trophy') {
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-          <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-          <path d="M4 22h16"></path>
-          <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
-          <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
-          <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path>
-        </svg>
-      }
-    }
-  </div>
+  <!-- Slides wrapper -->
+  <div class="onboarding__slides">
+    <div
+      class="onboarding__slide"
+      [class.onboarding__slide--enter-forward]="slideDirection() === 'forward'"
+      [class.onboarding__slide--enter-back]="slideDirection() === 'back'"
+    >
 
-  <!-- Step content -->
-  <div class="onboarding__content">
-    <h2 class="onboarding__title">{{ currentStepData.title }}</h2>
-    <p class="onboarding__body" [innerHTML]="currentStepData.body"></p>
+      <!-- Step icon -->
+      <div class="onboarding__icon">
+        @switch (currentStepData.icon) {
+          @case ('dumbbell') {
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14.4 14.4 9.6 9.6"></path>
+              <path d="M18.657 21.485a2 2 0 1 1-2.829-2.828l-1.767 1.768a2 2 0 1 1-2.829-2.829l6.364-6.364a2 2 0 1 1 2.829 2.829l-1.768 1.767a2 2 0 1 1 2.828 2.829z"></path>
+              <path d="m21.5 21.5-1.4-1.4"></path>
+              <path d="M3.9 3.9 2.5 2.5"></path>
+              <path d="M6.404 12.768a2 2 0 1 1-2.829-2.829l1.768-1.767a2 2 0 1 1-2.828-2.829l2.828-2.828a2 2 0 1 1 2.829 2.828l1.767-1.768a2 2 0 1 1 2.829 2.829z"></path>
+            </svg>
+          }
+          @case ('play') {
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polygon points="10 8 16 12 10 16 10 8"></polygon>
+            </svg>
+          }
+          @case ('check') {
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 11l3 3L22 4"></path>
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+            </svg>
+          }
+          @case ('trophy') {
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+              <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+              <path d="M4 22h16"></path>
+              <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"></path>
+              <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"></path>
+              <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path>
+            </svg>
+          }
+        }
+      </div>
+
+      <!-- Step title + body -->
+      <div class="onboarding__content">
+        <h2 class="onboarding__title">{{ currentStepData.title }}</h2>
+        <p class="onboarding__body">{{ currentStepData.body }}</p>
+      </div>
+
+      <!-- Step 2: interactive mock start button -->
+      @if (currentStep() === 2) {
+        <div class="onboarding__demo">
+          <button
+            class="onboarding__mock-start"
+            [class.onboarding__mock-start--loading]="workoutButtonState() === 'loading'"
+            [class.onboarding__mock-start--done]="workoutButtonState() === 'done'"
+            [disabled]="workoutButtonState() !== 'idle'"
+            (click)="tapStartWorkout()"
+          >
+            @if (workoutButtonState() === 'idle') {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="16"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+              </svg>
+              Start Workout
+            } @else if (workoutButtonState() === 'loading') {
+              <span class="onboarding__spinner"></span>
+              Starting…
+            } @else {
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Workout started!
+            }
+          </button>
+          <p class="onboarding__demo-hint">Give it a tap ↑</p>
+        </div>
+      }
+
+      <!-- Step 3: interactive mock set row -->
+      @if (currentStep() === 3) {
+        <div class="onboarding__demo">
+          <div class="onboarding__mock-exercise">
+            <span class="onboarding__mock-exercise-name">Bench Press</span>
+          </div>
+          <div class="onboarding__mock-set" [class.onboarding__mock-set--done]="setCompleted()">
+            <span class="onboarding__mock-set-num">1</span>
+            <div class="onboarding__mock-input-group">
+              <input
+                class="onboarding__mock-input"
+                type="number"
+                [ngModel]="mockWeight()"
+                (ngModelChange)="mockWeight.set($event)"
+                [disabled]="setCompleted()"
+                aria-label="Weight"
+              />
+              <span class="onboarding__mock-unit">kg</span>
+            </div>
+            <span class="onboarding__mock-sep">×</span>
+            <div class="onboarding__mock-input-group">
+              <input
+                class="onboarding__mock-input"
+                type="number"
+                [ngModel]="mockReps()"
+                (ngModelChange)="mockReps.set($event)"
+                [disabled]="setCompleted()"
+                aria-label="Reps"
+              />
+              <span class="onboarding__mock-unit">reps</span>
+            </div>
+            <button
+              class="onboarding__mock-check"
+              [class.onboarding__mock-check--done]="setCompleted()"
+              [disabled]="setCompleted()"
+              (click)="tapCompleteSet()"
+              aria-label="Complete set"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </button>
+          </div>
+          <p class="onboarding__demo-hint">Edit the values, then tap ✓</p>
+        </div>
+      }
+
+    </div>
   </div>
 
   <!-- Step dots -->
   <div class="onboarding__dots">
     @for (s of [1, 2, 3, 4]; track s) {
-      <div class="onboarding__dot" [class.onboarding__dot--active]="currentStep() === s"></div>
+      <div
+        class="onboarding__dot"
+        [class.onboarding__dot--active]="currentStep() === s"
+        [class.onboarding__dot--past]="currentStep() > s"
+        (click)="s < currentStep() ? prevStep() : null"
+      ></div>
     }
   </div>
 
@@ -67,7 +161,15 @@
   <div class="onboarding__actions">
     @if (currentStep() < totalSteps) {
       <button class="onboarding__skip" (click)="onDismiss()">Skip tour</button>
-      <app-button (clicked)="nextStep()">Next</app-button>
+      @if (currentStep() === 1) {
+        <app-button (clicked)="nextStep()">Get started →</app-button>
+      } @else {
+        <!-- Steps 2+3 advance via interaction; show a muted hint if not yet done -->
+        <span class="onboarding__auto-hint">
+          @if (currentStep() === 2) { Tap the button above to continue }
+          @if (currentStep() === 3) { Complete the set to continue }
+        </span>
+      }
     } @else {
       <button class="onboarding__skip" (click)="onDismiss()">Maybe later</button>
       <app-button (clicked)="onStartWorkout()">Start my first workout</app-button>
