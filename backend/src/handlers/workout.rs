@@ -12,6 +12,7 @@ use crate::dto::{
     UpdateWorkoutExerciseRequest, UpdateWorkoutRequest, WorkoutExerciseResponse, WorkoutListResponse,
     WorkoutQuery, WorkoutResponse, WorkoutSetResponse, WorkoutSummaryResponse,
 };
+use crate::cache;
 use crate::error::AppError;
 use crate::middleware::AuthUser;
 use crate::repositories::WorkoutRepository;
@@ -237,11 +238,26 @@ pub async fn add_exercise(
         .await?
         .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
 
+    // Resolve exercise name: use provided value, fall back to cache, then DB
+    let exercise_name = if let Some(ref name) = req.exercise_name {
+        name.clone()
+    } else if let Some(cached) = cache::get_exercise_name(&req.exercise_template_id) {
+        cached
+    } else {
+        sqlx::query_scalar::<_, String>(
+            "SELECT name FROM exercise_templates WHERE id = $1",
+        )
+        .bind(&req.exercise_template_id)
+        .fetch_optional(&pool)
+        .await?
+        .ok_or_else(|| AppError::NotFound("Exercise template not found".to_string()))?
+    };
+
     let exercise = WorkoutRepository::add_exercise(
         &pool,
         workout_id,
         &req.exercise_template_id,
-        &req.exercise_name,
+        &exercise_name,
         req.notes.as_deref(),
         req.superset_id,
     )

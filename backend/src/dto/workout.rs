@@ -75,8 +75,8 @@ pub struct WorkoutSetResponse {
 pub struct CreateWorkoutExerciseRequest {
     #[validate(length(min = 1, max = 200, message = "Exercise template ID is required"))]
     pub exercise_template_id: String,
-    #[validate(length(min = 1, max = 200, message = "Exercise name is required"))]
-    pub exercise_name: String,
+    #[validate(length(min = 1, max = 200))]
+    pub exercise_name: Option<String>,
     #[validate(length(max = 2000))]
     pub notes: Option<String>,
     pub superset_id: Option<Uuid>,
