@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, untracked } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
@@ -6,10 +6,10 @@ export class LoadingService {
   readonly isLoading = computed(() => this._activeRequests() > 0);
 
   increment(): void {
-    this._activeRequests.update(n => n + 1);
+    untracked(() => this._activeRequests.update(n => n + 1));
   }
 
   decrement(): void {
-    this._activeRequests.update(n => Math.max(0, n - 1));
+    untracked(() => this._activeRequests.update(n => Math.max(0, n - 1)));
   }
 }
