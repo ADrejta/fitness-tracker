@@ -8,9 +8,9 @@ use validator::Validate;
 
 use crate::dto::{
     CreateSetRequest, CreateSupersetRequest, CreateWorkoutExerciseRequest, CreateWorkoutRequest,
-    ErrorResponse, SupersetResponse, UpdateSetRequest, UpdateWorkoutExerciseRequest,
-    UpdateWorkoutRequest, WorkoutExerciseResponse, WorkoutListResponse, WorkoutQuery,
-    WorkoutResponse, WorkoutSetResponse, WorkoutSummaryResponse,
+    ErrorResponse, ReorderExercisesRequest, SupersetResponse, UpdateSetRequest,
+    UpdateWorkoutExerciseRequest, UpdateWorkoutRequest, WorkoutExerciseResponse, WorkoutListResponse,
+    WorkoutQuery, WorkoutResponse, WorkoutSetResponse, WorkoutSummaryResponse,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
@@ -527,4 +527,31 @@ pub async fn remove_superset(
         .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
 
     WorkoutRepository::remove_superset(&pool, workout_id, superset_id).await
+}
+
+#[utoipa::path(
+    patch,
+    path = "/api/v1/workouts/{workout_id}/exercises/reorder",
+    tag = "Workout Exercises",
+    params(("workout_id" = Uuid, Path, description = "Workout ID")),
+    request_body = ReorderExercisesRequest,
+    responses(
+        (status = 200, description = "Exercises reordered"),
+        (status = 400, description = "Validation error", body = ErrorResponse),
+        (status = 404, description = "Workout not found", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn reorder_exercises(
+    State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
+    Path(workout_id): Path<Uuid>,
+    Json(req): Json<ReorderExercisesRequest>,
+) -> Result<(), AppError> {
+    // Verify workout belongs to user
+    WorkoutRepository::find_by_id(&pool, workout_id, auth_user.user_id)
+        .await?
+        .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
+
+    WorkoutRepository::reorder_exercises(&pool, workout_id, &req.exercises).await
 }

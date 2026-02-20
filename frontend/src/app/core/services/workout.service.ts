@@ -866,6 +866,34 @@ export class WorkoutService {
     return this._activeWorkout();
   }
 
+  async reorderExercises(exerciseIds: string[]): Promise<void> {
+    const workout = this._activeWorkout();
+    if (!workout) return;
+
+    const previousExercises = [...workout.exercises];
+
+    // Optimistically reorder local state
+    const byId = new Map(workout.exercises.map(e => [e.id, e]));
+    const reordered = exerciseIds.map(id => byId.get(id)).filter((e): e is WorkoutExercise => !!e);
+    this._activeWorkout.update(w => w ? { ...w, exercises: reordered } : null);
+
+    if (this.authService.isAuthenticated()) {
+      try {
+        const exercises = exerciseIds.map((id, index) => ({ id, orderIndex: index }));
+        await firstValueFrom(
+          this.http.patch(
+            `${environment.apiUrl}/workouts/${workout.id}/exercises/reorder`,
+            { exercises }
+          )
+        );
+      } catch (error) {
+        console.error('Failed to reorder exercises via API:', error);
+        this._activeWorkout.update(w => w ? { ...w, exercises: previousExercises } : null);
+        this.toastService.error('Failed to reorder exercises');
+      }
+    }
+  }
+
   // Superset methods
   async createSuperset(exerciseIds: string[]): Promise<string | null> {
     const workout = this._activeWorkout();

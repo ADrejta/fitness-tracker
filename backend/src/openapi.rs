@@ -34,6 +34,7 @@ use crate::models::{
         handlers::add_exercise,
         handlers::update_exercise,
         handlers::delete_exercise,
+        handlers::reorder_exercises,
         // Workout sets
         handlers::add_set,
         handlers::update_set,
@@ -101,6 +102,7 @@ use crate::models::{
             WorkoutSetResponse, CreateWorkoutExerciseRequest, UpdateWorkoutExerciseRequest,
             CreateSetRequest, UpdateSetRequest, WorkoutListResponse, WorkoutSummaryResponse,
             CreateSupersetRequest, SupersetResponse,
+            ReorderExercisesRequest, ExerciseOrderUpdate,
             // Exercise
             ExerciseTemplateResponse, CreateExerciseRequest, UpdateExerciseRequest,
             // Template

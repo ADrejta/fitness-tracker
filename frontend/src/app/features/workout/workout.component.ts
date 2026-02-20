@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ViewChild, signal, computed, DestroyRef } fr
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
+import { CdkDragDrop, CdkDropList, CdkDrag, CdkDragHandle, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageContainerComponent } from '../../layout';
 import { ButtonComponent, CardComponent, ModalComponent, EmptyStateComponent } from '../../shared/components';
 import { WorkoutService, SettingsService, TemplateService } from '../../core/services';
@@ -28,7 +29,10 @@ interface GroupedExercise extends WorkoutExercise {
     EmptyStateComponent,
     ExercisePickerComponent,
     WorkoutExerciseComponent,
-    RestTimerComponent
+    RestTimerComponent,
+    CdkDropList,
+    CdkDrag,
+    CdkDragHandle,
   ],
   templateUrl: './workout.component.html',
   styleUrls: ['./workout.component.scss']
@@ -253,6 +257,14 @@ export class WorkoutComponent implements OnInit {
     if (nonWarmupSets.length === 0) return true;
 
     return nonWarmupSets[nonWarmupSets.length - 1]?.id === setId;
+  }
+
+  onExerciseDrop(event: CdkDragDrop<GroupedExercise[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    const exercises = [...this.groupedExercises()];
+    moveItemInArray(exercises, event.previousIndex, event.currentIndex);
+    const ids = exercises.map(e => e.id);
+    this.workoutService.reorderExercises(ids);
   }
 
   // Superset selection methods

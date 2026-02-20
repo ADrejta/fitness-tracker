@@ -106,9 +106,22 @@
   </div>
 
   @if (estimated1RM !== null && !set.isCompleted) {
-    <div class="set-row__e1rm">
-      <span class="set-row__e1rm-value">{{ estimated1RM }}</span>
-      <span class="set-row__e1rm-label">e1RM</span>
+    <div class="set-row__e1rm-wrapper">
+      <button type="button" class="set-row__e1rm" (click)="toggleE1rmOverlay($event)">
+        <span class="set-row__e1rm-value">{{ estimated1RM }}</span>
+        <span class="set-row__e1rm-label">e1RM</span>
+      </button>
+      @if (showE1rmOverlay()) {
+        <div class="set-row__e1rm-popover" (click)="$event.stopPropagation()">
+          <div class="set-row__e1rm-popover-title">e1RM: {{ estimated1RM }} {{ settingsService.weightUnit() }}</div>
+          @for (row of e1rmPercentages; track row.pct) {
+            <div class="set-row__e1rm-popover-row">
+              <span class="set-row__e1rm-popover-pct">{{ row.pct }}%</span>
+              <span class="set-row__e1rm-popover-weight">{{ row.weight }} {{ settingsService.weightUnit() }}</span>
+            </div>
+          }
+        </div>
+      }
     </div>
   }
 

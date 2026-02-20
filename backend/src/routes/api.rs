@@ -110,6 +110,11 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
             "/workouts/{workout_id}/exercises/{exercise_id}/sets/{set_id}",
             delete(handlers::delete_set),
         )
+        // Workout exercise reorder
+        .route(
+            "/workouts/{workout_id}/exercises/reorder",
+            patch(handlers::reorder_exercises),
+        )
         // Workout supersets
         .route(
             "/workouts/{workout_id}/superset",

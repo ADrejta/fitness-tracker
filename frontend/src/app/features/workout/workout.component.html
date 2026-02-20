@@ -87,7 +87,11 @@
       </div>
 
       <!-- Exercise List -->
-      <div class="workout__exercises">
+      <div
+        class="workout__exercises"
+        cdkDropList
+        (cdkDropListDropped)="onExerciseDrop($event)"
+      >
         @for (exercise of groupedExercises(); track exercise.id) {
           @if (exercise.isFirstInSuperset) {
             <div class="superset-label">
@@ -105,12 +109,20 @@
           }
           <div
             class="exercise-wrapper"
+            cdkDrag
             [class.in-superset]="exercise.isInSuperset"
             [class.superset-first]="exercise.isFirstInSuperset"
             [class.superset-last]="exercise.isLastInSuperset"
             [class.superset-selected]="selectedExercises().includes(exercise.id)"
             (click)="toggleExerciseSelection(exercise.id, $event)"
           >
+            <div class="exercise-drag-handle" cdkDragHandle>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="8" y1="12" x2="16" y2="12"></line>
+                <line x1="8" y1="18" x2="16" y2="18"></line>
+              </svg>
+            </div>
             <app-workout-exercise
               [exercise]="exercise"
               (setAdded)="addSet(exercise.id, $event)"

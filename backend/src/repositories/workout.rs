@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::dto::WorkoutQuery;
+use crate::dto::{ExerciseOrderUpdate, WorkoutQuery};
 use crate::error::AppError;
 use crate::models::{Workout, WorkoutExercise, WorkoutSet, WorkoutStatus};
 
@@ -610,6 +610,27 @@ impl WorkoutRepository {
         .await?;
 
         Ok(exercises)
+    }
+
+    pub async fn reorder_exercises(
+        pool: &PgPool,
+        workout_id: Uuid,
+        updates: &[ExerciseOrderUpdate],
+    ) -> Result<(), AppError> {
+        let ids: Vec<Uuid> = updates.iter().map(|u| u.id).collect();
+        let indices: Vec<i32> = updates.iter().map(|u| u.order_index).collect();
+        sqlx::query(
+            "UPDATE workout_exercises AS we
+             SET order_index = u.order_index
+             FROM UNNEST($1::uuid[], $2::int[]) AS u(id, order_index)
+             WHERE we.id = u.id AND we.workout_id = $3",
+        )
+        .bind(&ids)
+        .bind(&indices)
+        .bind(workout_id)
+        .execute(pool)
+        .await?;
+        Ok(())
     }
 
     pub async fn update_exercise_superset(

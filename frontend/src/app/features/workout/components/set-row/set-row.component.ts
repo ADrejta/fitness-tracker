@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -33,6 +33,7 @@ export class SetRowComponent {
   private router = inject(Router);
 
   showPlateCalculator = signal(false);
+  showE1rmOverlay = signal(false);
   weightValue: number | null = null;
   repsValue: number | null = null;
   rpeValue: number | null = null;
@@ -56,7 +57,28 @@ export class SetRowComponent {
 
   togglePlateCalculator(event: Event): void {
     event.stopPropagation();
+    this.showE1rmOverlay.set(false);
     this.showPlateCalculator.update(v => !v);
+  }
+
+  toggleE1rmOverlay(event: Event): void {
+    event.stopPropagation();
+    this.showPlateCalculator.set(false);
+    this.showE1rmOverlay.update(v => !v);
+  }
+
+  get e1rmPercentages(): { pct: number; weight: number }[] {
+    const e1rm = this.estimated1RM;
+    if (e1rm === null) return [];
+    return [100, 95, 90, 85, 80, 75, 70, 65, 60, 55, 50].map(pct => ({
+      pct,
+      weight: Math.round(e1rm * pct / 100),
+    }));
+  }
+
+  @HostListener('document:click')
+  closeOverlays(): void {
+    this.showE1rmOverlay.set(false);
   }
 
   navigateToSettings(): void {

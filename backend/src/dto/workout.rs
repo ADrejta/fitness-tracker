@@ -164,3 +164,15 @@ pub struct SupersetResponse {
     pub superset_id: Uuid,
     pub exercise_ids: Vec<Uuid>,
 }
+
+#[derive(Debug, Deserialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct ExerciseOrderUpdate {
+    pub id: Uuid,
+    pub order_index: i32,
+}
+
+#[derive(Debug, Deserialize, Validate, ToSchema)]
+pub struct ReorderExercisesRequest {
+    pub exercises: Vec<ExerciseOrderUpdate>,
+}
