@@ -1,15 +1,20 @@
-import { Injectable, signal, computed, untracked } from '@angular/core';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  private _activeRequests = signal(0);
-  readonly isLoading = computed(() => this._activeRequests() > 0);
+  private _activeRequests = 0;
+  private _loading$ = new BehaviorSubject<boolean>(false);
+
+  readonly isLoading$ = this._loading$.asObservable();
 
   increment(): void {
-    untracked(() => this._activeRequests.update(n => n + 1));
+    this._activeRequests++;
+    this._loading$.next(true);
   }
 
   decrement(): void {
-    untracked(() => this._activeRequests.update(n => Math.max(0, n - 1)));
+    this._activeRequests = Math.max(0, this._activeRequests - 1);
+    this._loading$.next(this._activeRequests > 0);
   }
 }
