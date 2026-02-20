@@ -30,7 +30,10 @@
       "Bash(git -C /home/aureldrejta/projects/fitness-tracker show 1302671 --stat)",
       "Bash(node -e:*)",
       "Bash(python3:*)",
-      "Bash(npx jest:*)"
+      "Bash(npx jest:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ]
   }
 }
