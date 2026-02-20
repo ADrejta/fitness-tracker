@@ -291,6 +291,183 @@
   to   { transform: scale(1);   opacity: 1; }
 }
 
+// ── Plate calculator (step 4) ─────────────────────────────────────────────────
+
+.onboarding__plate-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.onboarding__plate-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+}
+
+.onboarding__plate-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  font-weight: var(--font-weight-medium);
+}
+
+.onboarding__plate-input-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.onboarding__plate-input {
+  width: 5rem;
+  text-align: center;
+}
+
+.onboarding__plate-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover:not(:disabled) {
+    border-color: var(--color-primary-400);
+    background: var(--color-primary-50);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.onboarding__plate-result {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-sm);
+  animation: fadeIn 0.25s ease-out both;
+}
+
+.onboarding__plate-result-label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+// Visual barbell
+.onboarding__plate-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: var(--spacing-xs) 0;
+}
+
+.onboarding__bar-shaft {
+  width: 32px;
+  height: 8px;
+  background: var(--color-text-tertiary);
+  border-radius: 2px 0 0 2px;
+  flex-shrink: 0;
+}
+
+.onboarding__plate {
+  border-radius: 3px;
+  flex-shrink: 0;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.25);
+  animation: plateSlide 0.2s ease-out both;
+}
+
+@keyframes plateSlide {
+  from { opacity: 0; transform: scaleY(0.4); }
+  to   { opacity: 1; transform: scaleY(1); }
+}
+
+.onboarding__collar {
+  width: 10px;
+  height: 20px;
+  background: var(--color-text-secondary);
+  border-radius: 0 3px 3px 0;
+  flex-shrink: 0;
+}
+
+.onboarding__plate-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.onboarding__plate-chip {
+  font-size: 11px;
+  font-weight: var(--font-weight-semibold);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 99px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+// ── Track Progress feature list (step 5) ──────────────────────────────────────
+
+.onboarding__features {
+  gap: var(--spacing-md) !important;
+  align-items: stretch !important;
+  width: 100%;
+}
+
+.onboarding__feature-item {
+  display: flex;
+  gap: var(--spacing-sm);
+  align-items: flex-start;
+  text-align: left;
+}
+
+.onboarding__feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
+
+  &--pr    { background: #fef9c3; color: #a16207; }
+  &--streak { background: #fce7f3; color: #9d174d; }
+  &--suggest { background: #dcfce7; color: #15803d; }
+}
+
+.onboarding__feature-title {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  margin: 0 0 2px;
+}
+
+.onboarding__feature-body {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
 // ── Dots ──────────────────────────────────────────────────────────────────────
 
 .onboarding__dots {

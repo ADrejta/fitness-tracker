@@ -45,6 +45,22 @@
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
             </svg>
           }
+          @case ('barbell') {
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="6" width="20" height="12" rx="2"></rect>
+              <line x1="6" y1="6" x2="6" y2="18"></line>
+              <line x1="18" y1="6" x2="18" y2="18"></line>
+              <line x1="2" y1="12" x2="22" y2="12"></line>
+            </svg>
+          }
+          @case ('chart') {
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+              <line x1="2" y1="20" x2="22" y2="20"></line>
+            </svg>
+          }
           @case ('trophy') {
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
               <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
@@ -142,12 +158,125 @@
         </div>
       }
 
+      <!-- Step 4: interactive plate calculator -->
+      @if (currentStep() === 4) {
+        <div class="onboarding__demo">
+          <div class="onboarding__plate-controls">
+            <div class="onboarding__plate-field">
+              <label class="onboarding__plate-label">Target weight</label>
+              <div class="onboarding__plate-input-row">
+                <button class="onboarding__plate-stepper" (click)="plateTargetWeight.update(w => Math.max(plateBarWeight + 2.5, w - 2.5))" [disabled]="plateCalculated()">−</button>
+                <input
+                  class="onboarding__mock-input onboarding__plate-input"
+                  type="number"
+                  [ngModel]="plateTargetWeight()"
+                  (ngModelChange)="plateTargetWeight.set(+$event); plateCalculated.set(false); plateResults.set([])"
+                  [disabled]="plateCalculated()"
+                  aria-label="Target weight in kg"
+                />
+                <button class="onboarding__plate-stepper" (click)="plateTargetWeight.update(w => w + 2.5)" [disabled]="plateCalculated()">+</button>
+                <span class="onboarding__mock-unit" style="margin-left:2px">kg</span>
+              </div>
+            </div>
+
+            @if (!plateCalculated()) {
+              <button class="onboarding__mock-start" style="margin-top:0" (click)="calculatePlates()">
+                Calculate plates
+              </button>
+            }
+          </div>
+
+          @if (plateCalculated()) {
+            <div class="onboarding__plate-result">
+              <p class="onboarding__plate-result-label">Per side — bar is {{ plateBarWeight }} kg</p>
+              @if (plateResults().length === 0) {
+                <p class="onboarding__demo-hint">Just the bar!</p>
+              } @else {
+                <div class="onboarding__plate-bar">
+                  <!-- Bar shaft -->
+                  <div class="onboarding__bar-shaft"></div>
+                  <!-- Plates (largest first, closest to collar) -->
+                  @for (plate of plateResults(); track plate.weight) {
+                    @for (i of getRange(plate.count); track i) {
+                      <div
+                        class="onboarding__plate"
+                        [style.background]="plate.color"
+                        [style.height.px]="getPlateHeight(plate.weight)"
+                        [style.width.px]="getPlateWidth(plate.weight)"
+                        [title]="plate.weight + ' kg'"
+                      ></div>
+                    }
+                  }
+                  <!-- Collar -->
+                  <div class="onboarding__collar"></div>
+                </div>
+                <div class="onboarding__plate-legend">
+                  @for (plate of plateResults(); track plate.weight) {
+                    <span class="onboarding__plate-chip" [style.background]="plate.color">
+                      {{ plate.count }}× {{ plate.weight }} kg
+                    </span>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (!plateCalculated()) {
+            <p class="onboarding__demo-hint">Tap Calculate to see the plates ↑</p>
+          }
+        </div>
+      }
+
+      <!-- Step 5: track progress — feature highlights -->
+      @if (currentStep() === 5) {
+        <div class="onboarding__demo onboarding__features">
+          <div class="onboarding__feature-item">
+            <div class="onboarding__feature-icon onboarding__feature-icon--pr">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                <path d="M4 22h16"></path>
+                <path d="M18 2H6v7a6 6 0 0 0 12 0V2z"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="onboarding__feature-title">Personal Records</p>
+              <p class="onboarding__feature-body">Max weight, max reps, and estimated 1RM are tracked automatically on every workout.</p>
+            </div>
+          </div>
+          <div class="onboarding__feature-item">
+            <div class="onboarding__feature-icon onboarding__feature-icon--streak">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              </svg>
+            </div>
+            <div>
+              <p class="onboarding__feature-title">Streaks & Consistency</p>
+              <p class="onboarding__feature-body">Your training streak and a 52-week heatmap show how consistent you've been.</p>
+            </div>
+          </div>
+          <div class="onboarding__feature-item">
+            <div class="onboarding__feature-icon onboarding__feature-icon--suggest">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="20" x2="12" y2="10"></line>
+                <line x1="18" y1="20" x2="18" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="16"></line>
+              </svg>
+            </div>
+            <div>
+              <p class="onboarding__feature-title">Progression Suggestions</p>
+              <p class="onboarding__feature-body">After a few sessions the app recommends when to increase weight or reps.</p>
+            </div>
+          </div>
+        </div>
+      }
+
     </div>
   </div>
 
   <!-- Step dots -->
   <div class="onboarding__dots">
-    @for (s of [1, 2, 3, 4]; track s) {
+    @for (s of stepRange; track s) {
       <div
         class="onboarding__dot"
         [class.onboarding__dot--active]="currentStep() === s"
@@ -161,10 +290,11 @@
   <div class="onboarding__actions">
     @if (currentStep() < totalSteps) {
       <button class="onboarding__skip" (click)="onDismiss()">Skip tour</button>
-      @if (currentStep() === 1) {
-        <app-button (clicked)="nextStep()">Get started →</app-button>
+      @if (currentStep() === 1 || currentStep() === 4 || currentStep() === 5) {
+        <app-button (clicked)="nextStep()">
+          {{ currentStep() === 1 ? 'Get started →' : 'Next →' }}
+        </app-button>
       } @else {
-        <!-- Steps 2+3 advance via interaction; show a muted hint if not yet done -->
         <span class="onboarding__auto-hint">
           @if (currentStep() === 2) { Tap the button above to continue }
           @if (currentStep() === 3) { Complete the set to continue }
