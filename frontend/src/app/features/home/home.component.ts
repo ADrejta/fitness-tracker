@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
 import { ButtonComponent, CardComponent, BadgeComponent, ProgressComponent } from '../../shared/components';
-import { WorkoutService, TemplateService, StatisticsService, SettingsService, ProgramService } from '../../core/services';
+import { WorkoutService, TemplateService, StatisticsService, SettingsService, ProgramService, OnboardingService } from '../../core/services';
+import { OnboardingModalComponent } from './onboarding-modal/onboarding-modal.component';
 import { format, isToday, isYesterday } from 'date-fns';
 
 @Component({
@@ -16,7 +17,8 @@ import { format, isToday, isYesterday } from 'date-fns';
     ButtonComponent,
     CardComponent,
     BadgeComponent,
-    ProgressComponent
+    ProgressComponent,
+    OnboardingModalComponent
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
@@ -27,7 +29,10 @@ export class HomeComponent {
   statisticsService = inject(StatisticsService);
   settingsService = inject(SettingsService);
   programService = inject(ProgramService);
+  private onboardingService = inject(OnboardingService);
   private router = inject(Router);
+
+  showOnboarding = this.onboardingService.shouldShow;
 
   get greeting(): string {
     const hour = new Date().getHours();
@@ -66,6 +71,15 @@ export class HomeComponent {
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
     return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  }
+
+  dismissOnboarding(): void {
+    this.onboardingService.dismiss();
+  }
+
+  startWorkoutFromOnboarding(): void {
+    this.onboardingService.dismiss();
+    this.startNewWorkout();
   }
 
   startNewWorkout(): void {

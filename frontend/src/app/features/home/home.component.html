@@ -252,3 +252,9 @@
     </div>
   </section>
 </app-page-container>
+
+<app-onboarding-modal
+  [isOpen]="showOnboarding()"
+  (closed)="dismissOnboarding()"
+  (startWorkout)="startWorkoutFromOnboarding()"
+></app-onboarding-modal>
