@@ -161,6 +161,18 @@ export class OnboardingModalComponent {
     this.closed.emit();
   }
 
+  plateDecrement(): void {
+    this.plateTargetWeight.update(w => Math.max(this.plateBarWeight + 2.5, w - 2.5));
+    this.plateCalculated.set(false);
+    this.plateResults.set([]);
+  }
+
+  plateIncrement(): void {
+    this.plateTargetWeight.update(w => w + 2.5);
+    this.plateCalculated.set(false);
+    this.plateResults.set([]);
+  }
+
   // Plate calculator helpers
   getRange(n: number): number[] {
     return Array.from({ length: n }, (_, i) => i);

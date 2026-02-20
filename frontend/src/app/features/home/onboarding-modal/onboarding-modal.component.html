@@ -165,7 +165,7 @@
             <div class="onboarding__plate-field">
               <label class="onboarding__plate-label">Target weight</label>
               <div class="onboarding__plate-input-row">
-                <button class="onboarding__plate-stepper" (click)="plateTargetWeight.update(w => Math.max(plateBarWeight + 2.5, w - 2.5))" [disabled]="plateCalculated()">−</button>
+                <button class="onboarding__plate-stepper" (click)="plateDecrement()" [disabled]="plateCalculated()">−</button>
                 <input
                   class="onboarding__mock-input onboarding__plate-input"
                   type="number"
@@ -174,7 +174,7 @@
                   [disabled]="plateCalculated()"
                   aria-label="Target weight in kg"
                 />
-                <button class="onboarding__plate-stepper" (click)="plateTargetWeight.update(w => w + 2.5)" [disabled]="plateCalculated()">+</button>
+                <button class="onboarding__plate-stepper" (click)="plateIncrement()" [disabled]="plateCalculated()">+</button>
                 <span class="onboarding__mock-unit" style="margin-left:2px">kg</span>
               </div>
             </div>
