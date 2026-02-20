@@ -184,6 +184,10 @@ export class WorkoutService {
     return this.storage.get<PersonalRecord[]>(PERSONAL_RECORDS_KEY, []);
   }
 
+  setActiveWorkout(workout: Workout): void {
+    this._activeWorkout.set(workout);
+  }
+
   async startWorkout(name?: string, templateId?: string): Promise<Workout> {
     const workoutName = name || `Workout ${new Date().toLocaleDateString()}`;
 

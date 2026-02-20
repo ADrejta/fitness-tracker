@@ -143,9 +143,11 @@ export class WorkoutComponent implements OnInit {
     this.router.navigate([], { queryParams: {} });
   }
 
-  startFromTemplate(templateId: string): void {
-    this.templateService.startWorkoutFromTemplate(templateId);
-    this.startTimer();
+  async startFromTemplate(templateId: string): Promise<void> {
+    const workout = await this.templateService.startWorkoutFromTemplate(templateId);
+    if (workout) {
+      this.startTimer();
+    }
   }
 
   updateWorkoutName(event: Event): void {

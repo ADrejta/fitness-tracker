@@ -275,6 +275,8 @@ export class TemplateService {
           this.http.post<Workout>(`${environment.apiUrl}/templates/${templateId}/start`, {})
         );
 
+        this.workoutService.setActiveWorkout(workout);
+
         // Update template usage stats locally
         this._templates.update(current =>
           current.map(t => t.id === templateId ? {

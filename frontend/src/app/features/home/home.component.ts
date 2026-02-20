@@ -86,8 +86,10 @@ export class HomeComponent {
     this.router.navigate(['/workout'], { queryParams: { start: 'true' } });
   }
 
-  startFromTemplate(templateId: string): void {
-    this.templateService.startWorkoutFromTemplate(templateId);
-    this.router.navigate(['/workout']);
+  async startFromTemplate(templateId: string): Promise<void> {
+    const workout = await this.templateService.startWorkoutFromTemplate(templateId);
+    if (workout) {
+      this.router.navigate(['/workout']);
+    }
   }
 }
