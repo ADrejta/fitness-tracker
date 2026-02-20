@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { WorkoutService, AuthService } from '../../core/services';
 import { SyncQueueService } from '../../core/services/sync-queue.service';
+import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, LoadingBarComponent],
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss']
 })

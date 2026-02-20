@@ -9,3 +9,4 @@ export * from './auth.service';
 export * from './toast.service';
 export * from './program.service';
 export * from './onboarding.service';
+export * from './loading.service';
