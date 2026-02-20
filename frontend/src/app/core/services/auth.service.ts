@@ -1,7 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, of, BehaviorSubject } from 'rxjs';
+import { Observable, tap, catchError, of, BehaviorSubject, skip, take, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 export interface User {
@@ -143,17 +143,11 @@ export class AuthService {
     }
 
     if (this.refreshTokenInProgress) {
-      return new Observable((observer) => {
-        this.refreshTokenSubject.subscribe((token) => {
-          if (token) {
-            observer.next({
-              accessToken: token,
-              refreshToken: this.getRefreshToken()!,
-            });
-            observer.complete();
-          }
-        });
-      });
+      return this.refreshTokenSubject.pipe(
+        skip(1),
+        take(1),
+        map(token => token ? { accessToken: token, refreshToken: this.getRefreshToken()! } : null)
+      );
     }
 
     this.refreshTokenInProgress = true;
@@ -169,6 +163,7 @@ export class AuthService {
         }),
         catchError((error) => {
           this.refreshTokenInProgress = false;
+          this.refreshTokenSubject.next(null);
           this.logout();
           return of(null);
         })
