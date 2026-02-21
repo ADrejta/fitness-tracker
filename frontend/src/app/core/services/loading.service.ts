@@ -1,28 +1,15 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  private activeCount = 0;
-  private _isLoading = signal(false);
-  readonly isLoading = this._isLoading.asReadonly();
+  private readonly activeCount = signal(0);
+  readonly isLoading = computed(() => this.activeCount() > 0);
 
   increment(): void {
-    this.activeCount++;
-    // Defer signal write to avoid NG0600 when called from reactive contexts
-    // (e.g. HTTP requests triggered inside effects)
-    Promise.resolve().then(() => {
-      if (this.activeCount > 0) {
-        this._isLoading.set(true);
-      }
-    });
+    this.activeCount.update(n => n + 1);
   }
 
   decrement(): void {
-    this.activeCount = Math.max(0, this.activeCount - 1);
-    Promise.resolve().then(() => {
-      if (this.activeCount === 0) {
-        this._isLoading.set(false);
-      }
-    });
+    this.activeCount.update(n => Math.max(0, n - 1));
   }
 }
