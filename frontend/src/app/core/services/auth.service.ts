@@ -53,9 +53,11 @@ export class AuthService {
   private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor() {
-    // Check token validity on init
+    // Defer to avoid circular DI: authInterceptor calls inject(AuthService)
+    // while AuthService is still being constructed, causing a synchronous throw
+    // that prevents the loading interceptor's finalize() from registering.
     if (this.hasValidToken()) {
-      this.loadCurrentUser();
+      queueMicrotask(() => this.loadCurrentUser());
     }
   }
 
