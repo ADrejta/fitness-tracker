@@ -1,5 +1,9 @@
 # Fitness Tracker - Development Guide
 
+## Git Commit Rules
+
+- **Never** add `Co-Authored-By` lines to commit messages.
+
 ## Project Structure
 
 - `backend/` - Rust/Axum REST API with PostgreSQL
