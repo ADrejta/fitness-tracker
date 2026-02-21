@@ -6,12 +6,12 @@ export class LoadingService {
   readonly isLoading = computed(() => this.activeCount() > 0);
 
   increment(): void {
-    console.log(`Incrementing ${this.activeCount}`);
+    console.log(`Incrementing ${this.activeCount()}`);
     this.activeCount.update(n => n + 1);
   }
 
   decrement(): void {
-    console.log(`Decrementing ${this.activeCount}`);
+    console.log(`Decrementing ${this.activeCount()}`);
     this.activeCount.update(n => Math.max(0, n - 1));
   }
 }
