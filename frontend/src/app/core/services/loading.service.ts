@@ -8,19 +8,13 @@ export class LoadingService {
 
   increment(): void {
     this.activeCount++;
-    Promise.resolve().then(() => {
-      if (this.activeCount > 0) {
-        this._isLoading.set(true);
-      }
-    });
+    this._isLoading.set(true);
   }
 
   decrement(): void {
     this.activeCount = Math.max(0, this.activeCount - 1);
-    Promise.resolve().then(() => {
-      if (this.activeCount === 0) {
-        this._isLoading.set(false);
-      }
-    });
+    if (this.activeCount === 0) {
+      this._isLoading.set(false);
+    }
   }
 }
