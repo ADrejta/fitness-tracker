@@ -1,17 +1,26 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 
 @Injectable({ providedIn: 'root' })
 export class LoadingService {
-  private readonly activeCount = signal(0);
-  readonly isLoading = computed(() => this.activeCount() > 0);
+  private activeCount = 0;
+  private _isLoading = signal(false);
+  readonly isLoading = this._isLoading.asReadonly();
 
   increment(): void {
-    console.log(`Incrementing ${this.activeCount()}`);
-    this.activeCount.update(n => n + 1);
+    this.activeCount++;
+    Promise.resolve().then(() => {
+      if (this.activeCount > 0) {
+        this._isLoading.set(true);
+      }
+    });
   }
 
   decrement(): void {
-    console.log(`Decrementing ${this.activeCount()}`);
-    this.activeCount.update(n => Math.max(0, n - 1));
+    this.activeCount = Math.max(0, this.activeCount - 1);
+    Promise.resolve().then(() => {
+      if (this.activeCount === 0) {
+        this._isLoading.set(false);
+      }
+    });
   }
 }
