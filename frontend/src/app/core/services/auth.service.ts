@@ -1,5 +1,5 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpBackend } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of, BehaviorSubject, skip, take, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
@@ -39,6 +39,7 @@ const USER_KEY = 'fitness_tracker_user';
 })
 export class AuthService {
   private http = inject(HttpClient);
+  private httpBackend = inject(HttpBackend);
   private router = inject(Router);
 
   private _user = signal<User | null>(this.loadUser());
@@ -53,11 +54,8 @@ export class AuthService {
   private refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor() {
-    // Defer to avoid circular DI: authInterceptor calls inject(AuthService)
-    // while AuthService is still being constructed, causing a synchronous throw
-    // that prevents the loading interceptor's finalize() from registering.
     if (this.hasValidToken()) {
-      queueMicrotask(() => this.loadCurrentUser());
+      this.loadCurrentUser();
     }
   }
 
@@ -173,19 +171,19 @@ export class AuthService {
   }
 
   private loadCurrentUser(): void {
-    this.http.get<User>(`${environment.apiUrl}/auth/me`).subscribe({
+    const token = this.getAccessToken();
+    const http = new HttpClient(this.httpBackend);
+    http.get<User>(`${environment.apiUrl}/auth/me`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    }).subscribe({
       next: (user) => {
         this.saveUser(user);
         this._isAuthenticated.set(true);
       },
       error: (error) => {
-        // Only clear auth on actual authentication errors (401/403)
-        // Don't clear on network errors or CORS issues
         if (error.status === 401 || error.status === 403) {
           this.clearAuth();
         } else {
-          // Keep the existing auth state for network errors
-          // User data from localStorage is still valid
           console.warn('Failed to verify user, keeping existing session:', error.status);
         }
       },
