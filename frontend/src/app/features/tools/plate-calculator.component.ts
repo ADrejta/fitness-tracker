@@ -8,17 +8,16 @@ import { BARBELL_PRESETS, BarbellType } from '../../core/models';
 import { calculatePlates, PlateCalculation, PlateCount } from '../../shared/utils';
 
 @Component({
-  selector: 'app-plate-calculator',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    PageContainerComponent,
-    CardComponent,
-    ButtonComponent
-  ],
-  templateUrl: './plate-calculator.component.html',
-  styleUrls: ['./plate-calculator.component.scss']
+    selector: 'app-plate-calculator',
+    imports: [
+        CommonModule,
+        FormsModule,
+        PageContainerComponent,
+        CardComponent,
+        ButtonComponent
+    ],
+    templateUrl: './plate-calculator.component.html',
+    styleUrls: ['./plate-calculator.component.scss']
 })
 export class PlateCalculatorComponent {
   settingsService = inject(SettingsService);

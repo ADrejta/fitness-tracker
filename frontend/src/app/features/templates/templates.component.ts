@@ -32,22 +32,21 @@ interface EditableTemplateExercise extends TemplateExercise {
 }
 
 @Component({
-  selector: 'app-templates',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    PageContainerComponent,
-    CardComponent,
-    ButtonComponent,
-    BadgeComponent,
-    EmptyStateComponent,
-    ModalComponent,
-    InputComponent,
-    ExercisePickerComponent
-  ],
-  templateUrl: './templates.component.html',
-  styleUrls: ['./templates.component.scss']
+    selector: 'app-templates',
+    imports: [
+        CommonModule,
+        FormsModule,
+        PageContainerComponent,
+        CardComponent,
+        ButtonComponent,
+        BadgeComponent,
+        EmptyStateComponent,
+        ModalComponent,
+        InputComponent,
+        ExercisePickerComponent
+    ],
+    templateUrl: './templates.component.html',
+    styleUrls: ['./templates.component.scss']
 })
 export class TemplatesComponent {
   templateService = inject(TemplateService);

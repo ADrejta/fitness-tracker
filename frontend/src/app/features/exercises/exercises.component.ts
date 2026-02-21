@@ -7,20 +7,19 @@ import { ExerciseService } from '../../core/services';
 import { ExerciseTemplate, MuscleGroup } from '../../core/models';
 
 @Component({
-  selector: 'app-exercises',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    PageContainerComponent,
-    CardComponent,
-    ButtonComponent,
-    InputComponent,
-    BadgeComponent,
-    ModalComponent
-  ],
-  templateUrl: './exercises.component.html',
-  styleUrls: ['./exercises.component.scss']
+    selector: 'app-exercises',
+    imports: [
+        CommonModule,
+        FormsModule,
+        PageContainerComponent,
+        CardComponent,
+        ButtonComponent,
+        InputComponent,
+        BadgeComponent,
+        ModalComponent
+    ],
+    templateUrl: './exercises.component.html',
+    styleUrls: ['./exercises.component.scss']
 })
 export class ExercisesComponent {
   exerciseService = inject(ExerciseService);

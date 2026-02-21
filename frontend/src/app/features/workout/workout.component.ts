@@ -18,24 +18,23 @@ interface GroupedExercise extends WorkoutExercise {
 }
 
 @Component({
-  selector: 'app-workout',
-  standalone: true,
-  imports: [
-    CommonModule,
-    PageContainerComponent,
-    ButtonComponent,
-    CardComponent,
-    ModalComponent,
-    EmptyStateComponent,
-    ExercisePickerComponent,
-    WorkoutExerciseComponent,
-    RestTimerComponent,
-    CdkDropList,
-    CdkDrag,
-    CdkDragHandle,
-  ],
-  templateUrl: './workout.component.html',
-  styleUrls: ['./workout.component.scss']
+    selector: 'app-workout',
+    imports: [
+        CommonModule,
+        PageContainerComponent,
+        ButtonComponent,
+        CardComponent,
+        ModalComponent,
+        EmptyStateComponent,
+        ExercisePickerComponent,
+        WorkoutExerciseComponent,
+        RestTimerComponent,
+        CdkDropList,
+        CdkDrag,
+        CdkDragHandle,
+    ],
+    templateUrl: './workout.component.html',
+    styleUrls: ['./workout.component.scss']
 })
 export class WorkoutComponent implements OnInit {
   @ViewChild('restTimer') restTimer!: RestTimerComponent;

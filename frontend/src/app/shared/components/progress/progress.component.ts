@@ -5,11 +5,10 @@ export type ProgressVariant = 'primary' | 'success' | 'warning' | 'danger';
 export type ProgressSize = 'sm' | 'md' | 'lg';
 
 @Component({
-  selector: 'app-progress',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './progress.component.html',
-  styleUrls: ['./progress.component.scss']
+    selector: 'app-progress',
+    imports: [CommonModule],
+    templateUrl: './progress.component.html',
+    styleUrls: ['./progress.component.scss']
 })
 export class ProgressComponent {
   @Input() value = 0;

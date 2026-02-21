@@ -38,20 +38,19 @@ export interface CalendarDay {
 }
 
 @Component({
-  selector: 'app-history',
-  standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    PageContainerComponent,
-    CardComponent,
-    BadgeComponent,
-    EmptyStateComponent,
-    ButtonComponent,
-    SkeletonComponent
-  ],
-  templateUrl: './history.component.html',
-  styleUrls: ['./history.component.scss']
+    selector: 'app-history',
+    imports: [
+        CommonModule,
+        RouterLink,
+        PageContainerComponent,
+        CardComponent,
+        BadgeComponent,
+        EmptyStateComponent,
+        ButtonComponent,
+        SkeletonComponent
+    ],
+    templateUrl: './history.component.html',
+    styleUrls: ['./history.component.scss']
 })
 export class HistoryComponent implements OnInit {
   workoutService = inject(WorkoutService);

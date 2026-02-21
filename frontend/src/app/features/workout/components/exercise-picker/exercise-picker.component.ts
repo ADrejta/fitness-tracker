@@ -18,17 +18,16 @@ import { ExerciseService } from "../../../../core/services";
 import { ExerciseTemplate, MuscleGroup } from "../../../../core/models";
 
 @Component({
-  selector: "app-exercise-picker",
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    ModalComponent,
-    InputComponent,
-    BadgeComponent,
-  ],
-  templateUrl: './exercise-picker.component.html',
-  styleUrls: ['./exercise-picker.component.scss'],
+    selector: "app-exercise-picker",
+    imports: [
+        CommonModule,
+        FormsModule,
+        ModalComponent,
+        InputComponent,
+        BadgeComponent,
+    ],
+    templateUrl: './exercise-picker.component.html',
+    styleUrls: ['./exercise-picker.component.scss']
 })
 export class ExercisePickerComponent {
   @Input() isOpen = false;

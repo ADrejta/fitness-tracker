@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
@@ -116,23 +116,21 @@ describe('AuthService', () => {
       expect(stored).toEqual(mockAuthResponse.user);
     });
 
-    it('sets isLoading to false after a 401 error', fakeAsync(() => {
+    it('sets isLoading to false after a 401 error', () => {
       service.login({ email: 'x', password: 'y' }).subscribe({ error: () => {} });
       httpMock
         .expectOne(`${environment.apiUrl}/auth/login`)
         .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-      tick();
       expect(service.isLoading()).toBe(false);
-    }));
+    });
 
-    it('does not set isAuthenticated on error', fakeAsync(() => {
+    it('does not set isAuthenticated on error', () => {
       service.login({ email: 'x', password: 'y' }).subscribe({ error: () => {} });
       httpMock
         .expectOne(`${environment.apiUrl}/auth/login`)
         .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-      tick();
       expect(service.isAuthenticated()).toBe(false);
-    }));
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -192,13 +190,12 @@ describe('AuthService', () => {
   // refreshAccessToken
   // ---------------------------------------------------------------------------
   describe('refreshAccessToken', () => {
-    it('returns null and triggers logout when there is no refresh token', fakeAsync(() => {
+    it('returns null and triggers logout when there is no refresh token', () => {
       let result: unknown;
       service.refreshAccessToken().subscribe(r => (result = r));
-      tick();
       expect(result).toBeNull();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
-    }));
+    });
 
     it('POSTs to /auth/refresh with the stored refresh token', () => {
       localStorage.setItem('fitness_tracker_refresh_token', 'my-refresh');
@@ -221,14 +218,13 @@ describe('AuthService', () => {
       expect(localStorage.getItem('fitness_tracker_refresh_token')).toBe('new-refresh');
     });
 
-    it('logs out when the refresh call fails', fakeAsync(() => {
+    it('logs out when the refresh call fails', () => {
       localStorage.setItem('fitness_tracker_refresh_token', 'bad-token');
       service.refreshAccessToken().subscribe();
       httpMock
         .expectOne(`${environment.apiUrl}/auth/refresh`)
         .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-      tick();
       expect(mockRouter.navigate).toHaveBeenCalledWith(['/login']);
-    }));
+    });
   });
 });

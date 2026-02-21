@@ -27,23 +27,22 @@ interface DaySlot {
 }
 
 @Component({
-  selector: 'app-programs',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    PageContainerComponent,
-    CardComponent,
-    ButtonComponent,
-    BadgeComponent,
-    EmptyStateComponent,
-    ModalComponent,
-    InputComponent,
-    ProgressComponent,
-    TabsComponent,
-  ],
-  templateUrl: './programs.component.html',
-  styleUrls: ['./programs.component.scss']
+    selector: 'app-programs',
+    imports: [
+        CommonModule,
+        FormsModule,
+        PageContainerComponent,
+        CardComponent,
+        ButtonComponent,
+        BadgeComponent,
+        EmptyStateComponent,
+        ModalComponent,
+        InputComponent,
+        ProgressComponent,
+        TabsComponent,
+    ],
+    templateUrl: './programs.component.html',
+    styleUrls: ['./programs.component.scss']
 })
 export class ProgramsComponent {
   programService = inject(ProgramService);

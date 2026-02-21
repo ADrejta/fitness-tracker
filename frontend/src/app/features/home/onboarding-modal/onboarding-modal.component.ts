@@ -11,11 +11,10 @@ interface PlateResult {
 }
 
 @Component({
-  selector: 'app-onboarding-modal',
-  standalone: true,
-  imports: [CommonModule, FormsModule, ModalComponent, ButtonComponent],
-  templateUrl: './onboarding-modal.component.html',
-  styleUrls: ['./onboarding-modal.component.scss']
+    selector: 'app-onboarding-modal',
+    imports: [CommonModule, FormsModule, ModalComponent, ButtonComponent],
+    templateUrl: './onboarding-modal.component.html',
+    styleUrls: ['./onboarding-modal.component.scss']
 })
 export class OnboardingModalComponent {
   @Input() isOpen = false;

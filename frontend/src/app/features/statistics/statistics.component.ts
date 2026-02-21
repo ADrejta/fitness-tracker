@@ -24,21 +24,20 @@ const STRENGTH_STANDARDS = [
 ] as const;
 
 @Component({
-  selector: 'app-statistics',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    RouterLink,
-    PageContainerComponent,
-    CardComponent,
-    BadgeComponent,
-    EmptyStateComponent,
-    ButtonComponent,
-    ProgressComponent
-  ],
-  templateUrl: './statistics.component.html',
-  styleUrls: ['./statistics.component.scss']
+    selector: 'app-statistics',
+    imports: [
+        CommonModule,
+        FormsModule,
+        RouterLink,
+        PageContainerComponent,
+        CardComponent,
+        BadgeComponent,
+        EmptyStateComponent,
+        ButtonComponent,
+        ProgressComponent
+    ],
+    templateUrl: './statistics.component.html',
+    styleUrls: ['./statistics.component.scss']
 })
 export class StatisticsComponent implements OnInit {
   statisticsService = inject(StatisticsService);

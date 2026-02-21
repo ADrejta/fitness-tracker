@@ -21,11 +21,10 @@ const PLATE_COLORS: Record<number, string> = {
 };
 
 @Component({
-  selector: 'app-plate-calculator',
-  standalone: true,
-  imports: [CommonModule, FormsModule],
-  templateUrl: './plate-calculator.component.html',
-  styleUrls: ['./plate-calculator.component.scss']
+    selector: 'app-plate-calculator',
+    imports: [CommonModule, FormsModule],
+    templateUrl: './plate-calculator.component.html',
+    styleUrls: ['./plate-calculator.component.scss']
 })
 export class PlateCalculatorComponent {
   private settingsService = inject(SettingsService);

@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../../core/services';
 
 @Component({
-  selector: 'app-rest-timer',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './rest-timer.component.html',
-  styleUrls: ['./rest-timer.component.scss']
+    selector: 'app-rest-timer',
+    imports: [CommonModule],
+    templateUrl: './rest-timer.component.html',
+    styleUrls: ['./rest-timer.component.scss']
 })
 export class RestTimerComponent implements OnDestroy {
   @Input() autoStart = true;

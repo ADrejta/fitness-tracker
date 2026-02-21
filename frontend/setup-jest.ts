@@ -1,6 +1,6 @@
-import { setupZoneTestEnv } from 'jest-preset-angular/setup-env/zone';
+import { setupZonelessTestEnv } from 'jest-preset-angular/setup-env/zoneless';
 
-setupZoneTestEnv();
+setupZonelessTestEnv();
 
 // jsdom does not implement crypto.randomUUID — polyfill with Node's implementation
 // Use require to avoid needing @types/node in tsconfig.spec.json

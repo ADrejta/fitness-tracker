@@ -14,11 +14,10 @@ export interface ProgressionSuggestion {
 }
 
 @Component({
-  selector: 'app-set-row',
-  standalone: true,
-  imports: [CommonModule, FormsModule, PlateCalculatorComponent],
-  templateUrl: './set-row.component.html',
-  styleUrls: ['./set-row.component.scss']
+    selector: 'app-set-row',
+    imports: [CommonModule, FormsModule, PlateCalculatorComponent],
+    templateUrl: './set-row.component.html',
+    styleUrls: ['./set-row.component.scss']
 })
 export class SetRowComponent {
   @Input() set!: WorkoutSet;

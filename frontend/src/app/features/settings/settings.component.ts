@@ -17,18 +17,17 @@ import {
 } from '../../core/models';
 
 @Component({
-  selector: 'app-settings',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    PageContainerComponent,
-    CardComponent,
-    ButtonComponent,
-    ModalComponent
-  ],
-  templateUrl: './settings.component.html',
-  styleUrls: ['./settings.component.scss']
+    selector: 'app-settings',
+    imports: [
+        CommonModule,
+        FormsModule,
+        PageContainerComponent,
+        CardComponent,
+        ButtonComponent,
+        ModalComponent
+    ],
+    templateUrl: './settings.component.html',
+    styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent {
   settingsService = inject(SettingsService);

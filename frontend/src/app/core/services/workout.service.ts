@@ -113,7 +113,7 @@ export class WorkoutService {
       if (isAuth) {
         this.loadFromApi();
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   private async loadFromApi(): Promise<void> {

@@ -6,11 +6,10 @@ import { SyncQueueService } from '../../core/services/sync-queue.service';
 import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
 
 @Component({
-  selector: 'app-header',
-  standalone: true,
-  imports: [CommonModule, RouterLink, LoadingBarComponent],
-  templateUrl: './header.component.html',
-  styleUrls: ['./header.component.scss']
+    selector: 'app-header',
+    imports: [CommonModule, RouterLink, LoadingBarComponent],
+    templateUrl: './header.component.html',
+    styleUrls: ['./header.component.scss']
 })
 export class HeaderComponent {
   workoutService = inject(WorkoutService);

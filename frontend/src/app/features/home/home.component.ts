@@ -8,20 +8,19 @@ import { OnboardingModalComponent } from './onboarding-modal/onboarding-modal.co
 import { format, isToday, isYesterday } from 'date-fns';
 
 @Component({
-  selector: 'app-home',
-  standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    PageContainerComponent,
-    ButtonComponent,
-    CardComponent,
-    BadgeComponent,
-    ProgressComponent,
-    OnboardingModalComponent
-  ],
-  templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+    selector: 'app-home',
+    imports: [
+        CommonModule,
+        RouterLink,
+        PageContainerComponent,
+        ButtonComponent,
+        CardComponent,
+        BadgeComponent,
+        ProgressComponent,
+        OnboardingModalComponent
+    ],
+    templateUrl: './home.component.html',
+    styleUrls: ['./home.component.scss']
 })
 export class HomeComponent {
   workoutService = inject(WorkoutService);

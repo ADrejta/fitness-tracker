@@ -8,20 +8,19 @@ import { BodyMeasurement } from '../../core/models';
 import { format, parseISO } from 'date-fns';
 
 @Component({
-  selector: 'app-body-stats',
-  standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    PageContainerComponent,
-    CardComponent,
-    ButtonComponent,
-    InputComponent,
-    ModalComponent,
-    EmptyStateComponent
-  ],
-  templateUrl: './body-stats.component.html',
-  styleUrls: ['./body-stats.component.scss']
+    selector: 'app-body-stats',
+    imports: [
+        CommonModule,
+        FormsModule,
+        PageContainerComponent,
+        CardComponent,
+        ButtonComponent,
+        InputComponent,
+        ModalComponent,
+        EmptyStateComponent
+    ],
+    templateUrl: './body-stats.component.html',
+    styleUrls: ['./body-stats.component.scss']
 })
 export class BodyStatsComponent {
   bodyStatsService = inject(BodyStatsService);

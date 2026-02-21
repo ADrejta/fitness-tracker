@@ -8,19 +8,18 @@ import { Workout } from '../../../core/models';
 import { format, parseISO } from 'date-fns';
 
 @Component({
-  selector: 'app-workout-detail',
-  standalone: true,
-  imports: [
-    CommonModule,
-    RouterLink,
-    PageContainerComponent,
-    CardComponent,
-    BadgeComponent,
-    ButtonComponent,
-    ModalComponent
-  ],
-  templateUrl: './workout-detail.component.html',
-  styleUrls: ['./workout-detail.component.scss']
+    selector: 'app-workout-detail',
+    imports: [
+        CommonModule,
+        RouterLink,
+        PageContainerComponent,
+        CardComponent,
+        BadgeComponent,
+        ButtonComponent,
+        ModalComponent
+    ],
+    templateUrl: './workout-detail.component.html',
+    styleUrls: ['./workout-detail.component.scss']
 })
 export class WorkoutDetailComponent implements OnInit {
   private route = inject(ActivatedRoute);

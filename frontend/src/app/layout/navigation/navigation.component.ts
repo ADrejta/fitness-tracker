@@ -10,11 +10,10 @@ interface NavItem {
 }
 
 @Component({
-  selector: 'app-navigation',
-  standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive],
-  templateUrl: './navigation.component.html',
-  styleUrls: ['./navigation.component.scss']
+    selector: 'app-navigation',
+    imports: [CommonModule, RouterLink, RouterLinkActive],
+    templateUrl: './navigation.component.html',
+    styleUrls: ['./navigation.component.scss']
 })
 export class NavigationComponent {
   workoutService = inject(WorkoutService);

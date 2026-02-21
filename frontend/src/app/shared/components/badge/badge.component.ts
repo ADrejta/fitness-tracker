@@ -5,11 +5,10 @@ export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'dang
 export type BadgeSize = 'sm' | 'md';
 
 @Component({
-  selector: 'app-badge',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './badge.component.html',
-  styleUrls: ['./badge.component.scss']
+    selector: 'app-badge',
+    imports: [CommonModule],
+    templateUrl: './badge.component.html',
+    styleUrls: ['./badge.component.scss']
 })
 export class BadgeComponent {
   @Input() variant: BadgeVariant = 'default';

@@ -62,7 +62,7 @@ export class ProgramService {
         this.fetchPrograms();
         this.fetchActiveProgram();
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   private fetchPrograms(): void {

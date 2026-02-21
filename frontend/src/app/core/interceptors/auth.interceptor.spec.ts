@@ -1,4 +1,4 @@
-import { TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { TestBed } from '@angular/core/testing';
 import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { of } from 'rxjs';
@@ -50,15 +50,14 @@ describe('authInterceptor', () => {
       req.flush({});
     });
 
-    it('does not call refreshAccessToken on /auth/refresh 401', fakeAsync(() => {
+    it('does not call refreshAccessToken on /auth/refresh 401', () => {
       mockAuthService.getAccessToken.mockReturnValue('token');
       http.post('http://api.test/auth/refresh', {}).subscribe({ error: () => {} });
       httpMock
         .expectOne('http://api.test/auth/refresh')
         .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-      tick();
       expect(mockAuthService.refreshAccessToken).not.toHaveBeenCalled();
-    }));
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -86,7 +85,7 @@ describe('authInterceptor', () => {
   // 401 handling — token refresh + retry
   // ---------------------------------------------------------------------------
   describe('401 handling', () => {
-    it('calls refreshAccessToken when a 401 is received', fakeAsync(() => {
+    it('calls refreshAccessToken when a 401 is received', () => {
       mockAuthService.getAccessToken.mockReturnValue('expired');
       mockAuthService.refreshAccessToken.mockReturnValue(of(null));
 
@@ -94,12 +93,11 @@ describe('authInterceptor', () => {
       httpMock
         .expectOne('http://api.test/workouts')
         .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-      tick();
 
       expect(mockAuthService.refreshAccessToken).toHaveBeenCalled();
-    }));
+    });
 
-    it('retries the request with the new token after a successful refresh', fakeAsync(() => {
+    it('retries the request with the new token after a successful refresh', () => {
       mockAuthService.getAccessToken.mockReturnValue('old-token');
       mockAuthService.refreshAccessToken.mockReturnValue(
         of({ accessToken: 'new-token', refreshToken: 'new-refresh' })
@@ -111,17 +109,15 @@ describe('authInterceptor', () => {
       httpMock
         .expectOne('http://api.test/workouts')
         .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-      tick();
 
       const retryReq = httpMock.expectOne('http://api.test/workouts');
       expect(retryReq.request.headers.get('Authorization')).toBe('Bearer new-token');
       retryReq.flush([{ id: 1 }]);
-      tick();
 
       expect(response).toEqual([{ id: 1 }]);
-    }));
+    });
 
-    it('propagates the original error when refresh returns null', fakeAsync(() => {
+    it('propagates the original error when refresh returns null', () => {
       mockAuthService.getAccessToken.mockReturnValue('expired');
       mockAuthService.refreshAccessToken.mockReturnValue(of(null));
 
@@ -131,12 +127,11 @@ describe('authInterceptor', () => {
       httpMock
         .expectOne('http://api.test/workouts')
         .flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
-      tick();
 
       expect(caughtError).toBeDefined();
-    }));
+    });
 
-    it('does not retry on non-401 errors', fakeAsync(() => {
+    it('does not retry on non-401 errors', () => {
       mockAuthService.getAccessToken.mockReturnValue('token');
 
       let caughtError: unknown;
@@ -145,22 +140,20 @@ describe('authInterceptor', () => {
       httpMock
         .expectOne('http://api.test/workouts')
         .flush('Server Error', { status: 500, statusText: 'Internal Server Error' });
-      tick();
 
       expect(mockAuthService.refreshAccessToken).not.toHaveBeenCalled();
       expect(caughtError).toBeDefined();
-    }));
+    });
 
-    it('does not retry on 403 errors', fakeAsync(() => {
+    it('does not retry on 403 errors', () => {
       mockAuthService.getAccessToken.mockReturnValue('token');
 
       http.get('http://api.test/workouts').subscribe({ error: () => {} });
       httpMock
         .expectOne('http://api.test/workouts')
         .flush('Forbidden', { status: 403, statusText: 'Forbidden' });
-      tick();
 
       expect(mockAuthService.refreshAccessToken).not.toHaveBeenCalled();
-    }));
+    });
   });
 });

@@ -73,7 +73,7 @@ export class TemplateService {
       if (isAuth) {
         this.fetchTemplates();
       }
-    }, { allowSignalWrites: true });
+    });
   }
 
   private fetchTemplates(): void {

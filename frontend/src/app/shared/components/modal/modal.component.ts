@@ -2,11 +2,10 @@ import { Component, Input, Output, EventEmitter, HostListener } from '@angular/c
 import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: 'app-modal',
-  standalone: true,
-  imports: [CommonModule],
-  templateUrl: './modal.component.html',
-  styleUrls: ['./modal.component.scss']
+    selector: 'app-modal',
+    imports: [CommonModule],
+    templateUrl: './modal.component.html',
+    styleUrls: ['./modal.component.scss']
 })
 export class ModalComponent {
   @Input() isOpen = false;
