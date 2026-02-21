@@ -11,6 +11,7 @@ interface PlateResult {
 }
 
 @Component({
+    standalone: true,
     selector: 'app-onboarding-modal',
     imports: [CommonModule, FormsModule, ModalComponent, ButtonComponent],
     templateUrl: './onboarding-modal.component.html',

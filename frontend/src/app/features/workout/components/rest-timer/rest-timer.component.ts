@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../../core/services';
 
 @Component({
+    standalone: true,
     selector: 'app-rest-timer',
     imports: [CommonModule],
     templateUrl: './rest-timer.component.html',

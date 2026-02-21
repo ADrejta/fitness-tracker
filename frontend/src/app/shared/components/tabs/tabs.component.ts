@@ -10,6 +10,7 @@ export interface Tab {
 
 @Component({
     selector: 'app-tabs',
+    standalone: true,
     imports: [CommonModule],
     templateUrl: './tabs.component.html',
     styleUrls: ['./tabs.component.scss']

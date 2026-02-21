@@ -7,6 +7,7 @@ import { ExerciseService } from '../../core/services';
 import { ExerciseTemplate, MuscleGroup } from '../../core/models';
 
 @Component({
+    standalone: true,
     selector: 'app-exercises',
     imports: [
         CommonModule,

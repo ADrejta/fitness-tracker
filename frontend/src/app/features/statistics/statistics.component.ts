@@ -24,6 +24,7 @@ const STRENGTH_STANDARDS = [
 ] as const;
 
 @Component({
+    standalone: true,
     selector: 'app-statistics',
     imports: [
         CommonModule,

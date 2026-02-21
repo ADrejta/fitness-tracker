@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, HostListener } from '@angular/c
 import { CommonModule } from '@angular/common';
 
 @Component({
+    standalone: true,
     selector: 'app-modal',
     imports: [CommonModule],
     templateUrl: './modal.component.html',

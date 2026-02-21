@@ -3,7 +3,6 @@ import { HttpBackend, HttpRequest, HttpHeaders } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { StorageService } from './storage.service';
 import { ToastService } from './toast.service';
-import { AuthService } from './auth.service';
 
 export interface SyncQueueItem {
   id: string;
@@ -19,7 +18,6 @@ export interface SyncQueueItem {
 export class SyncQueueService {
   private storage = inject(StorageService);
   private toast = inject(ToastService);
-  private auth = inject(AuthService);
   private httpBackend = inject(HttpBackend);
 
   private _items = signal<SyncQueueItem[]>(this.storage.get<SyncQueueItem[]>('syncQueue', []));
@@ -59,7 +57,7 @@ export class SyncQueueService {
     const snapshot = [...this._items()];
     if (snapshot.length === 0) return;
 
-    const token = this.auth.getAccessToken();
+    const token = localStorage.getItem('fitness_tracker_access_token');
     let successCount = 0;
 
     for (const item of snapshot) {

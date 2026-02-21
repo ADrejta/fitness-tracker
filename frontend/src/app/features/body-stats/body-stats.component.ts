@@ -8,6 +8,7 @@ import { BodyMeasurement } from '../../core/models';
 import { format, parseISO } from 'date-fns';
 
 @Component({
+    standalone: true,
     selector: 'app-body-stats',
     imports: [
         CommonModule,

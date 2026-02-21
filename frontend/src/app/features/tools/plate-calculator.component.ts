@@ -8,6 +8,7 @@ import { BARBELL_PRESETS, BarbellType } from '../../core/models';
 import { calculatePlates, PlateCalculation, PlateCount } from '../../shared/utils';
 
 @Component({
+    standalone: true,
     selector: 'app-plate-calculator',
     imports: [
         CommonModule,

@@ -27,6 +27,7 @@ interface DaySlot {
 }
 
 @Component({
+    standalone: true,
     selector: 'app-programs',
     imports: [
         CommonModule,

@@ -38,6 +38,7 @@ export interface CalendarDay {
 }
 
 @Component({
+    standalone: true,
     selector: 'app-history',
     imports: [
         CommonModule,

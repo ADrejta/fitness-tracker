@@ -18,6 +18,7 @@ interface GroupedExercise extends WorkoutExercise {
 }
 
 @Component({
+    standalone: true,
     selector: 'app-workout',
     imports: [
         CommonModule,

@@ -21,6 +21,7 @@ const PLATE_COLORS: Record<number, string> = {
 };
 
 @Component({
+    standalone: true,
     selector: 'app-plate-calculator',
     imports: [CommonModule, FormsModule],
     templateUrl: './plate-calculator.component.html',

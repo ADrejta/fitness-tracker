@@ -8,6 +8,7 @@ import { Workout } from '../../../core/models';
 import { format, parseISO } from 'date-fns';
 
 @Component({
+    standalone: true,
     selector: 'app-workout-detail',
     imports: [
         CommonModule,

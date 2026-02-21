@@ -14,6 +14,7 @@ export interface ProgressionSuggestion {
 }
 
 @Component({
+    standalone: true,
     selector: 'app-set-row',
     imports: [CommonModule, FormsModule, PlateCalculatorComponent],
     templateUrl: './set-row.component.html',

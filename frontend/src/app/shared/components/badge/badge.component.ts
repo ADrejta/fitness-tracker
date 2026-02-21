@@ -5,6 +5,7 @@ export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'dang
 export type BadgeSize = 'sm' | 'md';
 
 @Component({
+    standalone: true,
     selector: 'app-badge',
     imports: [CommonModule],
     templateUrl: './badge.component.html',

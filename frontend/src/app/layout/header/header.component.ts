@@ -6,6 +6,7 @@ import { SyncQueueService } from '../../core/services/sync-queue.service';
 import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
 
 @Component({
+    standalone: true,
     selector: 'app-header',
     imports: [CommonModule, RouterLink, LoadingBarComponent],
     templateUrl: './header.component.html',

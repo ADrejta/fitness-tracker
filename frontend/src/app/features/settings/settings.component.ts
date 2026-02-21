@@ -17,6 +17,7 @@ import {
 } from '../../core/models';
 
 @Component({
+    standalone: true,
     selector: 'app-settings',
     imports: [
         CommonModule,

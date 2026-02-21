@@ -10,6 +10,7 @@ interface NavItem {
 }
 
 @Component({
+    standalone: true,
     selector: 'app-navigation',
     imports: [CommonModule, RouterLink, RouterLinkActive],
     templateUrl: './navigation.component.html',

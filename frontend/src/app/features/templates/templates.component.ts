@@ -32,6 +32,7 @@ interface EditableTemplateExercise extends TemplateExercise {
 }
 
 @Component({
+    standalone: true,
     selector: 'app-templates',
     imports: [
         CommonModule,

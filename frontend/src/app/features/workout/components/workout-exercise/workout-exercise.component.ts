@@ -8,6 +8,7 @@ import { SetRowComponent, ProgressionSuggestion } from '../set-row/set-row.compo
 import { calculateWarmupSets, WarmupSet } from '../../../../shared/utils';
 
 @Component({
+    standalone: true,
     selector: 'app-workout-exercise',
     imports: [CommonModule, FormsModule, CardComponent, BadgeComponent, SetRowComponent],
     templateUrl: './workout-exercise.component.html',

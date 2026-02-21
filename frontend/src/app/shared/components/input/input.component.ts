@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
 @Component({
+    standalone: true,
     selector: 'app-input',
     imports: [CommonModule, FormsModule],
     providers: [

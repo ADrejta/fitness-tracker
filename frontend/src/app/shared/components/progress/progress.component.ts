@@ -5,6 +5,7 @@ export type ProgressVariant = 'primary' | 'success' | 'warning' | 'danger';
 export type ProgressSize = 'sm' | 'md' | 'lg';
 
 @Component({
+    standalone: true,
     selector: 'app-progress',
     imports: [CommonModule],
     templateUrl: './progress.component.html',

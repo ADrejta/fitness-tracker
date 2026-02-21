@@ -8,6 +8,7 @@ import { OnboardingModalComponent } from './onboarding-modal/onboarding-modal.co
 import { format, isToday, isYesterday } from 'date-fns';
 
 @Component({
+    standalone: true,
     selector: 'app-home',
     imports: [
         CommonModule,
