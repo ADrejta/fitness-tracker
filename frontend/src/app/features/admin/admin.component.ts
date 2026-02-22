@@ -2,13 +2,13 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
-import { Chart, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart, BarController, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import { PageContainerComponent } from '../../layout';
 import { CardComponent, BadgeComponent, ButtonComponent, ModalComponent } from '../../shared/components';
 import { AdminService, AdminUser, AdminMetrics } from '../../core/services/admin.service';
 import { AuthService } from '../../core/services/auth.service';
 
-Chart.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+Chart.register(BarController, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 @Component({
   standalone: true,
