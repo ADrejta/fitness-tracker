@@ -176,6 +176,26 @@ impl AuthService {
         Self::generate_tokens(&user, settings)
     }
 
+    pub async fn change_password(
+        pool: &PgPool,
+        user_id: Uuid,
+        current_password: &str,
+        new_password: &str,
+    ) -> Result<(), AppError> {
+        let user = UserRepository::find_by_id(pool, user_id)
+            .await?
+            .ok_or(AppError::Unauthorized)?;
+
+        if !Self::verify_password(current_password, &user.password_hash)? {
+            return Err(AppError::BadRequest("Current password is incorrect".to_string()));
+        }
+
+        let new_hash = Self::hash_password(new_password)?;
+        UserRepository::update_password(pool, user_id, &new_hash).await?;
+
+        Ok(())
+    }
+
     pub async fn get_current_user(pool: &PgPool, user_id: Uuid) -> Result<UserResponse, AppError> {
         let user = UserRepository::find_by_id(pool, user_id)
             .await?

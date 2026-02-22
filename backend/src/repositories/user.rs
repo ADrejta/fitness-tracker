@@ -57,4 +57,20 @@ impl UserRepository {
 
         Ok(user)
     }
+
+    pub async fn update_password(
+        pool: &PgPool,
+        id: Uuid,
+        password_hash: &str,
+    ) -> Result<(), AppError> {
+        sqlx::query(
+            "UPDATE users SET password_hash = $2, updated_at = NOW() WHERE id = $1",
+        )
+        .bind(id)
+        .bind(password_hash)
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
 }

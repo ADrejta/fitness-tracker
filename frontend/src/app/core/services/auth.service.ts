@@ -172,6 +172,13 @@ export class AuthService {
       );
   }
 
+  changePassword(currentPassword: string, newPassword: string): Observable<void> {
+    return this.http.patch<void>(`${environment.apiUrl}/auth/password`, {
+      currentPassword,
+      newPassword,
+    });
+  }
+
   private loadCurrentUser(): void {
     const token = this.getAccessToken();
     const http = new HttpClient(this.httpBackend);

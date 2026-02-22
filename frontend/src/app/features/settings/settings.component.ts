@@ -1,10 +1,10 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
 import { CardComponent, ButtonComponent, ModalComponent } from '../../shared/components';
-import { SettingsService, StorageService, AuthService } from '../../core/services';
+import { SettingsService, StorageService, AuthService, ToastService } from '../../core/services';
 import {
   WeightUnit,
   MeasurementUnit,
@@ -34,10 +34,16 @@ export class SettingsComponent {
   settingsService = inject(SettingsService);
   storageService = inject(StorageService);
   authService = inject(AuthService);
+  private toastService = inject(ToastService);
   private router = inject(Router);
 
   showClearModal = false;
   showPlateConfigModal = false;
+  showPasswordModal = false;
+
+  passwordForm = { current: '', newPw: '', confirm: '' };
+  passwordError = signal<string | null>(null);
+  passwordLoading = signal(false);
   storageSize = this.storageService.getStorageSize();
 
   barbellPresets = BARBELL_PRESETS;
@@ -175,5 +181,44 @@ export class SettingsComponent {
 
   goToLogin(): void {
     this.router.navigate(['/login']);
+  }
+
+  openPasswordModal(): void {
+    this.passwordForm = { current: '', newPw: '', confirm: '' };
+    this.passwordError.set(null);
+    this.showPasswordModal = true;
+  }
+
+  submitPasswordChange(): void {
+    const { current, newPw, confirm } = this.passwordForm;
+
+    if (!current) {
+      this.passwordError.set('Current password is required.');
+      return;
+    }
+    if (newPw.length < 8) {
+      this.passwordError.set('New password must be at least 8 characters.');
+      return;
+    }
+    if (newPw !== confirm) {
+      this.passwordError.set('New passwords do not match.');
+      return;
+    }
+
+    this.passwordLoading.set(true);
+    this.passwordError.set(null);
+
+    this.authService.changePassword(current, newPw).subscribe({
+      next: () => {
+        this.passwordLoading.set(false);
+        this.showPasswordModal = false;
+        this.toastService.success('Password changed successfully.');
+      },
+      error: (err) => {
+        this.passwordLoading.set(false);
+        const msg = err?.error?.error ?? 'Failed to change password.';
+        this.passwordError.set(msg);
+      },
+    });
   }
 }

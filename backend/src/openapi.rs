@@ -28,6 +28,7 @@ use crate::models::{
         handlers::login,
         handlers::refresh,
         handlers::me,
+        handlers::change_password,
         // Workouts
         handlers::create_workout,
         handlers::list_workouts,
@@ -107,6 +108,7 @@ use crate::models::{
             ErrorResponse,
             // Auth
             RegisterRequest, LoginRequest, AuthResponse, UserResponse, RefreshRequest, TokenResponse,
+            ChangePasswordRequest,
             // Workout
             CreateWorkoutRequest, UpdateWorkoutRequest, WorkoutResponse, WorkoutExerciseResponse,
             WorkoutSetResponse, CreateWorkoutExerciseRequest, UpdateWorkoutExerciseRequest,

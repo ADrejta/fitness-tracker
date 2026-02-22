@@ -76,6 +76,7 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
     let protected_routes = Router::new()
         // Auth
         .route("/auth/me", get(handlers::me))
+        .route("/auth/password", patch(handlers::change_password))
         // Workouts
         .route("/workouts", get(handlers::list_workouts))
         .route("/workouts", post(handlers::create_workout))

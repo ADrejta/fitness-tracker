@@ -1,11 +1,11 @@
-use axum::{extract::State, Extension, Json};
+use axum::{extract::State, http::StatusCode, Extension, Json};
 use sqlx::PgPool;
 use validator::Validate;
 
 use crate::config::Settings;
 use crate::dto::{
-    AuthResponse, ErrorResponse, LoginRequest, RefreshRequest, RegisterRequest, TokenResponse,
-    UserResponse,
+    AuthResponse, ChangePasswordRequest, ErrorResponse, LoginRequest, RefreshRequest,
+    RegisterRequest, TokenResponse, UserResponse,
 };
 use crate::error::AppError;
 use crate::middleware::AuthUser;
@@ -92,4 +92,35 @@ pub async fn me(
 ) -> Result<Json<UserResponse>, AppError> {
     let response = AuthService::get_current_user(&pool, auth_user.user_id).await?;
     Ok(Json(response))
+}
+
+#[utoipa::path(
+    patch,
+    path = "/api/v1/auth/password",
+    tag = "Auth",
+    request_body = ChangePasswordRequest,
+    responses(
+        (status = 204, description = "Password changed successfully"),
+        (status = 400, description = "Current password incorrect or validation error", body = ErrorResponse),
+        (status = 401, description = "Unauthorized", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn change_password(
+    State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
+    Json(req): Json<ChangePasswordRequest>,
+) -> Result<StatusCode, AppError> {
+    req.validate()
+        .map_err(|e| AppError::Validation(e.to_string()))?;
+
+    AuthService::change_password(
+        &pool,
+        auth_user.user_id,
+        &req.current_password,
+        &req.new_password,
+    )
+    .await?;
+
+    Ok(StatusCode::NO_CONTENT)
 }

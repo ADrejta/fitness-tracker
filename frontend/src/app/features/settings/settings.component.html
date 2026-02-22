@@ -198,6 +198,15 @@
             <app-button variant="secondary" size="sm" (clicked)="authService.logout()">Sign Out</app-button>
           </div>
         </div>
+        <div class="setting-row">
+          <div class="setting-row__info">
+            <span class="setting-row__label">Change Password</span>
+            <span class="setting-row__description">Update your account password</span>
+          </div>
+          <div class="setting-row__control">
+            <app-button variant="secondary" size="sm" (clicked)="openPasswordModal()">Change</app-button>
+          </div>
+        </div>
       }
     </app-card>
   </section>
@@ -304,5 +313,58 @@
     <div modal-footer>
       <app-button variant="primary" (clicked)="showPlateConfigModal = false">Done</app-button>
     </div>
+  </app-modal>
+
+  <!-- Change Password Modal -->
+  <app-modal
+    [isOpen]="showPasswordModal"
+    title="Change Password"
+    size="sm"
+    (closed)="showPasswordModal = false"
+  >
+    <form class="password-form" (ngSubmit)="submitPasswordChange()">
+      <div class="password-form__field">
+        <label class="password-form__label">Current Password</label>
+        <input
+          type="password"
+          class="password-form__input"
+          [(ngModel)]="passwordForm.current"
+          name="current"
+          autocomplete="current-password"
+          placeholder="Enter current password"
+        />
+      </div>
+      <div class="password-form__field">
+        <label class="password-form__label">New Password</label>
+        <input
+          type="password"
+          class="password-form__input"
+          [(ngModel)]="passwordForm.newPw"
+          name="newPw"
+          autocomplete="new-password"
+          placeholder="At least 8 characters"
+        />
+      </div>
+      <div class="password-form__field">
+        <label class="password-form__label">Confirm New Password</label>
+        <input
+          type="password"
+          class="password-form__input"
+          [(ngModel)]="passwordForm.confirm"
+          name="confirm"
+          autocomplete="new-password"
+          placeholder="Repeat new password"
+        />
+      </div>
+      @if (passwordError()) {
+        <p class="password-form__error">{{ passwordError() }}</p>
+      }
+      <div class="password-form__actions">
+        <app-button variant="ghost" type="button" (clicked)="showPasswordModal = false">Cancel</app-button>
+        <app-button variant="primary" type="submit" [disabled]="passwordLoading()">
+          {{ passwordLoading() ? 'Saving…' : 'Change Password' }}
+        </app-button>
+      </div>
+    </form>
   </app-modal>
 </app-page-container>
