@@ -1,3 +1,4 @@
+mod admin;
 mod body_stats;
 mod exercise;
 mod personal_record;
@@ -7,6 +8,7 @@ mod template;
 mod user;
 mod workout;
 
+pub use admin::AdminRepository;
 pub use body_stats::BodyStatsRepository;
 pub use exercise::ExerciseRepository;
 pub use personal_record::PersonalRecordRepository;

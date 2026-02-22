@@ -39,9 +39,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Seeding demo user...");
     seed_demo_user(&pool).await?;
 
+    println!("Seeding admin user...");
+    seed_admin_user(&pool).await?;
+
     println!("\n✓ Demo user ready!");
     println!("  Email: demo@example.com");
     println!("  Password: demo1234");
+    println!("\n✓ Admin user ready!");
+    println!("  Email: admin@example.com");
+    println!("  Password: admin1234");
 
     Ok(())
 }
@@ -133,6 +139,11 @@ async fn clear_demo_data(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::error::
     // Finally delete the user
     sqlx::query("DELETE FROM users WHERE id = $1")
         .bind(user_id)
+        .execute(pool)
+        .await?;
+
+    // Delete admin user
+    sqlx::query("DELETE FROM users WHERE email = 'admin@example.com'")
         .execute(pool)
         .await?;
 
@@ -774,6 +785,22 @@ async fn seed_user_settings(
     .bind(user_id)
     .bind(&plate_calculator_json)
     .execute(&mut **tx)
+    .await?;
+
+    Ok(())
+}
+
+async fn seed_admin_user(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::error::Error>> {
+    let password_hash = hash_password("admin1234")
+        .map_err(|e| format!("Failed to hash password: {}", e))?;
+
+    sqlx::query(
+        "INSERT INTO users (id, email, password_hash, is_admin, created_at, updated_at)
+         VALUES (gen_random_uuid(), 'admin@example.com', $1, true, NOW(), NOW())
+         ON CONFLICT (email) DO UPDATE SET is_admin = true"
+    )
+    .bind(&password_hash)
+    .execute(pool)
     .await?;
 
     Ok(())

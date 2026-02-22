@@ -126,6 +126,7 @@ impl AuthService {
             user: UserResponse {
                 id: user.id,
                 email: user.email,
+                is_admin: user.is_admin,
             },
         })
     }
@@ -152,6 +153,7 @@ impl AuthService {
             user: UserResponse {
                 id: user.id,
                 email: user.email,
+                is_admin: user.is_admin,
             },
         })
     }
@@ -182,6 +184,7 @@ impl AuthService {
         Ok(UserResponse {
             id: user.id,
             email: user.email,
+            is_admin: user.is_admin,
         })
     }
 }
@@ -265,6 +268,7 @@ mod tests {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
             password_hash: "hash".to_string(),
+            is_admin: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -291,6 +295,7 @@ mod tests {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
             password_hash: "hash".to_string(),
+            is_admin: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -315,6 +320,7 @@ mod tests {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
             password_hash: "hash".to_string(),
+            is_admin: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };
@@ -349,6 +355,7 @@ mod tests {
             id: Uuid::new_v4(),
             email: "test@example.com".to_string(),
             password_hash: "hash".to_string(),
+            is_admin: false,
             created_at: Utc::now(),
             updated_at: Utc::now(),
         };

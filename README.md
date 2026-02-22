@@ -13,6 +13,7 @@ A full-stack web application for tracking workouts, monitoring body stats, and a
 - **Plateau Detection** - Automatic alerts when an exercise hasn't progressed in 3+ weeks, with actionable suggestions
 - **Superset Support** - Group exercises into supersets within workouts and templates
 - **Plate Calculator** - Calculate barbell plate configurations with customizable available plates
+- **Admin Dashboard** - Admin-only panel at `/admin` for user management (list, promote/demote, delete) and platform usage metrics (DAU/WAU/MAU, registrations over time, top users)
 
 ## Tech Stack
 
@@ -96,6 +97,8 @@ cargo run --bin seed -- --force # reset and re-seed demo data
 
 Login with `demo@example.com` / `demo1234` to explore all features with pre-populated workout history, templates, programs, body stats, goals, and personal records.
 
+Login with `admin@example.com` / `admin1234` to access the admin dashboard.
+
 ## Configuration
 
 ### Backend Environment Variables
@@ -130,6 +133,11 @@ Base URL: `/api/v1`
 | `GET /statistics/summary` | Get stats summary |
 | `GET /statistics/plateau-alerts` | Get plateau detection alerts |
 | `GET /personal-records` | Get personal records |
+| `GET /admin/users` | List all users (admin only) |
+| `GET /admin/users/{id}` | Get user detail (admin only) |
+| `DELETE /admin/users/{id}` | Delete user (admin only) |
+| `PATCH /admin/users/{id}` | Set admin status (admin only) |
+| `GET /admin/metrics` | Get platform usage metrics (admin only) |
 
 ## License
 

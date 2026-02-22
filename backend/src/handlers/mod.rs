@@ -1,3 +1,4 @@
+mod admin;
 mod auth;
 mod body_stats;
 mod exercise;
@@ -7,6 +8,7 @@ mod statistics;
 mod template;
 mod workout;
 
+pub use admin::*;
 pub use auth::*;
 pub use body_stats::*;
 pub use exercise::*;

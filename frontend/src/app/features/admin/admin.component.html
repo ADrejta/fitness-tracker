@@ -1,0 +1,190 @@
+<app-page-container title="Admin Dashboard">
+  <!-- Tab bar -->
+  <div class="admin-tabs">
+    <button class="admin-tab" [class.admin-tab--active]="activeTab() === 'overview'" (click)="setTab('overview')">
+      Overview
+    </button>
+    <button class="admin-tab" [class.admin-tab--active]="activeTab() === 'users'" (click)="setTab('users')">
+      Users
+      @if (usersTotal() > 0) {
+        <span class="admin-tab__count">{{ usersTotal() }}</span>
+      }
+    </button>
+  </div>
+
+  <!-- Overview Tab -->
+  @if (activeTab() === 'overview') {
+    @if (metricsLoading()) {
+      <div class="admin-loading">Loading metrics…</div>
+    } @else if (metricsError()) {
+      <div class="admin-error">{{ metricsError() }}</div>
+    } @else if (metrics()) {
+      <!-- Metrics cards -->
+      <div class="admin-metrics-grid">
+        <app-card class="admin-metric-card">
+          <div class="admin-metric-card__value">{{ metrics()!.totalUsers }}</div>
+          <div class="admin-metric-card__label">Total Users</div>
+        </app-card>
+        <app-card class="admin-metric-card">
+          <div class="admin-metric-card__value">{{ metrics()!.totalWorkouts }}</div>
+          <div class="admin-metric-card__label">Total Workouts</div>
+        </app-card>
+        <app-card class="admin-metric-card">
+          <div class="admin-metric-card__value">{{ metrics()!.totalSets }}</div>
+          <div class="admin-metric-card__label">Total Sets</div>
+        </app-card>
+        <app-card class="admin-metric-card admin-metric-card--accent">
+          <div class="admin-metric-card__value">{{ metrics()!.activeToday }}</div>
+          <div class="admin-metric-card__label">Active Today</div>
+        </app-card>
+        <app-card class="admin-metric-card">
+          <div class="admin-metric-card__value">{{ metrics()!.activeThisWeek }}</div>
+          <div class="admin-metric-card__label">Active This Week</div>
+        </app-card>
+        <app-card class="admin-metric-card">
+          <div class="admin-metric-card__value">{{ metrics()!.activeThisMonth }}</div>
+          <div class="admin-metric-card__label">Active This Month</div>
+        </app-card>
+      </div>
+
+      <!-- Registrations chart -->
+      <app-card class="admin-chart-card">
+        <h3 class="admin-section-title">Registrations (last 30 days)</h3>
+        @if (metrics()!.registrationsByDay.length > 0) {
+          <div class="admin-chart-wrap">
+            <canvas baseChart
+              [data]="barChartData()"
+              [options]="barChartOptions"
+              type="bar">
+            </canvas>
+          </div>
+        } @else {
+          <p class="admin-empty">No registrations in the last 30 days.</p>
+        }
+      </app-card>
+
+      <!-- Top users table -->
+      <app-card class="admin-top-users-card">
+        <h3 class="admin-section-title">Top Users by Workouts</h3>
+        @if (metrics()!.topUsersByWorkouts.length > 0) {
+          <div class="admin-table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Email</th>
+                  <th class="admin-table__num">Workouts</th>
+                  <th class="admin-table__num">Sets</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (u of metrics()!.topUsersByWorkouts; track u.id; let i = $index) {
+                  <tr>
+                    <td class="admin-table__rank">{{ i + 1 }}</td>
+                    <td class="admin-table__email">{{ u.email }}</td>
+                    <td class="admin-table__num">{{ u.workoutCount }}</td>
+                    <td class="admin-table__num">{{ u.totalSets }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="admin-empty">No workout data yet.</p>
+        }
+      </app-card>
+    }
+  }
+
+  <!-- Users Tab -->
+  @if (activeTab() === 'users') {
+    @if (usersLoading()) {
+      <div class="admin-loading">Loading users…</div>
+    } @else if (usersError()) {
+      <div class="admin-error">{{ usersError() }}</div>
+    } @else {
+      <app-card>
+        <div class="admin-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Joined</th>
+                <th class="admin-table__num">Workouts</th>
+                <th>Last Active</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of users(); track user.id) {
+                <tr>
+                  <td class="admin-table__email">{{ user.email }}</td>
+                  <td>
+                    @if (user.isAdmin) {
+                      <app-badge variant="primary">Admin</app-badge>
+                    } @else {
+                      <app-badge variant="default">User</app-badge>
+                    }
+                  </td>
+                  <td>{{ user.createdAt | date:'mediumDate' }}</td>
+                  <td class="admin-table__num">{{ user.workoutCount }}</td>
+                  <td>{{ user.lastActive ? (user.lastActive | date:'mediumDate') : '—' }}</td>
+                  <td class="admin-table__actions">
+                    <app-button
+                      size="sm"
+                      [variant]="user.isAdmin ? 'secondary' : 'ghost'"
+                      [disabled]="isSelf(user)"
+                      (click)="toggleAdmin(user)">
+                      {{ user.isAdmin ? 'Revoke Admin' : 'Make Admin' }}
+                    </app-button>
+                    <app-button
+                      size="sm"
+                      variant="danger"
+                      [disabled]="isSelf(user)"
+                      (click)="confirmDelete(user)">
+                      Delete
+                    </app-button>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination -->
+        @if (totalPages > 1) {
+          <div class="admin-pagination">
+            <app-button size="sm" variant="ghost" [disabled]="usersPage() <= 1" (click)="goToPage(usersPage() - 1)">
+              Previous
+            </app-button>
+            <span class="admin-pagination__info">Page {{ usersPage() }} of {{ totalPages }}</span>
+            <app-button size="sm" variant="ghost" [disabled]="usersPage() >= totalPages" (click)="goToPage(usersPage() + 1)">
+              Next
+            </app-button>
+          </div>
+        }
+      </app-card>
+    }
+  }
+</app-page-container>
+
+<!-- Delete confirmation modal -->
+<app-modal
+  [isOpen]="deleteTarget() !== null"
+  title="Delete User"
+  size="sm"
+  (closed)="cancelDelete()">
+  @if (deleteTarget()) {
+    <p class="admin-modal-body">
+      Are you sure you want to delete <strong>{{ deleteTarget()!.email }}</strong>?
+      This will permanently remove all their data.
+    </p>
+    <div class="admin-modal-actions">
+      <app-button variant="ghost" (click)="cancelDelete()">Cancel</app-button>
+      <app-button variant="danger" [disabled]="deleteLoading()" (click)="executeDelete()">
+        {{ deleteLoading() ? 'Deleting…' : 'Delete' }}
+      </app-button>
+    </div>
+  }
+</app-modal>

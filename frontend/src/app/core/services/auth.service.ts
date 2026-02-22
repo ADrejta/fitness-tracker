@@ -7,6 +7,7 @@ import { environment } from '../../../environments/environment';
 export interface User {
   id: string;
   email: string;
+  isAdmin?: boolean;
 }
 
 export interface LoginRequest {
@@ -49,6 +50,7 @@ export class AuthService {
   readonly user = this._user.asReadonly();
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
   readonly isLoading = this._isLoading.asReadonly();
+  readonly isAdmin = computed(() => this._user()?.isAdmin ?? false);
 
   private refreshTokenInProgress = false;
   private refreshTokenSubject = new BehaviorSubject<string | null>(null);

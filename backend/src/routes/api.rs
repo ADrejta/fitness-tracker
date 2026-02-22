@@ -15,7 +15,7 @@ use utoipa_swagger_ui::SwaggerUi;
 
 use crate::config::Settings;
 use crate::handlers;
-use crate::middleware::{auth_middleware, auth_rate_limiter, general_rate_limiter, request_id_middleware};
+use crate::middleware::{admin_middleware, auth_middleware, auth_rate_limiter, general_rate_limiter, request_id_middleware};
 use crate::openapi::ApiDoc;
 
 #[derive(Clone)]
@@ -225,14 +225,26 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
         .route("/settings", get(handlers::get_settings))
         .route("/settings", put(handlers::update_settings))
         .layer(middleware::from_fn_with_state(
-            settings,
+            settings.clone(),
             auth_middleware,
+        ));
+
+    // Admin routes (admin JWT check in middleware)
+    let admin_routes = Router::new()
+        .route("/admin/users", get(handlers::list_admin_users))
+        .route("/admin/users/{id}", get(handlers::get_admin_user))
+        .route("/admin/users/{id}", delete(handlers::delete_admin_user))
+        .route("/admin/users/{id}", patch(handlers::set_admin_status))
+        .route("/admin/metrics", get(handlers::get_admin_metrics))
+        .layer(middleware::from_fn_with_state(
+            state.clone(),
+            admin_middleware,
         ));
 
     // Combine all routes under /api/v1 with general rate limiting
     Router::new()
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
-        .nest("/api/v1", public_routes.merge(protected_routes))
+        .nest("/api/v1", public_routes.merge(protected_routes).merge(admin_routes))
         .layer(general_rate_limiter())
         .layer(
             TraceLayer::new_for_http()

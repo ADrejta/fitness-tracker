@@ -17,6 +17,12 @@ use crate::models::{
         description = "REST API for tracking workouts, exercises, body stats, and personal records."
     ),
     paths(
+        // Admin
+        handlers::list_admin_users,
+        handlers::get_admin_user,
+        handlers::delete_admin_user,
+        handlers::set_admin_status,
+        handlers::get_admin_metrics,
         // Auth
         handlers::register,
         handlers::login,
@@ -94,6 +100,9 @@ use crate::models::{
     ),
     components(
         schemas(
+            // Admin
+            AdminUserResponse, AdminUserListResponse, AdminUserDetailResponse,
+            SetAdminStatusRequest, DailyRegistration, TopUserResponse, AdminMetricsResponse,
             // Error
             ErrorResponse,
             // Auth
@@ -137,6 +146,7 @@ use crate::models::{
     ),
     modifiers(&SecurityAddon),
     tags(
+        (name = "Admin", description = "Admin management endpoints"),
         (name = "Auth", description = "Authentication endpoints"),
         (name = "Workouts", description = "Workout management"),
         (name = "Workout Exercises", description = "Exercises within a workout"),

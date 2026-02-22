@@ -28,9 +28,11 @@ pub struct AuthResponse {
 }
 
 #[derive(Debug, Serialize, ToSchema)]
+#[serde(rename_all = "camelCase")]
 pub struct UserResponse {
     pub id: Uuid,
     pub email: String,
+    pub is_admin: bool,
 }
 
 #[derive(Debug, Deserialize, ToSchema)]
@@ -166,6 +168,7 @@ mod tests {
             user: UserResponse {
                 id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap(),
                 email: "user@example.com".to_string(),
+                is_admin: false,
             },
         };
 
@@ -182,6 +185,7 @@ mod tests {
         let user = UserResponse {
             id: Uuid::parse_str("550e8400-e29b-41d4-a716-446655440000").unwrap(),
             email: "test@example.com".to_string(),
+            is_admin: false,
         };
 
         let json = serde_json::to_string(&user).unwrap();

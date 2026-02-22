@@ -148,6 +148,22 @@
   min-width: 1ch;
 }
 
+.header__admin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  color: var(--color-primary-600);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--color-background-secondary);
+    color: var(--color-primary-700);
+  }
+}
+
 .header__settings {
   display: flex;
   align-items: center;

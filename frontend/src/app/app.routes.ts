@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { guestGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 
 export const routes: Routes = [
   {
@@ -90,6 +91,12 @@ export const routes: Routes = [
       import('./features/tools/plate-calculator.component').then(
         (m) => m.PlateCalculatorComponent
       ),
+  },
+  {
+    path: 'admin',
+    loadComponent: () =>
+      import('./features/admin/admin.component').then((m) => m.AdminComponent),
+    canActivate: [adminGuard],
   },
   {
     path: '**',
