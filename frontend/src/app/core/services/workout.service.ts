@@ -28,7 +28,7 @@ const PERSONAL_RECORDS_KEY = 'personalRecords';
 
 interface WorkoutListResponse {
   workouts: Workout[];
-  total: number;
+  nextCursor: string | null;
 }
 
 interface PersonalRecordsResponse {
@@ -149,23 +149,21 @@ export class WorkoutService {
 
   async fetchWorkoutsPaginated(params: {
     limit?: number;
-    offset?: number;
+    cursor?: string | null;
     status?: WorkoutStatus;
-  }): Promise<{ workouts: Workout[]; total: number }> {
+  }): Promise<{ workouts: Workout[]; nextCursor: string | null }> {
     if (!this.authService.isAuthenticated()) {
-      // Fallback to local data with manual pagination
       const allWorkouts = this.completedWorkouts();
-      const start = params.offset || 0;
-      const end = start + (params.limit || 20);
+      const limit = params.limit || 20;
       return {
-        workouts: allWorkouts.slice(start, end),
-        total: allWorkouts.length,
+        workouts: allWorkouts.slice(0, limit),
+        nextCursor: null,
       };
     }
 
     const queryParams = new URLSearchParams();
     if (params.limit) queryParams.set('limit', params.limit.toString());
-    if (params.offset) queryParams.set('offset', params.offset.toString());
+    if (params.cursor) queryParams.set('cursor', params.cursor);
     if (params.status) queryParams.set('status', params.status);
 
     const url = `${environment.apiUrl}/workouts?${queryParams.toString()}`;

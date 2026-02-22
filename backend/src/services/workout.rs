@@ -162,7 +162,7 @@ impl WorkoutService {
         Self::get_workout_with_exercises(pool, workout.id, user_id).await
     }
 
-    async fn detect_personal_records(
+    pub async fn detect_personal_records(
         pool: &PgPool,
         workout_id: Uuid,
         user_id: Uuid,

@@ -1,10 +1,16 @@
-use axum::{extract::State, Extension, Json};
+use axum::{
+    extract::State,
+    http::{header, HeaderMap, StatusCode},
+    response::IntoResponse,
+    Extension, Json,
+};
 use sqlx::PgPool;
 
 use validator::Validate;
 
 use crate::dto::{ErrorResponse, SettingsResponse, UpdateSettingsRequest};
 use crate::error::AppError;
+use crate::etag::{check_none_match, compute_etag};
 use crate::middleware::AuthUser;
 use crate::repositories::SettingsRepository;
 
@@ -14,13 +20,15 @@ use crate::repositories::SettingsRepository;
     tag = "Settings",
     responses(
         (status = 200, description = "User settings", body = SettingsResponse),
+        (status = 304, description = "Not modified"),
     ),
     security(("bearer_auth" = []))
 )]
 pub async fn get_settings(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
-) -> Result<Json<SettingsResponse>, AppError> {
+    headers: HeaderMap,
+) -> Result<impl IntoResponse, AppError> {
     let settings = if let Some(cached) = crate::cache::get_settings(auth_user.user_id) {
         cached
     } else {
@@ -29,7 +37,7 @@ pub async fn get_settings(
         s
     };
 
-    Ok(Json(SettingsResponse {
+    let response = SettingsResponse {
         weight_unit: settings.weight_unit,
         measurement_unit: settings.measurement_unit,
         theme: settings.theme,
@@ -40,7 +48,16 @@ pub async fn get_settings(
         sound_on_timer_end: settings.sound_on_timer_end,
         plate_calculator: settings.plate_calculator,
         compact_mode: settings.compact_mode,
-    }))
+    };
+
+    let body = serde_json::to_vec(&response).unwrap();
+    let etag = compute_etag(&body);
+
+    if check_none_match(&headers, &etag) {
+        return Ok(StatusCode::NOT_MODIFIED.into_response());
+    }
+
+    Ok(([(header::ETAG, etag)], Json(response)).into_response())
 }
 
 #[utoipa::path(

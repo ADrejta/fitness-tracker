@@ -83,13 +83,14 @@ export class HistoryComponent implements OnInit {
     return [...tags].sort();
   });
 
-  // Pagination state
-  currentPage = signal(1);
-  pageSize = signal(20);
-  totalWorkouts = signal(0);
+  // Pagination state (cursor-based)
+  nextCursor = signal<string | null>(null);
+  cursorStack = signal<(string | null)[]>([]);
   isLoadingPage = signal(false);
+  readonly limit = 20;
 
-  totalPages = computed(() => Math.ceil(this.totalWorkouts() / this.pageSize()) || 1);
+  hasNextPage = computed(() => this.nextCursor() !== null);
+  hasPrevPage = computed(() => this.cursorStack().length > 1);
 
   // Calendar state
   viewMode = signal<'list' | 'calendar'>('list');
@@ -151,24 +152,38 @@ export class HistoryComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    this.loadPage(1);
+    this.loadPage(null);
   }
 
-  async loadPage(page: number): Promise<void> {
+  async loadPage(cursor: string | null): Promise<void> {
     this.isLoadingPage.set(true);
     try {
-      const offset = (page - 1) * this.pageSize();
       const response = await this.workoutService.fetchWorkoutsPaginated({
-        limit: this.pageSize(),
-        offset,
+        limit: this.limit,
+        cursor,
         status: 'completed',
       });
-      this.currentPage.set(page);
-      this.totalWorkouts.set(response.total);
+      this.nextCursor.set(response.nextCursor);
       this.groupWorkoutsFromList(response.workouts);
     } finally {
       this.isLoadingPage.set(false);
     }
+  }
+
+  async loadNext(): Promise<void> {
+    const next = this.nextCursor();
+    if (!next) return;
+    this.cursorStack.update(s => [...s, next]);
+    await this.loadPage(next);
+  }
+
+  async loadPrev(): Promise<void> {
+    const stack = this.cursorStack();
+    if (stack.length === 0) return;
+    const newStack = stack.slice(0, -1);
+    this.cursorStack.set(newStack);
+    const prevCursor = newStack.length > 0 ? newStack[newStack.length - 1] : null;
+    await this.loadPage(prevCursor);
   }
 
   private groupWorkoutsFromList(workouts: Workout[]): void {

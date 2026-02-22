@@ -4,8 +4,10 @@ use axum::{
     routing::{delete, get, patch, post, put},
     Router,
 };
+use axum_prometheus::PrometheusMetricLayer;
 use sqlx::PgPool;
 use axum::http::{header, Method};
+use tokio::sync::mpsc;
 use tower_http::compression::CompressionLayer;
 use tower_http::cors::CorsLayer;
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
@@ -17,11 +19,13 @@ use crate::config::Settings;
 use crate::handlers;
 use crate::middleware::{admin_middleware, auth_middleware, auth_rate_limiter, general_rate_limiter, request_id_middleware};
 use crate::openapi::ApiDoc;
+use crate::services::PrJob;
 
 #[derive(Clone)]
 pub struct AppState {
     pub pool: PgPool,
     pub settings: Settings,
+    pub pr_tx: mpsc::Sender<PrJob>,
 }
 
 impl FromRef<AppState> for PgPool {
@@ -36,10 +40,11 @@ impl FromRef<AppState> for Settings {
     }
 }
 
-pub fn create_router(pool: PgPool, settings: Settings) -> Router {
+pub fn create_router(pool: PgPool, settings: Settings, pr_tx: mpsc::Sender<PrJob>) -> Router {
     let state = AppState {
         pool,
         settings: settings.clone(),
+        pr_tx,
     };
 
     // CORS configuration - use origins from settings
@@ -244,11 +249,19 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
             admin_middleware,
         ));
 
-    // Combine all routes under /api/v1 with general rate limiting
-    Router::new()
+    let (prometheus_layer, metrics_handle) = PrometheusMetricLayer::pair();
+
+    // Rate-limited API routes (swagger + /api/v1)
+    let api_routes = Router::new()
         .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .nest("/api/v1", public_routes.merge(protected_routes).merge(admin_routes))
-        .layer(general_rate_limiter())
+        .layer(general_rate_limiter());
+
+    // Top-level router: /health and /metrics are outside the rate limiter
+    Router::new()
+        .route("/health", get(handlers::health))
+        .route("/metrics", get(move || async move { metrics_handle.render() }))
+        .merge(api_routes)
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &axum::http::Request<_>| {
@@ -270,5 +283,6 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
         .layer(cors)
         .layer(CompressionLayer::new())
         .layer(DefaultBodyLimit::max(1024 * 1024)) // 1 MB
+        .layer(prometheus_layer)
         .with_state(state)
 }

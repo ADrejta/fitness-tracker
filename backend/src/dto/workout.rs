@@ -121,7 +121,7 @@ pub struct UpdateSetRequest {
 #[serde(rename_all = "camelCase")]
 pub struct WorkoutListResponse {
     pub workouts: Vec<WorkoutSummaryResponse>,
-    pub total: i64,
+    pub next_cursor: Option<String>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -147,8 +147,7 @@ pub struct WorkoutQuery {
     pub status: Option<WorkoutStatus>,
     #[validate(range(min = 1, max = 100))]
     pub limit: Option<i64>,
-    #[validate(range(min = 0))]
-    pub offset: Option<i64>,
+    pub cursor: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]

@@ -6,6 +6,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 use validator::Validate;
 
+use crate::cursor::encode_cursor;
 use crate::dto::{
     CreateSetRequest, CreateSupersetRequest, CreateWorkoutExerciseRequest, CreateWorkoutRequest,
     ErrorResponse, ReorderExercisesRequest, SupersetResponse, UpdateSetRequest,
@@ -16,7 +17,8 @@ use crate::cache;
 use crate::error::AppError;
 use crate::middleware::AuthUser;
 use crate::repositories::WorkoutRepository;
-use crate::services::WorkoutService;
+use crate::routes::AppState;
+use crate::services::{PrJob, WorkoutService};
 
 // Workout handlers
 
@@ -71,7 +73,14 @@ pub async fn list_workouts(
         .validate()
         .map_err(|e| AppError::Validation(e.to_string()))?;
 
-    let (workouts, total) = WorkoutRepository::find_all(&pool, auth_user.user_id, &query).await?;
+    let limit = query.limit.unwrap_or(20).min(100);
+    let workouts = WorkoutRepository::find_all(&pool, auth_user.user_id, &query).await?;
+
+    let next_cursor = if workouts.len() as i64 == limit {
+        workouts.last().map(|w| encode_cursor(w.started_at, w.id))
+    } else {
+        None
+    };
 
     Ok(Json(WorkoutListResponse {
         workouts: workouts
@@ -90,7 +99,7 @@ pub async fn list_workouts(
                 tags: w.tags,
             })
             .collect(),
-        total,
+        next_cursor,
     }))
 }
 
@@ -201,11 +210,18 @@ pub async fn restore_workout(
     security(("bearer_auth" = []))
 )]
 pub async fn complete_workout(
-    State(pool): State<PgPool>,
+    State(state): State<AppState>,
     Extension(auth_user): Extension<AuthUser>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<WorkoutResponse>, AppError> {
-    let response = WorkoutService::complete_workout(&pool, id, auth_user.user_id).await?;
+    WorkoutRepository::complete(&state.pool, id, auth_user.user_id).await?;
+    let _ = state.pr_tx.try_send(PrJob {
+        pool: state.pool.clone(),
+        workout_id: id,
+        user_id: auth_user.user_id,
+    });
+    let response =
+        WorkoutService::get_workout_with_exercises(&state.pool, id, auth_user.user_id).await?;
     Ok(Json(response))
 }
 

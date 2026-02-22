@@ -229,25 +229,22 @@
       </div>
 
       <!-- Pagination -->
-      @if (totalPages() > 1) {
+      @if (hasPrevPage() || hasNextPage()) {
         <div class="pagination">
           <button
             class="pagination__btn"
-            [disabled]="currentPage() === 1"
-            (click)="loadPage(currentPage() - 1)"
+            [disabled]="!hasPrevPage()"
+            (click)="loadPrev()"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
             Previous
           </button>
-          <span class="pagination__info">
-            Page {{ currentPage() }} of {{ totalPages() }}
-          </span>
           <button
             class="pagination__btn"
-            [disabled]="currentPage() === totalPages()"
-            (click)="loadPage(currentPage() + 1)"
+            [disabled]="!hasNextPage()"
+            (click)="loadNext()"
           >
             Next
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

@@ -1,8 +1,10 @@
 use std::net::SocketAddr;
+use std::time::Duration;
 
 use fitness_tracker_api::config::Settings;
 use fitness_tracker_api::db::create_pool;
 use fitness_tracker_api::routes::create_router;
+use fitness_tracker_api::services::{pr_worker, PrJob};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[tokio::main]
@@ -37,8 +39,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     sqlx::migrate!("./migrations").run(&pool).await?;
     tracing::info!("Migrations applied");
 
+    // Spawn background PR detection worker
+    let (pr_tx, pr_rx) = tokio::sync::mpsc::channel::<PrJob>(256);
+    tokio::spawn(pr_worker(pr_rx));
+
+    // Spawn DB pool metrics poller (every 15s)
+    let pool_metrics = pool.clone();
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_secs(15));
+        loop {
+            interval.tick().await;
+            metrics::gauge!("db_pool_connections_total").set(pool_metrics.size() as f64);
+            metrics::gauge!("db_pool_connections_idle").set(pool_metrics.num_idle() as f64);
+        }
+    });
+
     // Create router
-    let app = create_router(pool, settings.clone());
+    let app = create_router(pool.clone(), settings.clone(), pr_tx);
 
     // Start server
     let addr = SocketAddr::new(
@@ -48,7 +65,36 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Server starting on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await?;
+
+    pool.close().await;
+    tracing::info!("Server shut down cleanly.");
 
     Ok(())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        tokio::signal::ctrl_c().await.unwrap();
+    };
+
+    #[cfg(unix)]
+    let sigterm = async {
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+            .unwrap()
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let sigterm = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = sigterm => {},
+    }
+
+    tracing::info!("Shutdown signal received, draining in-flight requests...");
 }

@@ -1,5 +1,7 @@
 use axum::{
     extract::{Path, Query, State},
+    http::{header, HeaderMap, StatusCode},
+    response::IntoResponse,
     Extension, Json,
 };
 use sqlx::PgPool;
@@ -11,6 +13,7 @@ use crate::dto::{
     UpdateExerciseRequest,
 };
 use crate::error::AppError;
+use crate::etag::{check_none_match, compute_etag};
 use crate::middleware::AuthUser;
 use crate::repositories::ExerciseRepository;
 
@@ -21,6 +24,7 @@ use crate::repositories::ExerciseRepository;
     params(ExerciseQuery),
     responses(
         (status = 200, description = "List of exercises", body = Vec<ExerciseTemplateResponse>),
+        (status = 304, description = "Not modified"),
     ),
     security(("bearer_auth" = []))
 )]
@@ -28,24 +32,32 @@ pub async fn list_exercises(
     State(pool): State<PgPool>,
     Extension(auth_user): Extension<AuthUser>,
     Query(query): Query<ExerciseQuery>,
-) -> Result<Json<Vec<ExerciseTemplateResponse>>, AppError> {
+    headers: HeaderMap,
+) -> Result<impl IntoResponse, AppError> {
     let exercises = ExerciseRepository::find_all(&pool, auth_user.user_id, &query).await?;
 
-    Ok(Json(
-        exercises
-            .into_iter()
-            .map(|e| ExerciseTemplateResponse {
-                id: e.id,
-                name: e.name,
-                muscle_groups: e.muscle_groups,
-                category: e.category,
-                equipment: e.equipment,
-                is_custom: e.is_custom,
-                description: e.description,
-                instructions: e.instructions,
-            })
-            .collect(),
-    ))
+    let response_vec: Vec<ExerciseTemplateResponse> = exercises
+        .into_iter()
+        .map(|e| ExerciseTemplateResponse {
+            id: e.id,
+            name: e.name,
+            muscle_groups: e.muscle_groups,
+            category: e.category,
+            equipment: e.equipment,
+            is_custom: e.is_custom,
+            description: e.description,
+            instructions: e.instructions,
+        })
+        .collect();
+
+    let body = serde_json::to_vec(&response_vec).unwrap();
+    let etag = compute_etag(&body);
+
+    if check_none_match(&headers, &etag) {
+        return Ok(StatusCode::NOT_MODIFIED.into_response());
+    }
+
+    Ok(([(header::ETAG, etag)], Json(response_vec)).into_response())
 }
 
 #[utoipa::path(

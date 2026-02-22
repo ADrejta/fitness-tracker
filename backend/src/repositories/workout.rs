@@ -2,6 +2,7 @@ use chrono::{DateTime, Utc};
 use sqlx::PgPool;
 use uuid::Uuid;
 
+use crate::cursor::decode_cursor;
 use crate::dto::{ExerciseOrderUpdate, WorkoutQuery};
 use crate::error::AppError;
 use crate::models::{Workout, WorkoutExercise, WorkoutSet, WorkoutStatus};
@@ -58,67 +59,102 @@ impl WorkoutRepository {
         pool: &PgPool,
         user_id: Uuid,
         query: &WorkoutQuery,
-    ) -> Result<(Vec<WorkoutWithCount>, i64), AppError> {
+    ) -> Result<Vec<WorkoutWithCount>, AppError> {
         let limit = query.limit.unwrap_or(20).min(100);
-        let offset = query.offset.unwrap_or(0).max(0);
+        let cursor = query.cursor.as_deref().and_then(decode_cursor);
 
-        let total = if let Some(ref status) = query.status {
-            sqlx::query_scalar::<_, i64>(
-                "SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND status = $2 AND deleted_at IS NULL",
-            )
-            .bind(user_id)
-            .bind(status)
-            .fetch_one(pool)
-            .await?
-        } else {
-            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND deleted_at IS NULL")
+        let workouts = match (&query.status, cursor) {
+            // No cursor, no status filter
+            (None, None) => {
+                sqlx::query_as::<_, WorkoutWithCount>(
+                    r#"
+                    SELECT
+                        w.id, w.user_id, w.name, w.started_at, w.completed_at,
+                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.status, w.template_id, w.notes, w.tags,
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                    FROM workouts w
+                    WHERE w.user_id = $1 AND w.deleted_at IS NULL
+                    ORDER BY w.started_at DESC, w.id DESC
+                    LIMIT $2
+                    "#,
+                )
                 .bind(user_id)
-                .fetch_one(pool)
+                .bind(limit)
+                .fetch_all(pool)
                 .await?
+            }
+            // No cursor, with status filter
+            (Some(status), None) => {
+                sqlx::query_as::<_, WorkoutWithCount>(
+                    r#"
+                    SELECT
+                        w.id, w.user_id, w.name, w.started_at, w.completed_at,
+                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.status, w.template_id, w.notes, w.tags,
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                    FROM workouts w
+                    WHERE w.user_id = $1 AND w.status = $2 AND w.deleted_at IS NULL
+                    ORDER BY w.started_at DESC, w.id DESC
+                    LIMIT $3
+                    "#,
+                )
+                .bind(user_id)
+                .bind(status)
+                .bind(limit)
+                .fetch_all(pool)
+                .await?
+            }
+            // With cursor, no status filter
+            (None, Some((cursor_at, cursor_id))) => {
+                sqlx::query_as::<_, WorkoutWithCount>(
+                    r#"
+                    SELECT
+                        w.id, w.user_id, w.name, w.started_at, w.completed_at,
+                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.status, w.template_id, w.notes, w.tags,
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                    FROM workouts w
+                    WHERE w.user_id = $1 AND w.deleted_at IS NULL
+                      AND (w.started_at < $2 OR (w.started_at = $2 AND w.id < $3))
+                    ORDER BY w.started_at DESC, w.id DESC
+                    LIMIT $4
+                    "#,
+                )
+                .bind(user_id)
+                .bind(cursor_at)
+                .bind(cursor_id)
+                .bind(limit)
+                .fetch_all(pool)
+                .await?
+            }
+            // With cursor, with status filter
+            (Some(status), Some((cursor_at, cursor_id))) => {
+                sqlx::query_as::<_, WorkoutWithCount>(
+                    r#"
+                    SELECT
+                        w.id, w.user_id, w.name, w.started_at, w.completed_at,
+                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.status, w.template_id, w.notes, w.tags,
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                    FROM workouts w
+                    WHERE w.user_id = $1 AND w.status = $2 AND w.deleted_at IS NULL
+                      AND (w.started_at < $3 OR (w.started_at = $3 AND w.id < $4))
+                    ORDER BY w.started_at DESC, w.id DESC
+                    LIMIT $5
+                    "#,
+                )
+                .bind(user_id)
+                .bind(status)
+                .bind(cursor_at)
+                .bind(cursor_id)
+                .bind(limit)
+                .fetch_all(pool)
+                .await?
+            }
         };
 
-        let workouts = if let Some(ref status) = query.status {
-            sqlx::query_as::<_, WorkoutWithCount>(
-                r#"
-                SELECT
-                    w.id, w.user_id, w.name, w.started_at, w.completed_at,
-                    w.total_volume, w.total_sets, w.total_reps, w.duration,
-                    w.status, w.template_id, w.notes, w.tags,
-                    (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
-                FROM workouts w
-                WHERE w.user_id = $1 AND w.status = $2 AND w.deleted_at IS NULL
-                ORDER BY w.started_at DESC
-                LIMIT $3 OFFSET $4
-                "#,
-            )
-            .bind(user_id)
-            .bind(status)
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(pool)
-            .await?
-        } else {
-            sqlx::query_as::<_, WorkoutWithCount>(
-                r#"
-                SELECT
-                    w.id, w.user_id, w.name, w.started_at, w.completed_at,
-                    w.total_volume, w.total_sets, w.total_reps, w.duration,
-                    w.status, w.template_id, w.notes, w.tags,
-                    (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
-                FROM workouts w
-                WHERE w.user_id = $1 AND w.deleted_at IS NULL
-                ORDER BY w.started_at DESC
-                LIMIT $2 OFFSET $3
-                "#,
-            )
-            .bind(user_id)
-            .bind(limit)
-            .bind(offset)
-            .fetch_all(pool)
-            .await?
-        };
-
-        Ok((workouts, total))
+        Ok(workouts)
     }
 
     pub async fn update(
