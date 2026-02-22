@@ -1,5 +1,5 @@
 use axum::{
-    http::StatusCode,
+    http::{header, StatusCode},
     response::{IntoResponse, Response},
     Json,
 };
@@ -41,39 +41,41 @@ pub enum AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, error_message) = match &self {
-            AppError::Unauthorized => (StatusCode::UNAUTHORIZED, self.to_string()),
-            AppError::InvalidCredentials => (StatusCode::UNAUTHORIZED, self.to_string()),
-            AppError::Forbidden => (StatusCode::FORBIDDEN, self.to_string()),
-            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, msg.clone()),
-            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg.clone()),
-            AppError::Conflict(msg) => (StatusCode::CONFLICT, msg.clone()),
-            AppError::Validation(msg) => (StatusCode::UNPROCESSABLE_ENTITY, msg.clone()),
+        let (status, title, detail) = match &self {
+            AppError::Unauthorized => (StatusCode::UNAUTHORIZED, "Unauthorized", self.to_string()),
+            AppError::InvalidCredentials => (StatusCode::UNAUTHORIZED, "Unauthorized", self.to_string()),
+            AppError::Forbidden => (StatusCode::FORBIDDEN, "Forbidden", self.to_string()),
+            AppError::NotFound(msg) => (StatusCode::NOT_FOUND, "Not Found", msg.clone()),
+            AppError::BadRequest(msg) => (StatusCode::BAD_REQUEST, "Bad Request", msg.clone()),
+            AppError::Conflict(msg) => (StatusCode::CONFLICT, "Conflict", msg.clone()),
+            AppError::Validation(msg) => (StatusCode::UNPROCESSABLE_ENTITY, "Unprocessable Entity", msg.clone()),
             AppError::Database(e) => {
                 tracing::error!("Database error: {:?}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Database error".to_string(),
-                )
+                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error", "Database error".to_string())
             }
             AppError::Jwt(e) => {
                 tracing::error!("JWT error: {:?}", e);
-                (StatusCode::UNAUTHORIZED, "Invalid token".to_string())
+                (StatusCode::UNAUTHORIZED, "Unauthorized", "Invalid token".to_string())
             }
             AppError::Internal(msg) => {
                 tracing::error!("Internal error: {}", msg);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Internal server error".to_string(),
-                )
+                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error", "Internal server error".to_string())
             }
         };
 
         let body = Json(json!({
-            "error": error_message
+            "type": "about:blank",
+            "title": title,
+            "status": status.as_u16(),
+            "detail": detail,
         }));
 
-        (status, body).into_response()
+        (
+            status,
+            [(header::CONTENT_TYPE, "application/problem+json")],
+            body,
+        )
+            .into_response()
     }
 }
 
@@ -202,7 +204,10 @@ mod tests {
         let body_str = String::from_utf8(bytes.to_vec()).unwrap();
 
         let json: serde_json::Value = serde_json::from_str(&body_str).unwrap();
-        assert_eq!(json["error"], "User not found");
+        assert_eq!(json["type"], "about:blank");
+        assert_eq!(json["title"], "Not Found");
+        assert_eq!(json["status"], 404);
+        assert_eq!(json["detail"], "User not found");
     }
 
     #[tokio::test]
@@ -216,7 +221,7 @@ mod tests {
 
         let json: serde_json::Value = serde_json::from_str(&body_str).unwrap();
         // Should NOT expose internal details
-        assert_eq!(json["error"], "Internal server error");
+        assert_eq!(json["detail"], "Internal server error");
         assert!(!body_str.contains("Sensitive"));
     }
 

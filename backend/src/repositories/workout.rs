@@ -43,7 +43,7 @@ impl WorkoutRepository {
             r#"
             SELECT id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
             FROM workouts
-            WHERE id = $1 AND user_id = $2
+            WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
             "#,
         )
         .bind(id)
@@ -64,14 +64,14 @@ impl WorkoutRepository {
 
         let total = if let Some(ref status) = query.status {
             sqlx::query_scalar::<_, i64>(
-                "SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND status = $2",
+                "SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND status = $2 AND deleted_at IS NULL",
             )
             .bind(user_id)
             .bind(status)
             .fetch_one(pool)
             .await?
         } else {
-            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM workouts WHERE user_id = $1")
+            sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM workouts WHERE user_id = $1 AND deleted_at IS NULL")
                 .bind(user_id)
                 .fetch_one(pool)
                 .await?
@@ -86,7 +86,7 @@ impl WorkoutRepository {
                     w.status, w.template_id, w.notes, w.tags,
                     (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
                 FROM workouts w
-                WHERE w.user_id = $1 AND w.status = $2
+                WHERE w.user_id = $1 AND w.status = $2 AND w.deleted_at IS NULL
                 ORDER BY w.started_at DESC
                 LIMIT $3 OFFSET $4
                 "#,
@@ -106,7 +106,7 @@ impl WorkoutRepository {
                     w.status, w.template_id, w.notes, w.tags,
                     (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
                 FROM workouts w
-                WHERE w.user_id = $1
+                WHERE w.user_id = $1 AND w.deleted_at IS NULL
                 ORDER BY w.started_at DESC
                 LIMIT $2 OFFSET $3
                 "#,
@@ -162,17 +162,37 @@ impl WorkoutRepository {
     }
 
     pub async fn delete(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<(), AppError> {
-        let result = sqlx::query("DELETE FROM workouts WHERE id = $1 AND user_id = $2")
-            .bind(id)
-            .bind(user_id)
-            .execute(pool)
-            .await?;
+        let result = sqlx::query(
+            "UPDATE workouts SET deleted_at = NOW() WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL",
+        )
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
 
         if result.rows_affected() == 0 {
             return Err(AppError::NotFound("Workout not found".to_string()));
         }
 
         Ok(())
+    }
+
+    pub async fn restore(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<Workout, AppError> {
+        let result = sqlx::query(
+            "UPDATE workouts SET deleted_at = NULL WHERE id = $1 AND user_id = $2 AND deleted_at IS NOT NULL",
+        )
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(AppError::NotFound("Workout not found or not deleted".to_string()));
+        }
+
+        Self::find_by_id(pool, id, user_id)
+            .await?
+            .ok_or_else(|| AppError::Internal("Failed to restore workout".to_string()))
     }
 
     pub async fn complete(

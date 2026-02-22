@@ -260,6 +260,58 @@ pub async fn delete_template(
 
 #[utoipa::path(
     post,
+    path = "/api/v1/templates/{id}/restore",
+    tag = "Templates",
+    params(("id" = Uuid, Path, description = "Template ID")),
+    responses(
+        (status = 200, description = "Template restored", body = WorkoutTemplateResponse),
+        (status = 404, description = "Template not found or not deleted", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn restore_template(
+    State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<WorkoutTemplateResponse>, AppError> {
+    let template = TemplateRepository::restore(&pool, id, auth_user.user_id).await?;
+    let exercises = TemplateRepository::get_exercises_with_sets(&pool, id).await?;
+
+    Ok(Json(WorkoutTemplateResponse {
+        id: template.id,
+        name: template.name,
+        description: template.description,
+        exercises: exercises
+            .into_iter()
+            .map(|e| TemplateExerciseResponse {
+                id: e.id,
+                exercise_template_id: e.exercise_template_id,
+                exercise_name: e.exercise_name,
+                notes: e.notes,
+                rest_seconds: e.rest_seconds,
+                superset_id: e.superset_id,
+                sets: e
+                    .sets
+                    .into_iter()
+                    .map(|s| TemplateSetResponse {
+                        set_number: s.set_number,
+                        target_reps: s.target_reps,
+                        target_weight: s.target_weight,
+                        is_warmup: s.is_warmup,
+                    })
+                    .collect(),
+            })
+            .collect(),
+        estimated_duration: template.estimated_duration,
+        created_at: template.created_at,
+        last_used_at: template.last_used_at,
+        usage_count: template.usage_count,
+        tags: template.tags,
+    }))
+}
+
+#[utoipa::path(
+    post,
     path = "/api/v1/templates/{id}/start",
     tag = "Templates",
     params(("id" = Uuid, Path, description = "Template ID")),

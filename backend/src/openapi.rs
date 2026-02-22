@@ -35,6 +35,7 @@ use crate::models::{
         handlers::get_workout,
         handlers::update_workout,
         handlers::delete_workout,
+        handlers::restore_workout,
         handlers::complete_workout,
         handlers::cancel_workout,
         // Workout exercises
@@ -61,6 +62,7 @@ use crate::models::{
         handlers::create_template,
         handlers::update_template,
         handlers::delete_template,
+        handlers::restore_template,
         handlers::start_workout_from_template,
         // Programs
         handlers::create_program,

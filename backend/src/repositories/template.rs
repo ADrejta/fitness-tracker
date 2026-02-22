@@ -91,7 +91,7 @@ impl TemplateRepository {
             r#"
             SELECT id, user_id, name, description, estimated_duration, created_at, last_used_at, usage_count, tags
             FROM workout_templates
-            WHERE id = $1 AND user_id = $2
+            WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL
             "#,
         )
         .bind(id)
@@ -123,7 +123,7 @@ impl TemplateRepository {
                 t.last_used_at, t.usage_count, t.tags,
                 (SELECT COUNT(*)::int FROM template_exercises WHERE template_id = t.id) as exercise_count
             FROM workout_templates t
-            WHERE t.user_id = $1
+            WHERE t.user_id = $1 AND t.deleted_at IS NULL
             ORDER BY t.created_at DESC
             "#,
         )
@@ -253,17 +253,37 @@ impl TemplateRepository {
     }
 
     pub async fn delete(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<(), AppError> {
-        let result = sqlx::query("DELETE FROM workout_templates WHERE id = $1 AND user_id = $2")
-            .bind(id)
-            .bind(user_id)
-            .execute(pool)
-            .await?;
+        let result = sqlx::query(
+            "UPDATE workout_templates SET deleted_at = NOW() WHERE id = $1 AND user_id = $2 AND deleted_at IS NULL",
+        )
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
 
         if result.rows_affected() == 0 {
             return Err(AppError::NotFound("Template not found".to_string()));
         }
 
         Ok(())
+    }
+
+    pub async fn restore(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<WorkoutTemplate, AppError> {
+        let result = sqlx::query(
+            "UPDATE workout_templates SET deleted_at = NULL WHERE id = $1 AND user_id = $2 AND deleted_at IS NOT NULL",
+        )
+        .bind(id)
+        .bind(user_id)
+        .execute(pool)
+        .await?;
+
+        if result.rows_affected() == 0 {
+            return Err(AppError::NotFound("Template not found or not deleted".to_string()));
+        }
+
+        Self::find_by_id(pool, id, user_id)
+            .await?
+            .ok_or_else(|| AppError::Internal("Failed to restore template".to_string()))
     }
 
     pub async fn get_exercises_with_sets(

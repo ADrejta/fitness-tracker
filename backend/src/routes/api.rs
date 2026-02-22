@@ -1,5 +1,5 @@
 use axum::{
-    extract::FromRef,
+    extract::{DefaultBodyLimit, FromRef},
     middleware,
     routing::{delete, get, patch, post, put},
     Router,
@@ -85,6 +85,7 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
         .route("/workouts/{id}", delete(handlers::delete_workout))
         .route("/workouts/{id}/complete", post(handlers::complete_workout))
         .route("/workouts/{id}/cancel", post(handlers::cancel_workout))
+        .route("/workouts/{id}/restore", post(handlers::restore_workout))
         // Workout exercises
         .route(
             "/workouts/{workout_id}/exercises",
@@ -143,6 +144,7 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
         .route("/templates/{id}", get(handlers::get_template))
         .route("/templates/{id}", patch(handlers::update_template))
         .route("/templates/{id}", delete(handlers::delete_template))
+        .route("/templates/{id}/restore", post(handlers::restore_template))
         .route(
             "/templates/{id}/start",
             post(handlers::start_workout_from_template),
@@ -267,5 +269,6 @@ pub fn create_router(pool: PgPool, settings: Settings) -> Router {
         .layer(middleware::from_fn(request_id_middleware))
         .layer(cors)
         .layer(CompressionLayer::new())
+        .layer(DefaultBodyLimit::max(1024 * 1024)) // 1 MB
         .with_state(state)
 }

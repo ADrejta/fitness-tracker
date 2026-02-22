@@ -170,6 +170,27 @@ pub async fn delete_workout(
 
 #[utoipa::path(
     post,
+    path = "/api/v1/workouts/{id}/restore",
+    tag = "Workouts",
+    params(("id" = Uuid, Path, description = "Workout ID")),
+    responses(
+        (status = 200, description = "Workout restored", body = WorkoutResponse),
+        (status = 404, description = "Workout not found or not deleted", body = ErrorResponse),
+    ),
+    security(("bearer_auth" = []))
+)]
+pub async fn restore_workout(
+    State(pool): State<PgPool>,
+    Extension(auth_user): Extension<AuthUser>,
+    Path(id): Path<Uuid>,
+) -> Result<Json<WorkoutResponse>, AppError> {
+    WorkoutRepository::restore(&pool, id, auth_user.user_id).await?;
+    let response = WorkoutService::get_workout_with_exercises(&pool, id, auth_user.user_id).await?;
+    Ok(Json(response))
+}
+
+#[utoipa::path(
+    post,
     path = "/api/v1/workouts/{id}/complete",
     tag = "Workouts",
     params(("id" = Uuid, Path, description = "Workout ID")),
