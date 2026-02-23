@@ -593,5 +593,69 @@
     "category": "strength",
     "equipment": ["machine"],
     "description": "Machine rear delt fly"
+  },
+  {
+    "id": "ex-running",
+    "name": "Running",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Outdoor or treadmill running"
+  },
+  {
+    "id": "ex-cycling",
+    "name": "Cycling",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Indoor or outdoor cycling"
+  },
+  {
+    "id": "ex-rowing",
+    "name": "Rowing",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Rowing machine cardio"
+  },
+  {
+    "id": "ex-jump-rope",
+    "name": "Jump Rope",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Cardio jump rope session"
+  },
+  {
+    "id": "ex-swimming",
+    "name": "Swimming",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Swimming laps"
+  },
+  {
+    "id": "ex-stair-climber",
+    "name": "Stair Climber",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Stair climbing machine"
+  },
+  {
+    "id": "ex-elliptical",
+    "name": "Elliptical",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Elliptical trainer"
+  },
+  {
+    "id": "ex-battle-ropes",
+    "name": "Battle Ropes",
+    "muscleGroups": [],
+    "category": "cardio",
+    "equipment": [],
+    "description": "Battle rope cardio"
   }
 ]

@@ -224,8 +224,8 @@ export class WorkoutComponent implements OnInit {
     await this.workoutService.updateSet(exerciseId, setId, updates);
   }
 
-  completeSet(exerciseId: string, setId: string, reps: number, weight: number): void {
-    this.workoutService.completeSet(exerciseId, setId, reps, weight);
+  completeSet(exerciseId: string, setId: string, updates: Partial<WorkoutSet>): void {
+    this.workoutService.updateSet(exerciseId, setId, { ...updates, isCompleted: true });
 
     const workout = this.workoutService.activeWorkout();
     if (!workout) return;

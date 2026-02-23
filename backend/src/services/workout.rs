@@ -63,6 +63,9 @@ impl WorkoutService {
                         is_completed: s.is_completed,
                         completed_at: s.completed_at,
                         rpe: s.rpe,
+                        distance_meters: s.distance_meters,
+                        duration_seconds: s.duration_seconds,
+                        calories: s.calories,
                     })
                     .collect(),
                 notes: exercise.notes,
@@ -128,6 +131,9 @@ impl WorkoutService {
                     Some(set.target_reps),
                     set.target_weight,
                     set.is_warmup,
+                    None,
+                    None,
+                    None,
                 )
                 .await?;
             }

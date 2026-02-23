@@ -68,6 +68,9 @@ pub struct WorkoutSetResponse {
     pub is_completed: bool,
     pub completed_at: Option<DateTime<Utc>>,
     pub rpe: Option<i16>,
+    pub distance_meters: Option<f64>,
+    pub duration_seconds: Option<i32>,
+    pub calories: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
@@ -98,6 +101,9 @@ pub struct CreateSetRequest {
     pub target_weight: Option<f64>,
     #[serde(default)]
     pub is_warmup: bool,
+    pub distance_meters: Option<f64>,
+    pub duration_seconds: Option<i32>,
+    pub calories: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
@@ -115,6 +121,9 @@ pub struct UpdateSetRequest {
     pub is_completed: Option<bool>,
     #[validate(range(min = 1, max = 10))]
     pub rpe: Option<i16>,
+    pub distance_meters: Option<f64>,
+    pub duration_seconds: Option<i32>,
+    pub calories: Option<i32>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

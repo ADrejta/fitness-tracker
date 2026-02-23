@@ -127,7 +127,7 @@
               [exercise]="exercise"
               (setAdded)="addSet(exercise.id, $event)"
               (setUpdated)="updateSet(exercise.id, $event.setId, $event.updates)"
-              (setCompleted)="completeSet(exercise.id, $event.setId, $event.reps, $event.weight)"
+              (setCompleted)="completeSet(exercise.id, $event.setId, $event.updates)"
               (setRemoved)="removeSet(exercise.id, $event)"
               (exerciseRemoved)="removeExercise(exercise.id)"
             />

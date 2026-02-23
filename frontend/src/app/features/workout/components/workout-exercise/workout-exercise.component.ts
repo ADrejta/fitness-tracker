@@ -20,7 +20,7 @@ export class WorkoutExerciseComponent implements OnInit {
   @Output() setAdded = new EventEmitter<{ isWarmup: boolean; targetWeight?: number; targetReps?: number }>();
   @Output() setRemoved = new EventEmitter<string>();
   @Output() setUpdated = new EventEmitter<{ setId: string; updates: Partial<WorkoutSet> }>();
-  @Output() setCompleted = new EventEmitter<{ setId: string; reps: number; weight: number }>();
+  @Output() setCompleted = new EventEmitter<{ setId: string; updates: Partial<WorkoutSet> }>();
   @Output() exerciseRemoved = new EventEmitter<void>();
 
   exerciseService = inject(ExerciseService);
@@ -53,6 +53,16 @@ export class WorkoutExerciseComponent implements OnInit {
   get muscleGroups() {
     const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
     return template?.muscleGroups || [];
+  }
+
+  get isCardio(): boolean {
+    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
+    return template?.category === 'cardio';
+  }
+
+  get isBodyweight(): boolean {
+    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
+    return template?.category === 'bodyweight';
   }
 
   getPreviousSetData(currentSet: WorkoutSet): WorkoutSet | undefined {
@@ -136,8 +146,8 @@ export class WorkoutExerciseComponent implements OnInit {
     this.setUpdated.emit({ setId, updates });
   }
 
-  onSetCompleted(setId: string, data: { reps: number; weight: number }): void {
-    this.setCompleted.emit({ setId, ...data });
+  onSetCompleted(setId: string, updates: Partial<WorkoutSet>): void {
+    this.setCompleted.emit({ setId, updates });
   }
 
   onSetUncompleted(setId: string): void {

@@ -364,7 +364,8 @@ impl WorkoutRepository {
                 we.notes as exercise_notes, we.order_index, we.superset_id,
                 ws.id as set_id, ws.workout_exercise_id, ws.set_number, ws.target_reps,
                 ws.actual_reps, ws.target_weight, ws.actual_weight, ws.is_warmup,
-                ws.is_completed, ws.completed_at, ws.rpe
+                ws.is_completed, ws.completed_at, ws.rpe,
+                ws.distance_meters, ws.duration_seconds, ws.calories
             FROM workout_exercises we
             LEFT JOIN workout_sets ws ON ws.workout_exercise_id = we.id
             WHERE we.workout_id = $1
@@ -411,6 +412,9 @@ impl WorkoutRepository {
                         is_completed: row.is_completed.unwrap_or(false),
                         completed_at: row.completed_at,
                         rpe: row.rpe,
+                        distance_meters: row.distance_meters,
+                        duration_seconds: row.duration_seconds,
+                        calories: row.calories,
                     });
                 }
             }
@@ -428,7 +432,8 @@ impl WorkoutRepository {
         let sets = sqlx::query_as::<_, WorkoutSet>(
             r#"
             SELECT id, workout_exercise_id, set_number, target_reps, actual_reps,
-                   target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
+                   target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe,
+                   distance_meters, duration_seconds, calories
             FROM workout_sets
             WHERE workout_exercise_id = ANY($1)
             ORDER BY workout_exercise_id, set_number
@@ -487,6 +492,9 @@ impl WorkoutRepository {
         target_reps: Option<i32>,
         target_weight: Option<f64>,
         is_warmup: bool,
+        distance_meters: Option<f64>,
+        duration_seconds: Option<i32>,
+        calories: Option<i32>,
     ) -> Result<WorkoutSet, AppError> {
         let set_number = sqlx::query_scalar::<_, i32>(
             "SELECT COALESCE(MAX(set_number), 0) + 1 FROM workout_sets WHERE workout_exercise_id = $1",
@@ -497,9 +505,13 @@ impl WorkoutRepository {
 
         let set = sqlx::query_as::<_, WorkoutSet>(
             r#"
-            INSERT INTO workout_sets (id, workout_exercise_id, set_number, target_reps, target_weight, is_warmup, is_completed)
-            VALUES ($1, $2, $3, $4, $5, $6, false)
-            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
+            INSERT INTO workout_sets
+              (id, workout_exercise_id, set_number, target_reps, target_weight,
+               is_warmup, is_completed, distance_meters, duration_seconds, calories)
+            VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8, $9)
+            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps,
+              target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe,
+              distance_meters, duration_seconds, calories
             "#,
         )
         .bind(Uuid::new_v4())
@@ -508,6 +520,9 @@ impl WorkoutRepository {
         .bind(target_reps)
         .bind(target_weight)
         .bind(is_warmup)
+        .bind(distance_meters)
+        .bind(duration_seconds)
+        .bind(calories)
         .fetch_one(pool)
         .await?;
 
@@ -517,7 +532,8 @@ impl WorkoutRepository {
     pub async fn get_sets(pool: &PgPool, exercise_id: Uuid) -> Result<Vec<WorkoutSet>, AppError> {
         let sets = sqlx::query_as::<_, WorkoutSet>(
             r#"
-            SELECT id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
+            SELECT id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight,
+                   is_warmup, is_completed, completed_at, rpe, distance_meters, duration_seconds, calories
             FROM workout_sets
             WHERE workout_exercise_id = $1
             ORDER BY set_number
@@ -540,6 +556,9 @@ impl WorkoutRepository {
         is_warmup: Option<bool>,
         is_completed: Option<bool>,
         rpe: Option<i16>,
+        distance_meters: Option<f64>,
+        duration_seconds: Option<i32>,
+        calories: Option<i32>,
     ) -> Result<WorkoutSet, AppError> {
         let completed_at: Option<DateTime<Utc>> = if is_completed == Some(true) {
             Some(Utc::now())
@@ -566,9 +585,14 @@ impl WorkoutRepository {
                 is_warmup = COALESCE($6, is_warmup),
                 is_completed = COALESCE($7, is_completed),
                 completed_at = $8,
-                rpe = COALESCE($9, rpe)
+                rpe = COALESCE($9, rpe),
+                distance_meters = COALESCE($10, distance_meters),
+                duration_seconds = COALESCE($11, duration_seconds),
+                calories = COALESCE($12, calories)
             WHERE id = $1
-            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe
+            RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps,
+              target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe,
+              distance_meters, duration_seconds, calories
             "#,
         )
         .bind(set_id)
@@ -580,6 +604,9 @@ impl WorkoutRepository {
         .bind(is_completed)
         .bind(completed_at)
         .bind(rpe)
+        .bind(distance_meters)
+        .bind(duration_seconds)
+        .bind(calories)
         .fetch_optional(pool)
         .await?
         .ok_or_else(|| AppError::NotFound("Set not found".to_string()))?;
@@ -757,4 +784,7 @@ struct ExerciseWithSetRow {
     is_completed: Option<bool>,
     completed_at: Option<DateTime<Utc>>,
     rpe: Option<i16>,
+    distance_meters: Option<f64>,
+    duration_seconds: Option<i32>,
+    calories: Option<i32>,
 }

@@ -306,6 +306,9 @@ export class WorkoutService {
               targetReps: set?.targetReps,
               targetWeight: set?.targetWeight,
               isWarmup: set?.isWarmup ?? false,
+              distanceMeters: set?.distanceMeters,
+              durationSeconds: set?.durationSeconds,
+              calories: set?.calories,
             }
           )
         );
@@ -338,6 +341,9 @@ export class WorkoutService {
       isWarmup: set?.isWarmup ?? false,
       isCompleted: set?.isCompleted ?? false,
       completedAt: set?.completedAt,
+      distanceMeters: set?.distanceMeters,
+      durationSeconds: set?.durationSeconds,
+      calories: set?.calories,
     };
 
     this._activeWorkout.update((w) =>

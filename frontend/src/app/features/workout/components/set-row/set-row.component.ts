@@ -24,9 +24,11 @@ export class SetRowComponent {
   @Input() set!: WorkoutSet;
   @Input() previousSet?: WorkoutSet;
   @Input() progressionSuggestion?: ProgressionSuggestion;
+  @Input() isCardio = false;
+  @Input() isBodyweight = false;
 
   @Output() setUpdated = new EventEmitter<Partial<WorkoutSet>>();
-  @Output() setCompleted = new EventEmitter<{ reps: number; weight: number }>();
+  @Output() setCompleted = new EventEmitter<Partial<WorkoutSet>>();
   @Output() setUncompleted = new EventEmitter<void>();
   @Output() setDeleted = new EventEmitter<void>();
 
@@ -38,6 +40,12 @@ export class SetRowComponent {
   weightValue: number | null = null;
   repsValue: number | null = null;
   rpeValue: number | null = null;
+
+  // Cardio state
+  distanceKm: number | null = null;
+  durationMin: number | null = null;
+  durationSec: number | null = null;
+  caloriesValue: number | null = null;
 
   get estimated1RM(): number | null {
     const weight = this.weightValue ?? this.set.targetWeight;
@@ -91,6 +99,20 @@ export class SetRowComponent {
     this.weightValue = this.set.actualWeight ?? this.set.targetWeight ?? null;
     this.repsValue = this.set.actualReps ?? this.set.targetReps ?? null;
     this.rpeValue = this.set.rpe ?? null;
+    if (this.set.distanceMeters != null) {
+      this.distanceKm = this.set.distanceMeters / 1000;
+    }
+    if (this.set.durationSeconds != null) {
+      this.durationMin = Math.floor(this.set.durationSeconds / 60);
+      this.durationSec = this.set.durationSeconds % 60;
+    }
+    this.caloriesValue = this.set.calories ?? null;
+  }
+
+  private computeDurationSeconds(): number | undefined {
+    const min = this.durationMin ?? 0;
+    const sec = this.durationSec ?? 0;
+    return min === 0 && sec === 0 ? undefined : min * 60 + sec;
   }
 
   onWeightChange(event: Event): void {
@@ -130,10 +152,18 @@ export class SetRowComponent {
   toggleComplete(): void {
     if (this.set.isCompleted) {
       this.setUncompleted.emit();
+    } else if (this.isCardio) {
+      const updates: Partial<WorkoutSet> = {
+        distanceMeters: this.distanceKm != null ? this.distanceKm * 1000 : undefined,
+        durationSeconds: this.computeDurationSeconds(),
+        calories: this.caloriesValue ?? undefined,
+        isCompleted: true,
+      };
+      this.setCompleted.emit(updates);
     } else {
       const weight = this.weightValue ?? this.set.targetWeight ?? 0;
       const reps = this.repsValue ?? this.set.targetReps ?? 0;
-      this.setCompleted.emit({ weight, reps });
+      this.setCompleted.emit({ actualWeight: weight, actualReps: reps, isCompleted: true });
     }
   }
 }

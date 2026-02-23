@@ -319,6 +319,9 @@ pub async fn add_exercise(
                 is_completed: s.is_completed,
                 completed_at: s.completed_at,
                 rpe: s.rpe,
+                distance_meters: s.distance_meters,
+                duration_seconds: s.duration_seconds,
+                calories: s.calories,
             })
             .collect(),
         notes: exercise.notes,
@@ -369,6 +372,9 @@ pub async fn update_exercise(
                 is_completed: s.is_completed,
                 completed_at: s.completed_at,
                 rpe: s.rpe,
+                distance_meters: s.distance_meters,
+                duration_seconds: s.duration_seconds,
+                calories: s.calories,
             })
             .collect(),
         notes: exercise.notes,
@@ -428,6 +434,9 @@ pub async fn add_set(
         req.target_reps,
         req.target_weight,
         req.is_warmup,
+        req.distance_meters,
+        req.duration_seconds,
+        req.calories,
     )
     .await?;
 
@@ -442,6 +451,9 @@ pub async fn add_set(
         is_completed: set.is_completed,
         completed_at: set.completed_at,
         rpe: set.rpe,
+        distance_meters: set.distance_meters,
+        duration_seconds: set.duration_seconds,
+        calories: set.calories,
     }))
 }
 
@@ -479,6 +491,9 @@ pub async fn update_set(
         req.is_warmup,
         req.is_completed,
         req.rpe,
+        req.distance_meters,
+        req.duration_seconds,
+        req.calories,
     )
     .await?;
 
@@ -493,6 +508,9 @@ pub async fn update_set(
         is_completed: set.is_completed,
         completed_at: set.completed_at,
         rpe: set.rpe,
+        distance_meters: set.distance_meters,
+        duration_seconds: set.duration_seconds,
+        calories: set.calories,
     }))
 }
 

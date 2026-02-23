@@ -27,6 +27,9 @@ pub struct WorkoutSet {
     pub is_completed: bool,
     pub completed_at: Option<DateTime<Utc>>,
     pub rpe: Option<i16>,
+    pub distance_meters: Option<f64>,
+    pub duration_seconds: Option<i32>,
+    pub calories: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

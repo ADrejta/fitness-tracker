@@ -235,6 +235,10 @@ async fn seed_demo_user(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::error::E
     seed_user_settings(&mut tx, user_id).await?;
     println!("  Created user settings");
 
+    // Create cardio workouts
+    seed_cardio_workouts(&mut tx, user_id).await?;
+    println!("  Created cardio workouts");
+
     tx.commit().await?;
     Ok(())
 }
@@ -801,6 +805,105 @@ async fn seed_admin_user(pool: &sqlx::PgPool) -> Result<(), Box<dyn std::error::
     )
     .bind(&password_hash)
     .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
+async fn seed_cardio_workouts(
+    tx: &mut sqlx::Transaction<'_, sqlx::Postgres>,
+    user_id: Uuid,
+) -> Result<(), Box<dyn std::error::Error>> {
+    // Workout 1: Morning Run
+    let run_workout_id = Uuid::new_v4();
+    sqlx::query(
+        "INSERT INTO workouts (id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status)
+         VALUES ($1, $2, 'Morning Run', NOW() - INTERVAL '3 days' - INTERVAL '30 minutes', NOW() - INTERVAL '3 days', 0, 2, 0, 1800, 'completed')"
+    )
+    .bind(run_workout_id)
+    .bind(user_id)
+    .execute(&mut **tx)
+    .await?;
+
+    let run_exercise_id = Uuid::new_v4();
+    sqlx::query(
+        "INSERT INTO workout_exercises (id, workout_id, exercise_template_id, exercise_name, order_index)
+         VALUES ($1, $2, 'ex-running', 'Running', 0)"
+    )
+    .bind(run_exercise_id)
+    .bind(run_workout_id)
+    .execute(&mut **tx)
+    .await?;
+
+    // Set 1: 5km easy run in 25 min
+    sqlx::query(
+        "INSERT INTO workout_sets (id, workout_exercise_id, set_number, is_warmup, is_completed, completed_at, distance_meters, duration_seconds, calories)
+         VALUES ($1, $2, 1, false, true, NOW() - INTERVAL '3 days', 5000.0, 1500, 320)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(run_exercise_id)
+    .execute(&mut **tx)
+    .await?;
+
+    // Set 2: 3km tempo in 15 min
+    sqlx::query(
+        "INSERT INTO workout_sets (id, workout_exercise_id, set_number, is_warmup, is_completed, completed_at, distance_meters, duration_seconds, calories)
+         VALUES ($1, $2, 2, false, true, NOW() - INTERVAL '3 days', 3000.0, 900, 195)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(run_exercise_id)
+    .execute(&mut **tx)
+    .await?;
+
+    // Workout 2: Cycling Session
+    let cycle_workout_id = Uuid::new_v4();
+    sqlx::query(
+        "INSERT INTO workouts (id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status)
+         VALUES ($1, $2, 'Cycling Session', NOW() - INTERVAL '7 days' - INTERVAL '45 minutes', NOW() - INTERVAL '7 days', 0, 3, 0, 2700, 'completed')"
+    )
+    .bind(cycle_workout_id)
+    .bind(user_id)
+    .execute(&mut **tx)
+    .await?;
+
+    let cycle_exercise_id = Uuid::new_v4();
+    sqlx::query(
+        "INSERT INTO workout_exercises (id, workout_id, exercise_template_id, exercise_name, order_index)
+         VALUES ($1, $2, 'ex-cycling', 'Cycling', 0)"
+    )
+    .bind(cycle_exercise_id)
+    .bind(cycle_workout_id)
+    .execute(&mut **tx)
+    .await?;
+
+    // Set 1: 15km warm-up pace in 35 min
+    sqlx::query(
+        "INSERT INTO workout_sets (id, workout_exercise_id, set_number, is_warmup, is_completed, completed_at, distance_meters, duration_seconds, calories)
+         VALUES ($1, $2, 1, true, true, NOW() - INTERVAL '7 days', 15000.0, 2100, 280)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(cycle_exercise_id)
+    .execute(&mut **tx)
+    .await?;
+
+    // Set 2: 20km main ride in 40 min
+    sqlx::query(
+        "INSERT INTO workout_sets (id, workout_exercise_id, set_number, is_warmup, is_completed, completed_at, distance_meters, duration_seconds, calories)
+         VALUES ($1, $2, 2, false, true, NOW() - INTERVAL '7 days', 20000.0, 2400, 410)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(cycle_exercise_id)
+    .execute(&mut **tx)
+    .await?;
+
+    // Set 3: 5km cool-down in 15 min
+    sqlx::query(
+        "INSERT INTO workout_sets (id, workout_exercise_id, set_number, is_warmup, is_completed, completed_at, distance_meters, duration_seconds, calories)
+         VALUES ($1, $2, 3, false, true, NOW() - INTERVAL '7 days', 5000.0, 900, 95)"
+    )
+    .bind(Uuid::new_v4())
+    .bind(cycle_exercise_id)
+    .execute(&mut **tx)
     .await?;
 
     Ok(())

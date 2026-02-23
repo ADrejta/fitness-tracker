@@ -11,6 +11,9 @@ export interface WorkoutSet {
   isCompleted: boolean;
   completedAt?: string;
   rpe?: number;
+  distanceMeters?: number;
+  durationSeconds?: number;
+  calories?: number;
 }
 
 export interface WorkoutExercise {
