@@ -65,6 +65,11 @@ export class WorkoutExerciseComponent implements OnInit {
     return template?.category === 'bodyweight';
   }
 
+  get isCarry(): boolean {
+    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
+    return template?.category === 'carry';
+  }
+
   getPreviousSetData(currentSet: WorkoutSet): WorkoutSet | undefined {
     // Get previous workout data for this exercise
     const previousWorkouts = this.workoutService.getWorkoutsForExercise(this.exercise.exerciseTemplateId);

@@ -574,7 +574,7 @@
     "id": "ex-farmers-walk",
     "name": "Farmer's Walk",
     "muscleGroups": ["forearms", "traps", "abs"],
-    "category": "strength",
+    "category": "carry",
     "equipment": ["dumbbell", "kettlebell"],
     "description": "Loaded carry exercise"
   },
@@ -679,9 +679,50 @@
     "id": "ex-trap-bar-carry",
     "name": "Trap Bar Farmer's Carry",
     "muscleGroups": ["forearms", "traps", "abs"],
-    "category": "strength",
+    "category": "carry",
     "equipment": ["trap-bar"],
     "description": "Loaded carry with a trap bar — improves grip strength, stability, and full-body conditioning"
+  },
+  {
+    "id": "ex-sled-push",
+    "name": "Sled Push",
+    "muscleGroups": ["quads", "glutes", "calves"],
+    "category": "carry",
+    "equipment": ["bodyweight"],
+    "description": "Push a weighted sled for distance — builds lower body power and conditioning",
+    "instructions": ["Load sled with desired weight", "Drive through the floor with short powerful steps", "Keep hips low and back flat", "Push for the target distance"]
+  },
+  {
+    "id": "ex-sled-pull",
+    "name": "Sled Pull",
+    "muscleGroups": ["hamstrings", "glutes", "back"],
+    "category": "carry",
+    "equipment": ["bodyweight"],
+    "description": "Drag a weighted sled for distance — targets the posterior chain and back"
+  },
+  {
+    "id": "ex-yoke-carry",
+    "name": "Yoke Carry",
+    "muscleGroups": ["traps", "back", "quads", "abs"],
+    "category": "carry",
+    "equipment": ["barbell"],
+    "description": "Walk with a heavy yoke frame across the upper back — tests full-body strength and stability"
+  },
+  {
+    "id": "ex-sandbag-carry",
+    "name": "Sandbag Carry",
+    "muscleGroups": ["forearms", "abs", "back"],
+    "category": "carry",
+    "equipment": ["bodyweight"],
+    "description": "Carry a heavy sandbag for distance — unstable load challenges core and grip"
+  },
+  {
+    "id": "ex-zercher-carry",
+    "name": "Zercher Carry",
+    "muscleGroups": ["abs", "back", "biceps"],
+    "category": "carry",
+    "equipment": ["barbell"],
+    "description": "Carry a barbell in the crook of the elbows for distance — intense for the upper back and core"
   },
   {
     "id": "ex-copenhagen-plank",

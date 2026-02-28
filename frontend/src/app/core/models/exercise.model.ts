@@ -16,7 +16,7 @@ export type MuscleGroup =
   | 'lower-back'
   | 'adductors';
 
-export type ExerciseCategory = 'strength' | 'cardio' | 'bodyweight';
+export type ExerciseCategory = 'strength' | 'cardio' | 'bodyweight' | 'carry';
 
 export type Equipment =
   | 'barbell'

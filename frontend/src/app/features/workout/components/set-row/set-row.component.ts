@@ -26,6 +26,7 @@ export class SetRowComponent {
   @Input() progressionSuggestion?: ProgressionSuggestion;
   @Input() isCardio = false;
   @Input() isBodyweight = false;
+  @Input() isCarry = false;
 
   @Output() setUpdated = new EventEmitter<Partial<WorkoutSet>>();
   @Output() setCompleted = new EventEmitter<Partial<WorkoutSet>>();
@@ -46,6 +47,9 @@ export class SetRowComponent {
   durationMin: number | null = null;
   durationSec: number | null = null;
   caloriesValue: number | null = null;
+
+  // Carry state (weight + distance in metres)
+  distanceM: number | null = null;
 
   get estimated1RM(): number | null {
     const weight = this.weightValue ?? this.set.targetWeight;
@@ -100,7 +104,11 @@ export class SetRowComponent {
     this.repsValue = this.set.actualReps ?? this.set.targetReps ?? null;
     this.rpeValue = this.set.rpe ?? null;
     if (this.set.distanceMeters != null) {
-      this.distanceKm = this.set.distanceMeters / 1000;
+      if (this.isCarry) {
+        this.distanceM = this.set.distanceMeters;
+      } else {
+        this.distanceKm = this.set.distanceMeters / 1000;
+      }
     }
     if (this.set.durationSeconds != null) {
       this.durationMin = Math.floor(this.set.durationSeconds / 60);
@@ -152,6 +160,13 @@ export class SetRowComponent {
   toggleComplete(): void {
     if (this.set.isCompleted) {
       this.setUncompleted.emit();
+    } else if (this.isCarry) {
+      const weight = this.weightValue ?? this.set.targetWeight ?? 0;
+      this.setCompleted.emit({
+        actualWeight: weight,
+        distanceMeters: this.distanceM ?? undefined,
+        isCompleted: true,
+      });
     } else if (this.isCardio) {
       const updates: Partial<WorkoutSet> = {
         distanceMeters: this.distanceKm != null ? this.distanceKm * 1000 : undefined,
