@@ -257,25 +257,125 @@
   <!-- Template Picker Modal -->
   <app-modal
     [isOpen]="showTemplatePicker"
-    title="Select Template"
+    [title]="templatePickerView === 'create' ? 'New Template' : 'Select Template'"
     [size]="'md'"
-    (closed)="showTemplatePicker = false"
+    (closed)="showTemplatePicker = false; templatePickerView = 'select'"
   >
-    <div class="template-picker">
-      @if (templateService.templates().length > 0) {
-        @for (template of templateService.templates(); track template.id) {
-          <app-card [interactive]="true">
-            <div class="template-pick" (click)="selectTemplate(template)">
-              <h4>{{ template.name }}</h4>
-              <span class="template-pick__meta">{{ template.exercises.length }} exercises</span>
-            </div>
-          </app-card>
+    @if (templatePickerView === 'select') {
+      <div class="template-picker">
+        <div class="template-picker__header">
+          <app-button [variant]="'secondary'" [size]="'sm'" (clicked)="openCreateTemplate()">
+            <span class="action-btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              New Template
+            </span>
+          </app-button>
+        </div>
+        @if (templateService.templates().length > 0) {
+          @for (template of templateService.templates(); track template.id) {
+            <app-card [interactive]="true">
+              <div class="template-pick" (click)="selectTemplate(template)">
+                <h4>{{ template.name }}</h4>
+                <span class="template-pick__meta">{{ template.exercises.length }} exercises</span>
+              </div>
+            </app-card>
+          }
+        } @else {
+          <p class="template-picker__empty">No templates yet — create one with the button above.</p>
         }
-      } @else {
-        <p class="template-picker__empty">No templates available. Create templates first.</p>
-      }
-    </div>
+      </div>
+    }
+
+    @if (templatePickerView === 'create') {
+      <div class="inline-template-form">
+        <div class="inline-template-form__fields">
+          <app-input
+            label="Template Name"
+            placeholder="e.g., Push Day"
+            [(ngModel)]="inlineTemplateName"
+          ></app-input>
+          <app-input
+            label="Description (optional)"
+            placeholder="Brief description..."
+            [(ngModel)]="inlineTemplateDescription"
+          ></app-input>
+        </div>
+
+        <div class="inline-template-form__exercises">
+          <div class="inline-template-form__exercises-header">
+            <span class="inline-template-form__exercises-label">Exercises</span>
+            <app-button [variant]="'ghost'" [size]="'sm'" (clicked)="showInlineExercisePicker = true">
+              + Add Exercise
+            </app-button>
+          </div>
+
+          @if (inlineTemplateExercises().length === 0) {
+            <p class="inline-template-form__empty">No exercises added yet.</p>
+          }
+
+          @for (ex of inlineTemplateExercises(); track $index; let exIdx = $index) {
+            <div class="inline-exercise">
+              <div class="inline-exercise__header">
+                <span class="inline-exercise__name">{{ ex.exerciseName }}</span>
+                <button class="inline-exercise__remove" (click)="removeInlineExercise(exIdx)" title="Remove exercise">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div class="inline-exercise__sets-header">
+                <span>Set</span><span>Reps</span><span>Weight (kg)</span>
+              </div>
+              @for (set of ex.sets; track $index; let setIdx = $index) {
+                <div class="inline-set">
+                  <span class="inline-set__num">{{ setIdx + 1 }}</span>
+                  <input
+                    class="inline-set__input"
+                    type="number"
+                    [value]="set.targetReps"
+                    placeholder="8"
+                    min="1"
+                    (change)="updateInlineSetReps(exIdx, setIdx, +$any($event.target).value)"
+                  />
+                  <input
+                    class="inline-set__input"
+                    type="number"
+                    [value]="set.targetWeight ?? ''"
+                    placeholder="—"
+                    min="0"
+                    step="0.5"
+                    (change)="updateInlineSetWeight(exIdx, setIdx, +$any($event.target).value)"
+                  />
+                  @if (ex.sets.length > 1) {
+                    <button class="inline-set__remove" (click)="removeInlineSet(exIdx, setIdx)" title="Remove set">×</button>
+                  }
+                </div>
+              }
+              <button class="inline-exercise__add-set" (click)="addInlineSet(exIdx)">+ Set</button>
+            </div>
+          }
+        </div>
+
+        <div class="inline-template-form__actions">
+          <app-button [variant]="'secondary'" (clicked)="cancelCreateTemplate()">Back</app-button>
+          <app-button (clicked)="saveInlineTemplate()" [loading]="isSavingTemplate">
+            Save &amp; Select
+          </app-button>
+        </div>
+      </div>
+    }
   </app-modal>
+
+  <!-- Exercise picker for inline template creation -->
+  <app-exercise-picker
+    [isOpen]="showInlineExercisePicker"
+    (closed)="showInlineExercisePicker = false"
+    (exerciseSelected)="addExerciseToInlineTemplate($event)"
+  ></app-exercise-picker>
 
   <!-- Menu Modal -->
   <app-modal

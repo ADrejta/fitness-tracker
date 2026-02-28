@@ -9,12 +9,19 @@ import {
 } from '../../shared/components';
 import { Tab } from '../../shared/components/tabs/tabs.component';
 import { ProgramService, TemplateService, ToastService } from '../../core/services';
-import { ProgramSummary, WorkoutProgram, ProgramWorkout, ProgramWeek, WorkoutTemplate } from '../../core/models';
+import { ProgramSummary, WorkoutProgram, ProgramWorkout, ProgramWeek, WorkoutTemplate, ExerciseTemplate } from '../../core/models';
+import { ExercisePickerComponent } from '../workout/components/exercise-picker/exercise-picker.component';
 import { format, parseISO } from 'date-fns';
 import { PROGRAM_PRESETS, ProgramPreset, PresetDaySlot } from './program-presets';
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 const DAY_ABBR = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su'];
+
+interface InlineTemplateExercise {
+  exerciseTemplateId: string;
+  exerciseName: string;
+  sets: { targetReps: number; targetWeight?: number; isWarmup: boolean }[];
+}
 
 interface DaySlot {
   dayNumber: number;
@@ -41,6 +48,7 @@ interface DaySlot {
         InputComponent,
         ProgressComponent,
         TabsComponent,
+        ExercisePickerComponent,
     ],
     templateUrl: './programs.component.html',
     styleUrls: ['./programs.component.scss']
@@ -98,6 +106,14 @@ export class ProgramsComponent {
 
   // Template picker state
   pickingDayIndex: { week: number; day: number } | null = null;
+  templatePickerView: 'select' | 'create' = 'select';
+
+  // Inline template creation state
+  inlineTemplateName = '';
+  inlineTemplateDescription = '';
+  inlineTemplateExercises = signal<InlineTemplateExercise[]>([]);
+  showInlineExercisePicker = false;
+  isSavingTemplate = false;
 
   weekTabs = computed((): Tab[] => {
     const tabs: Tab[] = [];
@@ -217,7 +233,113 @@ export class ProgramsComponent {
 
   openTemplatePicker(dayIndex: number): void {
     this.pickingDayIndex = { week: this.activeWeekIndex(), day: dayIndex };
+    this.templatePickerView = 'select';
     this.showTemplatePicker = true;
+  }
+
+  openCreateTemplate(): void {
+    this.inlineTemplateName = '';
+    this.inlineTemplateDescription = '';
+    this.inlineTemplateExercises.set([]);
+    this.templatePickerView = 'create';
+  }
+
+  cancelCreateTemplate(): void {
+    this.templatePickerView = 'select';
+  }
+
+  addExerciseToInlineTemplate(exercise: ExerciseTemplate): void {
+    this.inlineTemplateExercises.update(current => [
+      ...current,
+      {
+        exerciseTemplateId: exercise.id,
+        exerciseName: exercise.name,
+        sets: [{ targetReps: 8, targetWeight: undefined, isWarmup: false }],
+      },
+    ]);
+  }
+
+  removeInlineExercise(exIndex: number): void {
+    this.inlineTemplateExercises.update(current => current.filter((_, i) => i !== exIndex));
+  }
+
+  addInlineSet(exIndex: number): void {
+    this.inlineTemplateExercises.update(current => {
+      const updated = [...current];
+      const ex = { ...updated[exIndex] };
+      ex.sets = [...ex.sets, { targetReps: 8, targetWeight: undefined, isWarmup: false }];
+      updated[exIndex] = ex;
+      return updated;
+    });
+  }
+
+  removeInlineSet(exIndex: number, setIndex: number): void {
+    this.inlineTemplateExercises.update(current => {
+      const updated = [...current];
+      const ex = { ...updated[exIndex] };
+      if (ex.sets.length <= 1) return current;
+      ex.sets = ex.sets.filter((_, i) => i !== setIndex);
+      updated[exIndex] = ex;
+      return updated;
+    });
+  }
+
+  updateInlineSetReps(exIndex: number, setIndex: number, reps: number): void {
+    this.inlineTemplateExercises.update(current => {
+      const updated = [...current];
+      const ex = { ...updated[exIndex] };
+      const sets = [...ex.sets];
+      sets[setIndex] = { ...sets[setIndex], targetReps: Math.max(1, reps || 1) };
+      ex.sets = sets;
+      updated[exIndex] = ex;
+      return updated;
+    });
+  }
+
+  updateInlineSetWeight(exIndex: number, setIndex: number, weight: number): void {
+    this.inlineTemplateExercises.update(current => {
+      const updated = [...current];
+      const ex = { ...updated[exIndex] };
+      const sets = [...ex.sets];
+      sets[setIndex] = { ...sets[setIndex], targetWeight: weight > 0 ? weight : undefined };
+      ex.sets = sets;
+      updated[exIndex] = ex;
+      return updated;
+    });
+  }
+
+  saveInlineTemplate(): void {
+    if (!this.inlineTemplateName.trim()) {
+      this.toastService.error('Template name is required');
+      return;
+    }
+    if (this.inlineTemplateExercises().length === 0) {
+      this.toastService.error('Add at least one exercise');
+      return;
+    }
+
+    this.isSavingTemplate = true;
+    this.templateService.createTemplate({
+      name: this.inlineTemplateName.trim(),
+      description: this.inlineTemplateDescription.trim() || undefined,
+      exercises: this.inlineTemplateExercises().map((ex, i) => ({
+        id: crypto.randomUUID(),
+        exerciseTemplateId: ex.exerciseTemplateId,
+        exerciseName: ex.exerciseName,
+        sets: ex.sets.map((s, j) => ({ ...s, setNumber: j + 1 })),
+        orderIndex: i,
+      })),
+      tags: [],
+    }).subscribe({
+      next: (template) => {
+        this.isSavingTemplate = false;
+        this.selectTemplate(template);
+        this.toastService.success(`"${template.name}" created and selected`);
+      },
+      error: () => {
+        this.isSavingTemplate = false;
+      },
+    });
   }
 
   selectTemplate(template: WorkoutTemplate): void {
