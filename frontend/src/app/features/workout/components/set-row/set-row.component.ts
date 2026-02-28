@@ -27,6 +27,7 @@ export class SetRowComponent {
   @Input() isCardio = false;
   @Input() isBodyweight = false;
   @Input() isCarry = false;
+  @Input() isTimed = false;
 
   @Output() setUpdated = new EventEmitter<Partial<WorkoutSet>>();
   @Output() setCompleted = new EventEmitter<Partial<WorkoutSet>>();
@@ -165,6 +166,12 @@ export class SetRowComponent {
       this.setCompleted.emit({
         actualWeight: weight,
         distanceMeters: this.distanceM ?? undefined,
+        isCompleted: true,
+      });
+    } else if (this.isTimed) {
+      this.setCompleted.emit({
+        actualWeight: this.weightValue ?? undefined,
+        durationSeconds: this.computeDurationSeconds(),
         isCompleted: true,
       });
     } else if (this.isCardio) {

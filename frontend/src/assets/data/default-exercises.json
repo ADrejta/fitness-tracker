@@ -366,7 +366,7 @@
     "id": "ex-plank",
     "name": "Plank",
     "muscleGroups": ["abs", "obliques"],
-    "category": "bodyweight",
+    "category": "timed",
     "equipment": ["bodyweight"],
     "description": "Core stability exercise"
   },
@@ -728,7 +728,7 @@
     "id": "ex-copenhagen-plank",
     "name": "Copenhagen Plank",
     "muscleGroups": ["adductors", "abs", "obliques"],
-    "category": "bodyweight",
+    "category": "timed",
     "equipment": ["bodyweight", "bench"],
     "description": "Side plank variation with the top leg elevated — one of the best adductor strengthening exercises",
     "instructions": ["Set up in a side plank with top foot resting on a bench or box", "Lift hips off the ground, forming a straight line from head to foot", "Hold or perform reps by lowering and raising hips", "Keep the bottom leg lifted off the floor for added challenge"]
@@ -737,7 +737,7 @@
     "id": "ex-side-plank",
     "name": "Side Plank",
     "muscleGroups": ["obliques", "abs"],
-    "category": "bodyweight",
+    "category": "timed",
     "equipment": ["bodyweight"],
     "description": "Lateral core stability exercise targeting the obliques and hip abductors"
   },
@@ -786,7 +786,7 @@
     "id": "ex-l-sit",
     "name": "L-Sit",
     "muscleGroups": ["abs"],
-    "category": "bodyweight",
+    "category": "timed",
     "equipment": ["bodyweight", "dip-station"],
     "description": "Isometric hold with legs parallel to the floor — builds core, hip flexor, and tricep strength"
   },
@@ -794,7 +794,7 @@
     "id": "ex-hollow-body-hold",
     "name": "Hollow Body Hold",
     "muscleGroups": ["abs"],
-    "category": "bodyweight",
+    "category": "timed",
     "equipment": ["bodyweight"],
     "description": "Foundational gymnastic core exercise — maintains a posterior pelvic tilt under load"
   },

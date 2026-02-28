@@ -70,6 +70,11 @@ export class WorkoutExerciseComponent implements OnInit {
     return template?.category === 'carry';
   }
 
+  get isTimed(): boolean {
+    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
+    return template?.category === 'timed';
+  }
+
   getPreviousSetData(currentSet: WorkoutSet): WorkoutSet | undefined {
     // Get previous workout data for this exercise
     const previousWorkouts = this.workoutService.getWorkoutsForExercise(this.exercise.exerciseTemplateId);

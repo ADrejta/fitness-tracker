@@ -33,6 +33,7 @@ pub enum ExerciseCategory {
     Cardio,
     Bodyweight,
     Carry,
+    Timed,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
@@ -134,6 +135,7 @@ mod tests {
         assert_eq!(serde_json::to_string(&ExerciseCategory::Cardio).unwrap(), "\"cardio\"");
         assert_eq!(serde_json::to_string(&ExerciseCategory::Bodyweight).unwrap(), "\"bodyweight\"");
         assert_eq!(serde_json::to_string(&ExerciseCategory::Carry).unwrap(), "\"carry\"");
+        assert_eq!(serde_json::to_string(&ExerciseCategory::Timed).unwrap(), "\"timed\"");
     }
 
     #[test]

@@ -31,6 +31,12 @@
       <span class="set-row__previous-value">
         @if (isCarry) {
           {{ previousSet.actualWeight || '-' }}{{ settingsService.weightUnit() }} × {{ previousSet.distanceMeters != null ? previousSet.distanceMeters + 'm' : '-' }}
+        } @else if (isTimed) {
+          @if (previousSet.durationSeconds != null) {
+            {{ previousSet.actualWeight != null ? (previousSet.actualWeight + settingsService.weightUnit() + ' × ') : '' }}{{ (previousSet.durationSeconds / 60 | number:'1.0-0') }}:{{ ((previousSet.durationSeconds % 60).toString().padStart(2, '0')) }}
+          } @else {
+            —
+          }
         } @else if (isCardio) {
           {{ previousSet.distanceMeters != null ? (previousSet.distanceMeters / 1000) + 'km' : '-' }}
         } @else {
@@ -43,7 +49,47 @@
   </div>
 
   <div class="set-row__inputs">
-    @if (isCarry) {
+    @if (isTimed) {
+      <!-- Timed: optional Weight + Duration (mm:ss) -->
+      <div class="set-row__input-group">
+        <input
+          type="number"
+          class="set-row__input"
+          [class.set-row__input--filled]="weightValue !== null"
+          [placeholder]="set.targetWeight?.toString() || '0'"
+          [value]="weightValue"
+          (input)="onWeightChange($event)"
+          [disabled]="set.isCompleted"
+          inputmode="decimal"
+        />
+        <span class="set-row__unit">{{ settingsService.weightUnit() }}</span>
+      </div>
+      <span class="set-row__separator">×</span>
+      <div class="set-row__input-group set-row__duration">
+        <input
+          type="number"
+          class="set-row__input set-row__input--duration"
+          [class.set-row__input--filled]="durationMin !== null"
+          placeholder="mm"
+          [(ngModel)]="durationMin"
+          [disabled]="set.isCompleted"
+          inputmode="numeric"
+          min="0"
+        />
+        <span class="set-row__separator">:</span>
+        <input
+          type="number"
+          class="set-row__input set-row__input--duration"
+          [class.set-row__input--filled]="durationSec !== null"
+          placeholder="ss"
+          [(ngModel)]="durationSec"
+          [disabled]="set.isCompleted"
+          inputmode="numeric"
+          min="0"
+          max="59"
+        />
+      </div>
+    } @else if (isCarry) {
       <!-- Carry: Weight + Distance (m) -->
       <div class="set-row__input-group">
         <input
