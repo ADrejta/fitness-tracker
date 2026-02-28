@@ -13,7 +13,8 @@ export type MuscleGroup =
   | 'calves'
   | 'traps'
   | 'lats'
-  | 'lower-back';
+  | 'lower-back'
+  | 'adductors';
 
 export type ExerciseCategory = 'strength' | 'cardio' | 'bodyweight';
 
@@ -30,7 +31,8 @@ export type Equipment =
   | 'pull-up-bar'
   | 'dip-station'
   | 'bench'
-  | 'cardio-machine';
+  | 'cardio-machine'
+  | 'trap-bar';
 
 export interface ExerciseTemplate {
   id: string;

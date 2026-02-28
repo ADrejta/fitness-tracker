@@ -272,6 +272,7 @@ export class ExerciseService {
       'traps',
       'lats',
       'lower-back',
+      'adductors',
     ];
   }
 
@@ -290,6 +291,7 @@ export class ExerciseService {
       'dip-station',
       'bench',
       'cardio-machine',
+      'trap-bar',
     ];
   }
 
@@ -310,6 +312,7 @@ export class ExerciseService {
       traps: 'Trapezius',
       lats: 'Latissimus',
       'lower-back': 'Lower Back',
+      adductors: 'Adductors',
     };
     return labels[muscleGroup] || muscleGroup;
   }
@@ -329,6 +332,7 @@ export class ExerciseService {
       'dip-station': 'Dip Station',
       bench: 'Bench',
       'cardio-machine': 'Cardio Machine',
+      'trap-bar': 'Trap Bar',
     };
     return labels[equipment] || equipment;
   }

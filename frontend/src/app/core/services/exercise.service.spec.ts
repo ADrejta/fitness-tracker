@@ -298,8 +298,8 @@ describe('ExerciseService', () => {
   // getMuscleGroups / getEquipmentTypes
   // ---------------------------------------------------------------------------
   describe('getMuscleGroups', () => {
-    it('returns 15 muscle groups', () => {
-      expect(service.getMuscleGroups()).toHaveLength(15);
+    it('returns 16 muscle groups', () => {
+      expect(service.getMuscleGroups()).toHaveLength(16);
     });
 
     it('includes all major groups', () => {
@@ -312,8 +312,8 @@ describe('ExerciseService', () => {
   });
 
   describe('getEquipmentTypes', () => {
-    it('returns 13 equipment types', () => {
-      expect(service.getEquipmentTypes()).toHaveLength(13);
+    it('returns 14 equipment types', () => {
+      expect(service.getEquipmentTypes()).toHaveLength(14);
     });
 
     it('includes common equipment', () => {

@@ -657,5 +657,419 @@
     "category": "cardio",
     "equipment": [],
     "description": "Battle rope cardio"
+  },
+  {
+    "id": "ex-trap-bar-deadlift",
+    "name": "Trap Bar Deadlift",
+    "muscleGroups": ["quads", "hamstrings", "glutes", "back", "traps"],
+    "category": "strength",
+    "equipment": ["trap-bar"],
+    "description": "Deadlift variation using a hex/trap bar — more quad-dominant and easier on the lower back than a conventional deadlift",
+    "instructions": ["Step inside the trap bar, feet hip-width apart", "Grip the handles at your sides", "Keep chest up and back flat", "Drive through the floor to stand tall", "Lower under control"]
+  },
+  {
+    "id": "ex-trap-bar-shrug",
+    "name": "Trap Bar Shrug",
+    "muscleGroups": ["traps"],
+    "category": "strength",
+    "equipment": ["trap-bar"],
+    "description": "Trap bar shrug — neutral grip reduces wrist stress compared to a barbell shrug"
+  },
+  {
+    "id": "ex-trap-bar-carry",
+    "name": "Trap Bar Farmer's Carry",
+    "muscleGroups": ["forearms", "traps", "abs"],
+    "category": "strength",
+    "equipment": ["trap-bar"],
+    "description": "Loaded carry with a trap bar — improves grip strength, stability, and full-body conditioning"
+  },
+  {
+    "id": "ex-copenhagen-plank",
+    "name": "Copenhagen Plank",
+    "muscleGroups": ["adductors", "abs", "obliques"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight", "bench"],
+    "description": "Side plank variation with the top leg elevated — one of the best adductor strengthening exercises",
+    "instructions": ["Set up in a side plank with top foot resting on a bench or box", "Lift hips off the ground, forming a straight line from head to foot", "Hold or perform reps by lowering and raising hips", "Keep the bottom leg lifted off the floor for added challenge"]
+  },
+  {
+    "id": "ex-side-plank",
+    "name": "Side Plank",
+    "muscleGroups": ["obliques", "abs"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Lateral core stability exercise targeting the obliques and hip abductors"
+  },
+  {
+    "id": "ex-dead-bug",
+    "name": "Dead Bug",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Anti-extension core exercise that builds stability and contralateral coordination",
+    "instructions": ["Lie on your back, arms pointing to ceiling, knees bent at 90°", "Lower opposite arm and leg toward the floor simultaneously", "Keep lower back pressed into the floor throughout", "Return and repeat on the other side"]
+  },
+  {
+    "id": "ex-pallof-press",
+    "name": "Pallof Press",
+    "muscleGroups": ["abs", "obliques"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Anti-rotation core exercise performed with a cable — trains the core to resist rotational forces"
+  },
+  {
+    "id": "ex-toes-to-bar",
+    "name": "Toes to Bar",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["pull-up-bar"],
+    "description": "Hanging core exercise targeting the abs and hip flexors — harder progression from hanging leg raise"
+  },
+  {
+    "id": "ex-dragon-flag",
+    "name": "Dragon Flag",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight", "bench"],
+    "description": "Advanced full-body core exercise popularised by Bruce Lee — requires significant core and hip flexor strength"
+  },
+  {
+    "id": "ex-bicycle-crunch",
+    "name": "Bicycle Crunch",
+    "muscleGroups": ["abs", "obliques"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Rotational crunch targeting both the rectus abdominis and obliques"
+  },
+  {
+    "id": "ex-l-sit",
+    "name": "L-Sit",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight", "dip-station"],
+    "description": "Isometric hold with legs parallel to the floor — builds core, hip flexor, and tricep strength"
+  },
+  {
+    "id": "ex-hollow-body-hold",
+    "name": "Hollow Body Hold",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Foundational gymnastic core exercise — maintains a posterior pelvic tilt under load"
+  },
+  {
+    "id": "ex-windmill",
+    "name": "Kettlebell Windmill",
+    "muscleGroups": ["obliques", "shoulders"],
+    "category": "strength",
+    "equipment": ["kettlebell", "dumbbell"],
+    "description": "Rotational hip-hinge movement that builds lateral flexion strength and hip mobility"
+  },
+  {
+    "id": "ex-hanging-knee-raise",
+    "name": "Hanging Knee Raise",
+    "muscleGroups": ["abs"],
+    "category": "bodyweight",
+    "equipment": ["pull-up-bar"],
+    "description": "Entry-level hanging ab exercise — easier regression of the hanging leg raise"
+  },
+  {
+    "id": "ex-adductor-machine",
+    "name": "Adductor Machine",
+    "muscleGroups": ["adductors"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine isolation exercise for the inner thighs"
+  },
+  {
+    "id": "ex-abductor-machine",
+    "name": "Abductor Machine",
+    "muscleGroups": ["glutes"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine isolation exercise for the hip abductors (outer glutes / glute medius)"
+  },
+  {
+    "id": "ex-nordic-curl",
+    "name": "Nordic Hamstring Curl",
+    "muscleGroups": ["hamstrings"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Eccentric hamstring exercise with strong injury-prevention evidence; requires anchored feet",
+    "instructions": ["Kneel on a pad with feet anchored", "Keeping hips extended, lower your torso toward the floor by extending your knees", "Control the descent as slowly as possible", "Use hands to push back up to start if needed"]
+  },
+  {
+    "id": "ex-glute-ham-raise",
+    "name": "Glute Ham Raise",
+    "muscleGroups": ["hamstrings", "glutes"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Posterior chain exercise on a GHR machine — trains both knee flexion and hip extension simultaneously"
+  },
+  {
+    "id": "ex-reverse-hyper",
+    "name": "Reverse Hyperextension",
+    "muscleGroups": ["glutes", "hamstrings", "lower-back"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Machine or table exercise that targets the glutes, hamstrings, and spinal erectors while decompressing the spine"
+  },
+  {
+    "id": "ex-sl-rdl",
+    "name": "Single Leg Romanian Deadlift",
+    "muscleGroups": ["hamstrings", "glutes"],
+    "category": "strength",
+    "equipment": ["dumbbell", "barbell", "kettlebell"],
+    "description": "Unilateral hip hinge that exposes and corrects left-right strength imbalances"
+  },
+  {
+    "id": "ex-cable-adduction",
+    "name": "Cable Hip Adduction",
+    "muscleGroups": ["adductors"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Cable isolation exercise for the inner thighs"
+  },
+  {
+    "id": "ex-cable-abduction",
+    "name": "Cable Hip Abduction",
+    "muscleGroups": ["glutes"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Cable isolation exercise for the glute medius and hip abductors"
+  },
+  {
+    "id": "ex-deficit-deadlift",
+    "name": "Deficit Deadlift",
+    "muscleGroups": ["back", "hamstrings", "glutes", "quads"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Deadlift performed while standing on a small platform — increases range of motion and builds strength off the floor"
+  },
+  {
+    "id": "ex-stiff-leg-dl",
+    "name": "Stiff-Leg Deadlift",
+    "muscleGroups": ["hamstrings", "glutes", "lower-back"],
+    "category": "strength",
+    "equipment": ["barbell", "dumbbell"],
+    "description": "Hip hinge with minimal knee bend — heavily loads the hamstrings through a long range of motion"
+  },
+  {
+    "id": "ex-leg-press-calf",
+    "name": "Leg Press Calf Raise",
+    "muscleGroups": ["calves"],
+    "category": "strength",
+    "equipment": ["machine"],
+    "description": "Calf raise performed on the leg press — allows heavy loading with a stable spine"
+  },
+  {
+    "id": "ex-rack-pull",
+    "name": "Rack Pull",
+    "muscleGroups": ["back", "traps", "lower-back"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Partial-range deadlift starting from knee height — useful for overloading the top half of the pull and training lockout"
+  },
+  {
+    "id": "ex-pendlay-row",
+    "name": "Pendlay Row",
+    "muscleGroups": ["back", "lats", "biceps"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Strict barbell row where the bar returns to the floor between reps — emphasises explosive upper back strength",
+    "instructions": ["Bar on the floor, torso parallel to the ground", "Explosively row the bar to your lower chest", "Lower the bar back to the floor with control", "Reset and repeat"]
+  },
+  {
+    "id": "ex-straight-arm-pulldown",
+    "name": "Straight Arm Pulldown",
+    "muscleGroups": ["lats", "back"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Cable lat isolation exercise — keeps the lats under constant tension through a long arc"
+  },
+  {
+    "id": "ex-incline-db-row",
+    "name": "Incline Dumbbell Row",
+    "muscleGroups": ["back", "lats", "biceps"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Chest-supported row on an incline bench — removes lower back involvement for strict lat work"
+  },
+  {
+    "id": "ex-chest-supported-row",
+    "name": "Chest Supported Row",
+    "muscleGroups": ["back", "lats", "biceps"],
+    "category": "strength",
+    "equipment": ["machine", "dumbbell", "bench"],
+    "description": "Machine or bench-supported row that eliminates lower back recruitment"
+  },
+  {
+    "id": "ex-cable-pullover",
+    "name": "Cable Pullover",
+    "muscleGroups": ["lats", "chest"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Standing cable pullover for lat isolation — constant tension version of the dumbbell pullover"
+  },
+  {
+    "id": "ex-landmine-press",
+    "name": "Landmine Press",
+    "muscleGroups": ["shoulders", "triceps", "chest"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Pressing movement using a landmine attachment — shoulder-friendly arc of motion, great for shoulder stability"
+  },
+  {
+    "id": "ex-cable-front-raise",
+    "name": "Cable Front Raise",
+    "muscleGroups": ["shoulders"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Front delt isolation with constant cable tension"
+  },
+  {
+    "id": "ex-band-pull-apart",
+    "name": "Band Pull Apart",
+    "muscleGroups": ["shoulders", "back"],
+    "category": "strength",
+    "equipment": ["resistance-band"],
+    "description": "Resistance band exercise for rear delts and upper back — commonly used as a warm-up or accessory movement"
+  },
+  {
+    "id": "ex-pike-push-up",
+    "name": "Pike Push-Up",
+    "muscleGroups": ["shoulders", "triceps"],
+    "category": "bodyweight",
+    "equipment": ["bodyweight"],
+    "description": "Bodyweight shoulder press variation with hips elevated — good progression toward a handstand push-up"
+  },
+  {
+    "id": "ex-db-shrug",
+    "name": "Dumbbell Shrug",
+    "muscleGroups": ["traps"],
+    "category": "strength",
+    "equipment": ["dumbbell"],
+    "description": "Dumbbell shrug — neutral hand position reduces wrist torque"
+  },
+  {
+    "id": "ex-behind-neck-press",
+    "name": "Behind the Neck Press",
+    "muscleGroups": ["shoulders", "traps", "triceps"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Overhead press variant with the bar behind the neck — increases lateral delt involvement; requires good shoulder mobility"
+  },
+  {
+    "id": "ex-decline-bench",
+    "name": "Decline Barbell Bench Press",
+    "muscleGroups": ["chest", "triceps"],
+    "category": "strength",
+    "equipment": ["barbell", "bench"],
+    "description": "Decline angle shifts emphasis to the lower chest fibres"
+  },
+  {
+    "id": "ex-decline-db-bench",
+    "name": "Decline Dumbbell Bench Press",
+    "muscleGroups": ["chest", "triceps"],
+    "category": "strength",
+    "equipment": ["dumbbell", "bench"],
+    "description": "Dumbbell version of the decline press — greater range of motion"
+  },
+  {
+    "id": "ex-low-cable-fly",
+    "name": "Low Cable Fly",
+    "muscleGroups": ["chest"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Cable fly with pulleys set low — targets the upper chest through an upward arc"
+  },
+  {
+    "id": "ex-high-cable-fly",
+    "name": "High Cable Fly",
+    "muscleGroups": ["chest"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Cable fly with pulleys set high — targets the lower chest through a downward arc"
+  },
+  {
+    "id": "ex-svend-press",
+    "name": "Svend Press",
+    "muscleGroups": ["chest"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Chest isolation exercise pressing two plates together in front of the chest — constant medial chest squeeze"
+  },
+  {
+    "id": "ex-spider-curl",
+    "name": "Spider Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["barbell", "ez-bar", "dumbbell"],
+    "description": "Bicep curl performed chest-down on an incline bench — removes body momentum and maximises peak contraction"
+  },
+  {
+    "id": "ex-reverse-curl",
+    "name": "Reverse Barbell Curl",
+    "muscleGroups": ["forearms", "biceps"],
+    "category": "strength",
+    "equipment": ["barbell", "ez-bar"],
+    "description": "Pronated grip curl — heavily loads the brachialis and forearm extensors"
+  },
+  {
+    "id": "ex-cable-overhead-ext",
+    "name": "Cable Overhead Tricep Extension",
+    "muscleGroups": ["triceps"],
+    "category": "strength",
+    "equipment": ["cable"],
+    "description": "Tricep long-head isolation with the cable overhead — maximum stretch position"
+  },
+  {
+    "id": "ex-drag-curl",
+    "name": "Drag Curl",
+    "muscleGroups": ["biceps"],
+    "category": "strength",
+    "equipment": ["barbell", "dumbbell"],
+    "description": "Bicep curl variation where the bar is dragged up the torso — eliminates front delt involvement"
+  },
+  {
+    "id": "ex-jm-press",
+    "name": "JM Press",
+    "muscleGroups": ["triceps", "chest"],
+    "category": "strength",
+    "equipment": ["barbell", "bench"],
+    "description": "Hybrid between a close-grip bench and a skull crusher — excellent tricep builder with heavy loads"
+  },
+  {
+    "id": "ex-power-clean",
+    "name": "Power Clean",
+    "muscleGroups": ["back", "shoulders", "quads", "glutes", "calves", "traps"],
+    "category": "strength",
+    "equipment": ["barbell"],
+    "description": "Olympic weightlifting pull — develops explosive full-body power",
+    "instructions": ["Start with bar over mid-foot, hip-width stance", "First pull: extend legs while keeping back angle constant", "Second pull: explosive hip extension, shrug, and pull elbows high", "Receive bar in a quarter-squat (power position)", "Stand to full extension"]
+  },
+  {
+    "id": "ex-kb-turkish-getup",
+    "name": "Kettlebell Turkish Get-Up",
+    "muscleGroups": ["shoulders", "abs", "glutes", "triceps"],
+    "category": "strength",
+    "equipment": ["kettlebell"],
+    "description": "Full-body movement combining a floor-to-stand sequence with a locked-out kettlebell overhead — builds shoulder stability, mobility, and core control"
+  },
+  {
+    "id": "ex-kb-snatch",
+    "name": "Kettlebell Snatch",
+    "muscleGroups": ["glutes", "hamstrings", "shoulders", "traps"],
+    "category": "strength",
+    "equipment": ["kettlebell"],
+    "description": "Single-arm overhead power movement with a kettlebell — combines hip hinge and overhead press"
+  },
+  {
+    "id": "ex-kb-clean-press",
+    "name": "Kettlebell Clean and Press",
+    "muscleGroups": ["shoulders", "glutes", "quads", "triceps"],
+    "category": "strength",
+    "equipment": ["kettlebell"],
+    "description": "Combination clean + overhead press with a kettlebell — full-body conditioning exercise"
   }
 ]
