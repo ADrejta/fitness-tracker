@@ -22,6 +22,7 @@ pub enum MuscleGroup {
     Traps,
     Lats,
     LowerBack,
+    Adductors,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
@@ -50,6 +51,7 @@ pub enum Equipment {
     DipStation,
     Bench,
     CardioMachine,
+    TrapBar,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
@@ -111,6 +113,7 @@ mod tests {
             MuscleGroup::Traps,
             MuscleGroup::Lats,
             MuscleGroup::LowerBack,
+            MuscleGroup::Adductors,
         ];
 
         for group in all_groups {
@@ -176,6 +179,7 @@ mod tests {
             Equipment::DipStation,
             Equipment::Bench,
             Equipment::CardioMachine,
+            Equipment::TrapBar,
         ];
 
         for eq in all_equipment {
