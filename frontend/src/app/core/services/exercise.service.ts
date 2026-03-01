@@ -92,26 +92,26 @@ export class ExerciseService {
   private async loadDefaultExercises(): Promise<void> {
     if (this._defaultExercisesLoaded()) return;
 
-    const currentExercises = this._exercises();
-    const hasDefaultExercises = currentExercises.some((e) => !e.isCustom);
-
-    if (!hasDefaultExercises) {
-      try {
-        const response = await fetch('/assets/data/default-exercises.json');
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
-        }
-        const defaultExercises: ExerciseTemplate[] = await response.json();
-        if (defaultExercises && defaultExercises.length > 0) {
-          this._exercises.update((current) => [
-            ...defaultExercises,
-            ...current.filter((e) => e.isCustom),
-          ]);
-        }
-      } catch (error) {
-        console.error('Failed to load default exercises:', error);
-        this.toastService.error('Failed to load default exercises');
+    try {
+      const response = await fetch('/assets/data/default-exercises.json');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
+      const defaultExercises: ExerciseTemplate[] = await response.json();
+      if (defaultExercises && defaultExercises.length > 0) {
+        this._exercises.update((current) => {
+          const customExercises = current.filter((e) => e.isCustom);
+          // Merge: update categories on existing non-custom exercises, add any missing ones
+          const mergedDefaults = defaultExercises.map((def) => {
+            const existing = current.find((e) => e.id === def.id && !e.isCustom);
+            return existing ? { ...existing, category: def.category } : def;
+          });
+          return [...mergedDefaults, ...customExercises];
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load default exercises:', error);
+      // Don't show toast on JSON load failure — API will cover it
     }
 
     this._defaultExercisesLoaded.set(true);

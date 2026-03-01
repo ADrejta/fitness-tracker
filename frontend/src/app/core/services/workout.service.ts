@@ -114,6 +114,25 @@ export class WorkoutService {
         this.loadFromApi();
       }
     });
+
+    // Enrich active workout exercises with exerciseCategory from the exercise service.
+    // This fixes stale localStorage workouts that lack exerciseCategory.
+    effect(() => {
+      const exercises = this.exerciseService.exercises();
+      if (exercises.length === 0) return;
+      this._activeWorkout.update(workout => {
+        if (!workout) return null;
+        let changed = false;
+        const enriched = workout.exercises.map(e => {
+          if (e.exerciseCategory) return e;
+          const category = exercises.find(ex => ex.id === e.exerciseTemplateId)?.category;
+          if (!category) return e;
+          changed = true;
+          return { ...e, exerciseCategory: category };
+        });
+        return changed ? { ...workout, exercises: enriched } : workout;
+      });
+    });
   }
 
   private async loadFromApi(): Promise<void> {
