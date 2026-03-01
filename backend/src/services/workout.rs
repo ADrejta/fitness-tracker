@@ -72,6 +72,7 @@ impl WorkoutService {
                     .collect(),
                 notes: exercise.notes,
                 superset_id: exercise.superset_id,
+                exercise_category: exercise.exercise_category.clone(),
             })
             .collect();
 

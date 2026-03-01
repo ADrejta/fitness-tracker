@@ -300,7 +300,12 @@ pub async fn add_exercise(
     )
     .await?;
 
-    let sets = WorkoutRepository::get_sets(&pool, exercise.id).await?;
+    let (sets, exercise_category) = tokio::join!(
+        WorkoutRepository::get_sets(&pool, exercise.id),
+        WorkoutRepository::get_exercise_category(&pool, &exercise.exercise_template_id),
+    );
+    let sets = sets?;
+    let exercise_category = exercise_category?;
 
     Ok(Json(WorkoutExerciseResponse {
         id: exercise.id,
@@ -322,12 +327,13 @@ pub async fn add_exercise(
                 distance_meters: s.distance_meters,
                 duration_seconds: s.duration_seconds,
                 calories: s.calories,
-                        target_distance_meters: s.target_distance_meters,
-                        target_duration_seconds: s.target_duration_seconds,
+                target_distance_meters: s.target_distance_meters,
+                target_duration_seconds: s.target_duration_seconds,
             })
             .collect(),
         notes: exercise.notes,
         superset_id: exercise.superset_id,
+        exercise_category,
     }))
 }
 
@@ -355,7 +361,12 @@ pub async fn update_exercise(
         .map_err(|e| AppError::Validation(e.to_string()))?;
 
     let exercise = WorkoutRepository::update_exercise(&pool, exercise_id, req.notes.as_deref()).await?;
-    let sets = WorkoutRepository::get_sets(&pool, exercise_id).await?;
+    let (sets, exercise_category) = tokio::join!(
+        WorkoutRepository::get_sets(&pool, exercise_id),
+        WorkoutRepository::get_exercise_category(&pool, &exercise.exercise_template_id),
+    );
+    let sets = sets?;
+    let exercise_category = exercise_category?;
 
     Ok(Json(WorkoutExerciseResponse {
         id: exercise.id,
@@ -377,12 +388,13 @@ pub async fn update_exercise(
                 distance_meters: s.distance_meters,
                 duration_seconds: s.duration_seconds,
                 calories: s.calories,
-                        target_distance_meters: s.target_distance_meters,
-                        target_duration_seconds: s.target_duration_seconds,
+                target_distance_meters: s.target_distance_meters,
+                target_duration_seconds: s.target_duration_seconds,
             })
             .collect(),
         notes: exercise.notes,
         superset_id: exercise.superset_id,
+        exercise_category,
     }))
 }
 

@@ -25,6 +25,7 @@ export interface WorkoutExercise {
   sets: WorkoutSet[];
   notes?: string;
   supersetId?: string;
+  exerciseCategory?: string;
 }
 
 export interface Workout {

@@ -4,7 +4,7 @@ use utoipa::{IntoParams, ToSchema};
 use uuid::Uuid;
 use validator::Validate;
 
-use crate::models::WorkoutStatus;
+use crate::models::{ExerciseCategory, WorkoutStatus};
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
 #[serde(rename_all = "camelCase")]
@@ -53,6 +53,7 @@ pub struct WorkoutExerciseResponse {
     pub sets: Vec<WorkoutSetResponse>,
     pub notes: Option<String>,
     pub superset_id: Option<Uuid>,
+    pub exercise_category: Option<ExerciseCategory>,
 }
 
 #[derive(Debug, Serialize, ToSchema)]

@@ -55,25 +55,16 @@ export class WorkoutExerciseComponent implements OnInit {
     return template?.muscleGroups || [];
   }
 
-  get isCardio(): boolean {
-    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
-    return template?.category === 'cardio';
+  private get exerciseCategory(): string {
+    return this.exercise.exerciseCategory
+      ?? this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId)?.category
+      ?? 'strength';
   }
 
-  get isBodyweight(): boolean {
-    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
-    return template?.category === 'bodyweight';
-  }
-
-  get isCarry(): boolean {
-    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
-    return template?.category === 'carry';
-  }
-
-  get isTimed(): boolean {
-    const template = this.exerciseService.getExerciseById(this.exercise.exerciseTemplateId);
-    return template?.category === 'timed';
-  }
+  get isCardio(): boolean { return this.exerciseCategory === 'cardio'; }
+  get isBodyweight(): boolean { return this.exerciseCategory === 'bodyweight'; }
+  get isCarry(): boolean { return this.exerciseCategory === 'carry'; }
+  get isTimed(): boolean { return this.exerciseCategory === 'timed'; }
 
   getPreviousSetData(currentSet: WorkoutSet): WorkoutSet | undefined {
     // Get previous workout data for this exercise

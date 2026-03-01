@@ -4,6 +4,8 @@ use sqlx::FromRow;
 use utoipa::ToSchema;
 use uuid::Uuid;
 
+use crate::models::ExerciseCategory;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, sqlx::Type, ToSchema)]
 #[sqlx(type_name = "workout_status", rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
@@ -44,6 +46,8 @@ pub struct WorkoutExercise {
     pub notes: Option<String>,
     pub order_index: i32,
     pub superset_id: Option<Uuid>,
+    #[sqlx(skip)]
+    pub exercise_category: Option<ExerciseCategory>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

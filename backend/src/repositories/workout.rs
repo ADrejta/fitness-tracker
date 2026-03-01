@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::cursor::decode_cursor;
 use crate::dto::{ExerciseOrderUpdate, WorkoutQuery};
 use crate::error::AppError;
-use crate::models::{Workout, WorkoutExercise, WorkoutSet, WorkoutStatus};
+use crate::models::{ExerciseCategory, Workout, WorkoutExercise, WorkoutSet, WorkoutStatus};
 
 pub struct WorkoutRepository;
 
@@ -332,6 +332,19 @@ impl WorkoutRepository {
         Ok(exercise)
     }
 
+    pub async fn get_exercise_category(
+        pool: &PgPool,
+        exercise_template_id: &str,
+    ) -> Result<Option<ExerciseCategory>, AppError> {
+        let category = sqlx::query_scalar::<_, ExerciseCategory>(
+            "SELECT category FROM exercise_templates WHERE id = $1",
+        )
+        .bind(exercise_template_id)
+        .fetch_optional(pool)
+        .await?;
+        Ok(category)
+    }
+
     pub async fn get_exercises(
         pool: &PgPool,
         workout_id: Uuid,
@@ -362,12 +375,14 @@ impl WorkoutRepository {
             SELECT
                 we.id as exercise_id, we.workout_id, we.exercise_template_id, we.exercise_name,
                 we.notes as exercise_notes, we.order_index, we.superset_id,
+                et.category as exercise_category,
                 ws.id as set_id, ws.workout_exercise_id, ws.set_number, ws.target_reps,
                 ws.actual_reps, ws.target_weight, ws.actual_weight, ws.is_warmup,
                 ws.is_completed, ws.completed_at, ws.rpe,
                 ws.distance_meters, ws.duration_seconds, ws.calories,
                 ws.target_distance_meters, ws.target_duration_seconds
             FROM workout_exercises we
+            LEFT JOIN exercise_templates et ON et.id = we.exercise_template_id
             LEFT JOIN workout_sets ws ON ws.workout_exercise_id = we.id
             WHERE we.workout_id = $1
             ORDER BY we.order_index, ws.set_number
@@ -393,6 +408,7 @@ impl WorkoutRepository {
                         notes: row.exercise_notes.clone(),
                         order_index: row.order_index,
                         superset_id: row.superset_id,
+                        exercise_category: row.exercise_category.clone(),
                     },
                     Vec::new(),
                 ));
@@ -784,6 +800,7 @@ struct ExerciseWithSetRow {
     exercise_notes: Option<String>,
     order_index: i32,
     superset_id: Option<Uuid>,
+    exercise_category: Option<ExerciseCategory>,
     // Set fields (nullable due to LEFT JOIN)
     set_id: Option<Uuid>,
     workout_exercise_id: Option<Uuid>,
