@@ -182,8 +182,8 @@
           type="number"
           [min]="1"
           [max]="52"
-          [(ngModel)]="programDurationWeeks"
-          (ngModelChange)="onDurationChange()"
+          [ngModel]="programDurationWeeks()"
+          (ngModelChange)="onDurationChange($event)"
         ></app-input>
       </div>
 
@@ -328,28 +328,116 @@
                 </button>
               </div>
               <div class="inline-exercise__sets-header">
-                <span>Set</span><span>Reps</span><span>Weight (kg)</span>
+                <span>Set</span>
+                @if (ex.exerciseCategory === 'carry') {
+                  <span>Weight (kg)</span><span>Distance (m)</span>
+                } @else if (ex.exerciseCategory === 'timed') {
+                  <span>Weight (kg)</span><span>Duration</span>
+                } @else if (ex.exerciseCategory === 'cardio') {
+                  <span>Distance (m)</span><span>Duration</span>
+                } @else {
+                  <span>Reps</span><span>Weight (kg)</span>
+                }
               </div>
               @for (set of ex.sets; track $index; let setIdx = $index) {
                 <div class="inline-set">
                   <span class="inline-set__num">{{ setIdx + 1 }}</span>
-                  <input
-                    class="inline-set__input"
-                    type="number"
-                    [value]="set.targetReps"
-                    placeholder="8"
-                    min="1"
-                    (change)="updateInlineSetReps(exIdx, setIdx, +$any($event.target).value)"
-                  />
-                  <input
-                    class="inline-set__input"
-                    type="number"
-                    [value]="set.targetWeight ?? ''"
-                    placeholder="—"
-                    min="0"
-                    step="0.5"
-                    (change)="updateInlineSetWeight(exIdx, setIdx, +$any($event.target).value)"
-                  />
+                  @if (ex.exerciseCategory === 'carry') {
+                    <input
+                      class="inline-set__input"
+                      type="number"
+                      [value]="set.targetWeight ?? ''"
+                      placeholder="—"
+                      min="0"
+                      step="0.5"
+                      (change)="updateInlineSetWeight(exIdx, setIdx, +$any($event.target).value)"
+                    />
+                    <input
+                      class="inline-set__input"
+                      type="number"
+                      [value]="set.targetDistanceMeters ?? ''"
+                      placeholder="—"
+                      min="0"
+                      (change)="updateInlineSetDistance(exIdx, setIdx, +$any($event.target).value)"
+                    />
+                  } @else if (ex.exerciseCategory === 'timed') {
+                    <input
+                      class="inline-set__input"
+                      type="number"
+                      [value]="set.targetWeight ?? ''"
+                      placeholder="—"
+                      min="0"
+                      step="0.5"
+                      (change)="updateInlineSetWeight(exIdx, setIdx, +$any($event.target).value)"
+                    />
+                    <div class="inline-set__duration">
+                      <input
+                        class="inline-set__input inline-set__input--sm"
+                        type="number"
+                        [value]="getInlineDurationMin(set)"
+                        placeholder="mm"
+                        min="0"
+                        inputmode="numeric"
+                        (change)="updateInlineSetDurationMin(exIdx, setIdx, +$any($event.target).value, set)"
+                      /><span class="inline-set__colon">:</span><input
+                        class="inline-set__input inline-set__input--sm"
+                        type="number"
+                        [value]="getInlineDurationSec(set)"
+                        placeholder="ss"
+                        min="0"
+                        max="59"
+                        inputmode="numeric"
+                        (change)="updateInlineSetDurationSec(exIdx, setIdx, +$any($event.target).value, set)"
+                      />
+                    </div>
+                  } @else if (ex.exerciseCategory === 'cardio') {
+                    <input
+                      class="inline-set__input"
+                      type="number"
+                      [value]="set.targetDistanceMeters ?? ''"
+                      placeholder="—"
+                      min="0"
+                      (change)="updateInlineSetDistance(exIdx, setIdx, +$any($event.target).value)"
+                    />
+                    <div class="inline-set__duration">
+                      <input
+                        class="inline-set__input inline-set__input--sm"
+                        type="number"
+                        [value]="getInlineDurationMin(set)"
+                        placeholder="mm"
+                        min="0"
+                        inputmode="numeric"
+                        (change)="updateInlineSetDurationMin(exIdx, setIdx, +$any($event.target).value, set)"
+                      /><span class="inline-set__colon">:</span><input
+                        class="inline-set__input inline-set__input--sm"
+                        type="number"
+                        [value]="getInlineDurationSec(set)"
+                        placeholder="ss"
+                        min="0"
+                        max="59"
+                        inputmode="numeric"
+                        (change)="updateInlineSetDurationSec(exIdx, setIdx, +$any($event.target).value, set)"
+                      />
+                    </div>
+                  } @else {
+                    <input
+                      class="inline-set__input"
+                      type="number"
+                      [value]="set.targetReps"
+                      placeholder="8"
+                      min="1"
+                      (change)="updateInlineSetReps(exIdx, setIdx, +$any($event.target).value)"
+                    />
+                    <input
+                      class="inline-set__input"
+                      type="number"
+                      [value]="set.targetWeight ?? ''"
+                      placeholder="—"
+                      min="0"
+                      step="0.5"
+                      (change)="updateInlineSetWeight(exIdx, setIdx, +$any($event.target).value)"
+                    />
+                  }
                   @if (ex.sets.length > 1) {
                     <button class="inline-set__remove" (click)="removeInlineSet(exIdx, setIdx)" title="Remove set">×</button>
                   }

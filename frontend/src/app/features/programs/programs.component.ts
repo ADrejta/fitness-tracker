@@ -20,7 +20,8 @@ const DAY_ABBR = ['M', 'Tu', 'W', 'Th', 'F', 'Sa', 'Su'];
 interface InlineTemplateExercise {
   exerciseTemplateId: string;
   exerciseName: string;
-  sets: { targetReps: number; targetWeight?: number; isWarmup: boolean }[];
+  exerciseCategory: string;
+  sets: { targetReps: number; targetWeight?: number; isWarmup: boolean; targetDistanceMeters?: number; targetDurationSeconds?: number }[];
 }
 
 interface DaySlot {
@@ -100,7 +101,7 @@ export class ProgramsComponent {
   // Form state
   programName = '';
   programDescription = '';
-  programDurationWeeks = 4;
+  programDurationWeeks = signal(4);
   activeWeekTab = 'week-1';
   weeks = signal<DaySlot[][]>([]);
 
@@ -117,7 +118,7 @@ export class ProgramsComponent {
 
   weekTabs = computed((): Tab[] => {
     const tabs: Tab[] = [];
-    for (let i = 1; i <= this.programDurationWeeks; i++) {
+    for (let i = 1; i <= this.programDurationWeeks(); i++) {
       tabs.push({ id: `week-${i}`, label: `Week ${i}` });
     }
     return tabs;
@@ -149,7 +150,7 @@ export class ProgramsComponent {
     this.editingProgramId = null;
     this.programName = '';
     this.programDescription = '';
-    this.programDurationWeeks = 4;
+    this.programDurationWeeks.set(4);
     this.activeWeekTab = 'week-1';
     this.initWeeks(4);
     this.showCreateModal = true;
@@ -161,7 +162,7 @@ export class ProgramsComponent {
     this.editingProgramId = program.id;
     this.programName = program.name;
     this.programDescription = program.description || '';
-    this.programDurationWeeks = program.durationWeeks;
+    this.programDurationWeeks.set(program.durationWeeks);
     this.activeWeekTab = 'week-1';
 
     // Load full program details to populate weeks
@@ -180,27 +181,28 @@ export class ProgramsComponent {
     this.showCreateModal = false;
   }
 
-  onDurationChange(): void {
+  onDurationChange(newValue: number): void {
     // Clamp
-    if (this.programDurationWeeks < 1) this.programDurationWeeks = 1;
-    if (this.programDurationWeeks > 52) this.programDurationWeeks = 52;
+    let val = Math.floor(newValue);
+    if (val < 1) val = 1;
+    if (val > 52) val = 52;
+    this.programDurationWeeks.set(val);
 
     const current = this.weeks();
-    if (this.programDurationWeeks > current.length) {
-      // Add new weeks
+    if (val > current.length) {
       const newWeeks = [...current];
-      for (let i = current.length; i < this.programDurationWeeks; i++) {
+      for (let i = current.length; i < val; i++) {
         newWeeks.push(this.createEmptyWeek());
       }
       this.weeks.set(newWeeks);
-    } else if (this.programDurationWeeks < current.length) {
-      this.weeks.set(current.slice(0, this.programDurationWeeks));
+    } else if (val < current.length) {
+      this.weeks.set(current.slice(0, val));
     }
 
     // Ensure active tab is valid
     const idx = this.activeWeekIndex();
-    if (idx >= this.programDurationWeeks) {
-      this.activeWeekTab = `week-${this.programDurationWeeks}`;
+    if (idx >= val) {
+      this.activeWeekTab = `week-${val}`;
     }
   }
 
@@ -254,6 +256,7 @@ export class ProgramsComponent {
       {
         exerciseTemplateId: exercise.id,
         exerciseName: exercise.name,
+        exerciseCategory: exercise.category,
         sets: [{ targetReps: 8, targetWeight: undefined, isWarmup: false }],
       },
     ]);
@@ -306,6 +309,52 @@ export class ProgramsComponent {
       updated[exIndex] = ex;
       return updated;
     });
+  }
+
+  updateInlineSetDistance(exIndex: number, setIndex: number, meters: number): void {
+    this.inlineTemplateExercises.update(current => {
+      const updated = [...current];
+      const ex = { ...updated[exIndex] };
+      const sets = [...ex.sets];
+      sets[setIndex] = { ...sets[setIndex], targetDistanceMeters: meters > 0 ? meters : undefined };
+      ex.sets = sets;
+      updated[exIndex] = ex;
+      return updated;
+    });
+  }
+
+  updateInlineSetDurationMin(exIndex: number, setIndex: number, minutes: number, set: InlineTemplateExercise['sets'][number]): void {
+    const sec = set.targetDurationSeconds != null ? set.targetDurationSeconds % 60 : 0;
+    this.inlineTemplateExercises.update(current => {
+      const updated = [...current];
+      const ex = { ...updated[exIndex] };
+      const sets = [...ex.sets];
+      sets[setIndex] = { ...sets[setIndex], targetDurationSeconds: (Math.max(0, minutes || 0) * 60) + sec };
+      ex.sets = sets;
+      updated[exIndex] = ex;
+      return updated;
+    });
+  }
+
+  updateInlineSetDurationSec(exIndex: number, setIndex: number, seconds: number, set: InlineTemplateExercise['sets'][number]): void {
+    const min = set.targetDurationSeconds != null ? Math.floor(set.targetDurationSeconds / 60) : 0;
+    this.inlineTemplateExercises.update(current => {
+      const updated = [...current];
+      const ex = { ...updated[exIndex] };
+      const sets = [...ex.sets];
+      sets[setIndex] = { ...sets[setIndex], targetDurationSeconds: (min * 60) + Math.min(59, Math.max(0, seconds || 0)) };
+      ex.sets = sets;
+      updated[exIndex] = ex;
+      return updated;
+    });
+  }
+
+  getInlineDurationMin(set: InlineTemplateExercise['sets'][number]): number | string {
+    return set.targetDurationSeconds != null ? Math.floor(set.targetDurationSeconds / 60) : '';
+  }
+
+  getInlineDurationSec(set: InlineTemplateExercise['sets'][number]): number | string {
+    return set.targetDurationSeconds != null ? set.targetDurationSeconds % 60 : '';
   }
 
   saveInlineTemplate(): void {
@@ -398,7 +447,7 @@ export class ProgramsComponent {
       this.programService.updateProgram(this.editingProgramId, {
         name: this.programName,
         description: this.programDescription || undefined,
-        durationWeeks: this.programDurationWeeks,
+        durationWeeks: this.programDurationWeeks(),
         workouts,
       }).subscribe({
         next: () => {
@@ -411,7 +460,7 @@ export class ProgramsComponent {
       this.programService.createProgram({
         name: this.programName,
         description: this.programDescription || undefined,
-        durationWeeks: this.programDurationWeeks,
+        durationWeeks: this.programDurationWeeks(),
         workouts,
       }).subscribe({
         next: () => {
