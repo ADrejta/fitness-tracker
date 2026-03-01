@@ -257,6 +257,38 @@
                                 inputmode="numeric"
                               />
                             </div>
+                          } @else if (getExerciseCategory(exercise.exerciseTemplateId) === 'cardio') {
+                            <div class="set-input">
+                              <input
+                                type="number"
+                                [value]="set.targetDistanceMeters || ''"
+                                (change)="updateSetDistance(exercise.id, j, $event)"
+                                placeholder="—"
+                                min="0"
+                              />
+                              <span>m</span>
+                            </div>
+                            <span class="set-input__sep">×</span>
+                            <div class="set-input set-input--duration">
+                              <input
+                                type="number"
+                                [value]="getDurationMin(set)"
+                                (change)="updateSetDurationMin(exercise.id, j, $event, set)"
+                                placeholder="mm"
+                                min="0"
+                                inputmode="numeric"
+                              />
+                              <span>:</span>
+                              <input
+                                type="number"
+                                [value]="getDurationSec(set)"
+                                (change)="updateSetDurationSec(exercise.id, j, $event, set)"
+                                placeholder="ss"
+                                min="0"
+                                max="59"
+                                inputmode="numeric"
+                              />
+                            </div>
                           } @else {
                             <div class="set-input">
                               <input
