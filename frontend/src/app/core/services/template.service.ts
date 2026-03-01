@@ -120,7 +120,9 @@ export class TemplateService {
           sets: e.sets.map(s => ({
             targetReps: s.targetReps,
             targetWeight: s.targetWeight,
-            isWarmup: s.isWarmup
+            isWarmup: s.isWarmup,
+            targetDistanceMeters: s.targetDistanceMeters,
+            targetDurationSeconds: s.targetDurationSeconds,
           })),
           notes: e.notes,
           restSeconds: e.restSeconds
@@ -163,7 +165,9 @@ export class TemplateService {
           sets: e.sets.map(s => ({
             targetReps: s.targetReps,
             targetWeight: s.targetWeight,
-            isWarmup: s.isWarmup
+            isWarmup: s.isWarmup,
+            targetDistanceMeters: s.targetDistanceMeters,
+            targetDurationSeconds: s.targetDurationSeconds,
           })),
           notes: e.notes,
           restSeconds: e.restSeconds

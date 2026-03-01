@@ -138,7 +138,7 @@
           type="number"
           class="set-row__input"
           [class.set-row__input--filled]="distanceM !== null"
-          [placeholder]="set.targetReps?.toString() || 'm'"
+          [placeholder]="set.targetDistanceMeters?.toString() || 'm'"
           [(ngModel)]="distanceM"
           [disabled]="set.isCompleted"
           inputmode="decimal"

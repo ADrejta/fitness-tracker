@@ -66,6 +66,8 @@ impl WorkoutService {
                         distance_meters: s.distance_meters,
                         duration_seconds: s.duration_seconds,
                         calories: s.calories,
+                        target_distance_meters: s.target_distance_meters,
+                        target_duration_seconds: s.target_duration_seconds,
                     })
                     .collect(),
                 notes: exercise.notes,
@@ -134,6 +136,8 @@ impl WorkoutService {
                     None,
                     None,
                     None,
+                    set.target_distance_meters,
+                    set.target_duration_seconds,
                 )
                 .await?;
             }

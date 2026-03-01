@@ -201,26 +201,84 @@
                       <div class="set-row">
                         <span class="set-row__number">Set {{ set.setNumber }}</span>
                         <div class="set-row__inputs">
-                          <div class="set-input">
-                            <input
-                              type="number"
-                              [value]="set.targetReps"
-                              (change)="updateSetReps(exercise.id, j, $event)"
-                              min="1"
-                            />
-                            <span>reps</span>
-                          </div>
-                          <div class="set-input">
-                            <input
-                              type="number"
-                              [value]="set.targetWeight || ''"
-                              (change)="updateSetWeight(exercise.id, j, $event)"
-                              placeholder="—"
-                              min="0"
-                              step="0.5"
-                            />
-                            <span>kg</span>
-                          </div>
+                          @if (getExerciseCategory(exercise.exerciseTemplateId) === 'carry') {
+                            <div class="set-input">
+                              <input
+                                type="number"
+                                [value]="set.targetWeight || ''"
+                                (change)="updateSetWeight(exercise.id, j, $event)"
+                                placeholder="—"
+                                min="0"
+                                step="0.5"
+                              />
+                              <span>kg</span>
+                            </div>
+                            <span class="set-input__sep">×</span>
+                            <div class="set-input">
+                              <input
+                                type="number"
+                                [value]="set.targetDistanceMeters || ''"
+                                (change)="updateSetDistance(exercise.id, j, $event)"
+                                placeholder="—"
+                                min="0"
+                              />
+                              <span>m</span>
+                            </div>
+                          } @else if (getExerciseCategory(exercise.exerciseTemplateId) === 'timed') {
+                            <div class="set-input">
+                              <input
+                                type="number"
+                                [value]="set.targetWeight || ''"
+                                (change)="updateSetWeight(exercise.id, j, $event)"
+                                placeholder="—"
+                                min="0"
+                                step="0.5"
+                              />
+                              <span>kg</span>
+                            </div>
+                            <span class="set-input__sep">×</span>
+                            <div class="set-input set-input--duration">
+                              <input
+                                type="number"
+                                [value]="getDurationMin(set)"
+                                (change)="updateSetDurationMin(exercise.id, j, $event, set)"
+                                placeholder="mm"
+                                min="0"
+                                inputmode="numeric"
+                              />
+                              <span>:</span>
+                              <input
+                                type="number"
+                                [value]="getDurationSec(set)"
+                                (change)="updateSetDurationSec(exercise.id, j, $event, set)"
+                                placeholder="ss"
+                                min="0"
+                                max="59"
+                                inputmode="numeric"
+                              />
+                            </div>
+                          } @else {
+                            <div class="set-input">
+                              <input
+                                type="number"
+                                [value]="set.targetReps"
+                                (change)="updateSetReps(exercise.id, j, $event)"
+                                min="1"
+                              />
+                              <span>reps</span>
+                            </div>
+                            <div class="set-input">
+                              <input
+                                type="number"
+                                [value]="set.targetWeight || ''"
+                                (change)="updateSetWeight(exercise.id, j, $event)"
+                                placeholder="—"
+                                min="0"
+                                step="0.5"
+                              />
+                              <span>kg</span>
+                            </div>
+                          }
                         </div>
                         <button class="icon-btn icon-btn--sm" (click)="removeSet(exercise.id, j)">
                           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

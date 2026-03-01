@@ -91,6 +91,8 @@ pub async fn get_template(
                         target_reps: s.target_reps,
                         target_weight: s.target_weight,
                         is_warmup: s.is_warmup,
+                        target_distance_meters: s.target_distance_meters,
+                        target_duration_seconds: s.target_duration_seconds,
                     })
                     .collect(),
                 notes: e.notes,
@@ -156,6 +158,8 @@ pub async fn create_template(
                         target_reps: s.target_reps,
                         target_weight: s.target_weight,
                         is_warmup: s.is_warmup,
+                        target_distance_meters: s.target_distance_meters,
+                        target_duration_seconds: s.target_duration_seconds,
                     })
                     .collect(),
                 notes: e.notes,
@@ -224,6 +228,8 @@ pub async fn update_template(
                         target_reps: s.target_reps,
                         target_weight: s.target_weight,
                         is_warmup: s.is_warmup,
+                        target_distance_meters: s.target_distance_meters,
+                        target_duration_seconds: s.target_duration_seconds,
                     })
                     .collect(),
                 notes: e.notes,
@@ -298,6 +304,8 @@ pub async fn restore_template(
                         target_reps: s.target_reps,
                         target_weight: s.target_weight,
                         is_warmup: s.is_warmup,
+                        target_distance_meters: s.target_distance_meters,
+                        target_duration_seconds: s.target_duration_seconds,
                     })
                     .collect(),
             })

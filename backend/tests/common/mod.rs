@@ -10,6 +10,8 @@ use fitness_tracker_api::config::{
     CorsSettings, DatabaseSettings, JwtSettings, ServerSettings, Settings,
 };
 use fitness_tracker_api::routes::create_router;
+use fitness_tracker_api::services::PrJob;
+use tokio::sync::mpsc;
 
 #[allow(dead_code)]
 pub struct TestApp {
@@ -50,7 +52,8 @@ impl TestApp {
             },
         };
 
-        let router = create_router(pool.clone(), settings);
+        let (pr_tx, _pr_rx) = mpsc::channel::<PrJob>(32);
+        let router = create_router(pool.clone(), settings, pr_tx);
 
         Self {
             router,

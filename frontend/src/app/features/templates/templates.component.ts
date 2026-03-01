@@ -277,6 +277,58 @@ export class TemplatesComponent {
     );
   }
 
+  getExerciseCategory(exerciseTemplateId: string): string {
+    return this.exerciseService.getExerciseById(exerciseTemplateId)?.category ?? 'strength';
+  }
+
+  updateSetDistance(exerciseId: string, setIndex: number, event: Event): void {
+    const inputValue = (event.target as HTMLInputElement).value;
+    const value = inputValue ? parseInt(inputValue, 10) : undefined;
+    this.templateExercises.update(exercises =>
+      exercises.map(e => {
+        if (e.id !== exerciseId) return e;
+        const newSets = e.sets.map((s, i) =>
+          i === setIndex ? { ...s, targetDistanceMeters: value } : s
+        );
+        return { ...e, sets: newSets };
+      })
+    );
+  }
+
+  getDurationMin(set: TemplateSet): number | string {
+    return set.targetDurationSeconds != null ? Math.floor(set.targetDurationSeconds / 60) : '';
+  }
+
+  getDurationSec(set: TemplateSet): number | string {
+    return set.targetDurationSeconds != null ? set.targetDurationSeconds % 60 : '';
+  }
+
+  updateSetDurationMin(exerciseId: string, setIndex: number, event: Event, currentSet: TemplateSet): void {
+    const min = +(event.target as HTMLInputElement).value || 0;
+    const sec = currentSet.targetDurationSeconds != null ? currentSet.targetDurationSeconds % 60 : 0;
+    this.updateSetDurationSeconds(exerciseId, setIndex, min, sec);
+  }
+
+  updateSetDurationSec(exerciseId: string, setIndex: number, event: Event, currentSet: TemplateSet): void {
+    const sec = +(event.target as HTMLInputElement).value || 0;
+    const min = currentSet.targetDurationSeconds != null ? Math.floor(currentSet.targetDurationSeconds / 60) : 0;
+    this.updateSetDurationSeconds(exerciseId, setIndex, min, sec);
+  }
+
+  updateSetDurationSeconds(exerciseId: string, setIndex: number, min: number | null, sec: number | null): void {
+    const total = ((min ?? 0) * 60) + (sec ?? 0);
+    const value = total > 0 ? total : undefined;
+    this.templateExercises.update(exercises =>
+      exercises.map(e => {
+        if (e.id !== exerciseId) return e;
+        const newSets = e.sets.map((s, i) =>
+          i === setIndex ? { ...s, targetDurationSeconds: value } : s
+        );
+        return { ...e, sets: newSets };
+      })
+    );
+  }
+
   updateSetReps(exerciseId: string, setIndex: number, event: Event): void {
     const value = parseInt((event.target as HTMLInputElement).value, 10) || 10;
     this.templateExercises.update(exercises =>

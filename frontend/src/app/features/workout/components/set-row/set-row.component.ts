@@ -111,9 +111,10 @@ export class SetRowComponent {
         this.distanceKm = this.set.distanceMeters / 1000;
       }
     }
-    if (this.set.durationSeconds != null) {
-      this.durationMin = Math.floor(this.set.durationSeconds / 60);
-      this.durationSec = this.set.durationSeconds % 60;
+    const durSrc = this.set.durationSeconds ?? (this.isTimed ? this.set.targetDurationSeconds : null);
+    if (durSrc != null) {
+      this.durationMin = Math.floor(durSrc / 60);
+      this.durationSec = durSrc % 60;
     }
     this.caloriesValue = this.set.calories ?? null;
   }

@@ -321,6 +321,26 @@
   }
 }
 
+.set-input__sep {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-tertiary);
+  padding: 0 2px;
+}
+
+.set-input--duration {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  input {
+    width: 44px;
+  }
+
+  span {
+    padding: 0 1px;
+  }
+}
+
 .set-input {
   display: flex;
   align-items: center;

@@ -322,6 +322,8 @@ pub async fn add_exercise(
                 distance_meters: s.distance_meters,
                 duration_seconds: s.duration_seconds,
                 calories: s.calories,
+                        target_distance_meters: s.target_distance_meters,
+                        target_duration_seconds: s.target_duration_seconds,
             })
             .collect(),
         notes: exercise.notes,
@@ -375,6 +377,8 @@ pub async fn update_exercise(
                 distance_meters: s.distance_meters,
                 duration_seconds: s.duration_seconds,
                 calories: s.calories,
+                        target_distance_meters: s.target_distance_meters,
+                        target_duration_seconds: s.target_duration_seconds,
             })
             .collect(),
         notes: exercise.notes,
@@ -437,6 +441,8 @@ pub async fn add_set(
         req.distance_meters,
         req.duration_seconds,
         req.calories,
+        req.target_distance_meters,
+        req.target_duration_seconds,
     )
     .await?;
 
@@ -454,6 +460,8 @@ pub async fn add_set(
         distance_meters: set.distance_meters,
         duration_seconds: set.duration_seconds,
         calories: set.calories,
+        target_distance_meters: set.target_distance_meters,
+        target_duration_seconds: set.target_duration_seconds,
     }))
 }
 
@@ -511,6 +519,8 @@ pub async fn update_set(
         distance_meters: set.distance_meters,
         duration_seconds: set.duration_seconds,
         calories: set.calories,
+        target_distance_meters: set.target_distance_meters,
+        target_duration_seconds: set.target_duration_seconds,
     }))
 }
 

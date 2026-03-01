@@ -3,6 +3,8 @@ export interface TemplateSet {
   targetReps: number;
   targetWeight?: number;
   isWarmup: boolean;
+  targetDistanceMeters?: number;
+  targetDurationSeconds?: number;
 }
 
 export interface TemplateExercise {

@@ -10,6 +10,8 @@ pub struct TemplateSet {
     pub target_reps: i32,
     pub target_weight: Option<f64>,
     pub is_warmup: bool,
+    pub target_distance_meters: Option<i32>,
+    pub target_duration_seconds: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]

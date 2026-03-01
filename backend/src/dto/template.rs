@@ -37,6 +37,8 @@ pub struct TemplateSetResponse {
     pub target_reps: i32,
     pub target_weight: Option<f64>,
     pub is_warmup: bool,
+    pub target_distance_meters: Option<i32>,
+    pub target_duration_seconds: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
@@ -78,6 +80,10 @@ pub struct CreateTemplateSetRequest {
     pub target_weight: Option<f64>,
     #[serde(default)]
     pub is_warmup: bool,
+    #[validate(range(min = 0, max = 100000))]
+    pub target_distance_meters: Option<i32>,
+    #[validate(range(min = 0, max = 86400))]
+    pub target_duration_seconds: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]

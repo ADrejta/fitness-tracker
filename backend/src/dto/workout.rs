@@ -71,6 +71,8 @@ pub struct WorkoutSetResponse {
     pub distance_meters: Option<f64>,
     pub duration_seconds: Option<i32>,
     pub calories: Option<i32>,
+    pub target_distance_meters: Option<i32>,
+    pub target_duration_seconds: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]
@@ -104,6 +106,10 @@ pub struct CreateSetRequest {
     pub distance_meters: Option<f64>,
     pub duration_seconds: Option<i32>,
     pub calories: Option<i32>,
+    #[validate(range(min = 0, max = 100000))]
+    pub target_distance_meters: Option<i32>,
+    #[validate(range(min = 0, max = 86400))]
+    pub target_duration_seconds: Option<i32>,
 }
 
 #[derive(Debug, Deserialize, Validate, ToSchema)]

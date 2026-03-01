@@ -365,7 +365,8 @@ impl WorkoutRepository {
                 ws.id as set_id, ws.workout_exercise_id, ws.set_number, ws.target_reps,
                 ws.actual_reps, ws.target_weight, ws.actual_weight, ws.is_warmup,
                 ws.is_completed, ws.completed_at, ws.rpe,
-                ws.distance_meters, ws.duration_seconds, ws.calories
+                ws.distance_meters, ws.duration_seconds, ws.calories,
+                ws.target_distance_meters, ws.target_duration_seconds
             FROM workout_exercises we
             LEFT JOIN workout_sets ws ON ws.workout_exercise_id = we.id
             WHERE we.workout_id = $1
@@ -415,6 +416,8 @@ impl WorkoutRepository {
                         distance_meters: row.distance_meters,
                         duration_seconds: row.duration_seconds,
                         calories: row.calories,
+                        target_distance_meters: row.target_distance_meters,
+                        target_duration_seconds: row.target_duration_seconds,
                     });
                 }
             }
@@ -433,7 +436,8 @@ impl WorkoutRepository {
             r#"
             SELECT id, workout_exercise_id, set_number, target_reps, actual_reps,
                    target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe,
-                   distance_meters, duration_seconds, calories
+                   distance_meters, duration_seconds, calories,
+                   target_distance_meters, target_duration_seconds
             FROM workout_sets
             WHERE workout_exercise_id = ANY($1)
             ORDER BY workout_exercise_id, set_number
@@ -495,6 +499,8 @@ impl WorkoutRepository {
         distance_meters: Option<f64>,
         duration_seconds: Option<i32>,
         calories: Option<i32>,
+        target_distance_meters: Option<i32>,
+        target_duration_seconds: Option<i32>,
     ) -> Result<WorkoutSet, AppError> {
         let set_number = sqlx::query_scalar::<_, i32>(
             "SELECT COALESCE(MAX(set_number), 0) + 1 FROM workout_sets WHERE workout_exercise_id = $1",
@@ -507,11 +513,13 @@ impl WorkoutRepository {
             r#"
             INSERT INTO workout_sets
               (id, workout_exercise_id, set_number, target_reps, target_weight,
-               is_warmup, is_completed, distance_meters, duration_seconds, calories)
-            VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8, $9)
+               is_warmup, is_completed, distance_meters, duration_seconds, calories,
+               target_distance_meters, target_duration_seconds)
+            VALUES ($1, $2, $3, $4, $5, $6, false, $7, $8, $9, $10, $11)
             RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps,
               target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe,
-              distance_meters, duration_seconds, calories
+              distance_meters, duration_seconds, calories,
+              target_distance_meters, target_duration_seconds
             "#,
         )
         .bind(Uuid::new_v4())
@@ -523,6 +531,8 @@ impl WorkoutRepository {
         .bind(distance_meters)
         .bind(duration_seconds)
         .bind(calories)
+        .bind(target_distance_meters)
+        .bind(target_duration_seconds)
         .fetch_one(pool)
         .await?;
 
@@ -533,7 +543,8 @@ impl WorkoutRepository {
         let sets = sqlx::query_as::<_, WorkoutSet>(
             r#"
             SELECT id, workout_exercise_id, set_number, target_reps, actual_reps, target_weight, actual_weight,
-                   is_warmup, is_completed, completed_at, rpe, distance_meters, duration_seconds, calories
+                   is_warmup, is_completed, completed_at, rpe, distance_meters, duration_seconds, calories,
+                   target_distance_meters, target_duration_seconds
             FROM workout_sets
             WHERE workout_exercise_id = $1
             ORDER BY set_number
@@ -592,7 +603,8 @@ impl WorkoutRepository {
             WHERE id = $1
             RETURNING id, workout_exercise_id, set_number, target_reps, actual_reps,
               target_weight, actual_weight, is_warmup, is_completed, completed_at, rpe,
-              distance_meters, duration_seconds, calories
+              distance_meters, duration_seconds, calories,
+              target_distance_meters, target_duration_seconds
             "#,
         )
         .bind(set_id)
@@ -787,4 +799,6 @@ struct ExerciseWithSetRow {
     distance_meters: Option<f64>,
     duration_seconds: Option<i32>,
     calories: Option<i32>,
+    target_distance_meters: Option<i32>,
+    target_duration_seconds: Option<i32>,
 }

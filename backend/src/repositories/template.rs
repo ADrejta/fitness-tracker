@@ -60,8 +60,8 @@ impl TemplateRepository {
             for (set_index, set) in exercise.sets.iter().enumerate() {
                 sqlx::query(
                     r#"
-                    INSERT INTO template_sets (id, template_exercise_id, set_number, target_reps, target_weight, is_warmup)
-                    VALUES ($1, $2, $3, $4, $5, $6)
+                    INSERT INTO template_sets (id, template_exercise_id, set_number, target_reps, target_weight, is_warmup, target_distance_meters, target_duration_seconds)
+                    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
                     "#,
                 )
                 .bind(Uuid::new_v4())
@@ -70,6 +70,8 @@ impl TemplateRepository {
                 .bind(set.target_reps)
                 .bind(set.target_weight)
                 .bind(set.is_warmup)
+                .bind(set.target_distance_meters)
+                .bind(set.target_duration_seconds)
                 .execute(&mut *tx)
                 .await?;
             }
@@ -296,7 +298,8 @@ impl TemplateRepository {
             SELECT
                 te.id as exercise_id, te.template_id, te.exercise_template_id, te.exercise_name,
                 te.notes, te.rest_seconds, te.order_index, te.superset_id,
-                ts.set_number, ts.target_reps, ts.target_weight, ts.is_warmup
+                ts.set_number, ts.target_reps, ts.target_weight, ts.is_warmup,
+                ts.target_distance_meters, ts.target_duration_seconds
             FROM template_exercises te
             LEFT JOIN template_sets ts ON ts.template_exercise_id = te.id
             WHERE te.template_id = $1
@@ -333,6 +336,8 @@ impl TemplateRepository {
                         target_reps: row.target_reps.unwrap_or(0),
                         target_weight: row.target_weight,
                         is_warmup: row.is_warmup.unwrap_or(false),
+                        target_distance_meters: row.target_distance_meters,
+                        target_duration_seconds: row.target_duration_seconds,
                     });
                 }
             }
@@ -396,4 +401,6 @@ struct TemplateExerciseWithSetRow {
     target_reps: Option<i32>,
     target_weight: Option<f64>,
     is_warmup: Option<bool>,
+    target_distance_meters: Option<i32>,
+    target_duration_seconds: Option<i32>,
 }

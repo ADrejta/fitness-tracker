@@ -14,6 +14,8 @@ export interface WorkoutSet {
   distanceMeters?: number;
   durationSeconds?: number;
   calories?: number;
+  targetDistanceMeters?: number;
+  targetDurationSeconds?: number;
 }
 
 export interface WorkoutExercise {
