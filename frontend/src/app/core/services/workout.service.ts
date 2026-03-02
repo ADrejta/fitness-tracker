@@ -51,6 +51,7 @@ export class WorkoutService {
     this.loadPersonalRecords()
   );
   private _isLoading = signal<boolean>(false);
+  private _pendingUpdates = signal<number>(0);
 
   readonly workouts = this._workouts.asReadonly();
   readonly activeWorkout = this._activeWorkout.asReadonly();
@@ -388,6 +389,7 @@ export class WorkoutService {
     if (!workout) return;
 
     if (this.authService.isAuthenticated()) {
+      this._pendingUpdates.update(n => n + 1);
       try {
         await firstValueFrom(
           this.http.patch(
@@ -398,6 +400,8 @@ export class WorkoutService {
       } catch (error) {
         console.error('Failed to update set via API:', error);
         this.toastService.error('Failed to update set');
+      } finally {
+        this._pendingUpdates.update(n => n - 1);
       }
     }
 
@@ -418,6 +422,13 @@ export class WorkoutService {
           }
         : null
     );
+  }
+
+  private async flushPendingUpdates(): Promise<void> {
+    const deadline = Date.now() + 5000;
+    while (this._pendingUpdates() > 0 && Date.now() < deadline) {
+      await new Promise(r => setTimeout(r, 50));
+    }
   }
 
   completeSet(
@@ -575,6 +586,7 @@ export class WorkoutService {
     if (!workout) return null;
 
     if (this.authService.isAuthenticated()) {
+      await this.flushPendingUpdates();
       try {
         const completedWorkout = await firstValueFrom(
           this.http.post<Workout>(

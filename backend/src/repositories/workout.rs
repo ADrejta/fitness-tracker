@@ -240,7 +240,10 @@ impl WorkoutRepository {
         id: Uuid,
         user_id: Uuid,
     ) -> Result<Workout, AppError> {
-        // Calculate totals from sets
+        let mut tx = pool.begin().await?;
+
+        // Lock the set rows while computing totals so a concurrent PATCH cannot
+        // slip between this SELECT and the UPDATE below.
         let stats = sqlx::query_as::<_, WorkoutStats>(
             r#"
             SELECT
@@ -250,10 +253,11 @@ impl WorkoutRepository {
             FROM workout_exercises we
             JOIN workout_sets ws ON ws.workout_exercise_id = we.id
             WHERE we.workout_id = $1
+            FOR SHARE
             "#,
         )
         .bind(id)
-        .fetch_one(pool)
+        .fetch_one(&mut *tx)
         .await?;
 
         let workout = sqlx::query_as::<_, Workout>(
@@ -274,9 +278,11 @@ impl WorkoutRepository {
         .bind(stats.total_volume)
         .bind(stats.total_sets)
         .bind(stats.total_reps)
-        .fetch_optional(pool)
+        .fetch_optional(&mut *tx)
         .await?
         .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
+
+        tx.commit().await?;
 
         Ok(workout)
     }
@@ -591,6 +597,31 @@ impl WorkoutRepository {
         duration_seconds: Option<i32>,
         calories: Option<i32>,
     ) -> Result<WorkoutSet, AppError> {
+        // Reject mutations on workouts that are no longer in-progress.
+        let workout_status = sqlx::query_scalar::<_, WorkoutStatus>(
+            r#"
+            SELECT w.status FROM workouts w
+            JOIN workout_exercises we ON we.workout_id = w.id
+            JOIN workout_sets ws ON ws.workout_exercise_id = we.id
+            WHERE ws.id = $1
+            "#,
+        )
+        .bind(set_id)
+        .fetch_optional(pool)
+        .await?;
+
+        match workout_status {
+            Some(WorkoutStatus::Completed) | Some(WorkoutStatus::Cancelled) => {
+                return Err(AppError::Conflict(
+                    "Cannot modify sets on a completed workout".to_string(),
+                ));
+            }
+            None => {
+                return Err(AppError::NotFound("Set not found".to_string()));
+            }
+            Some(WorkoutStatus::InProgress) => {}
+        }
+
         let completed_at: Option<DateTime<Utc>> = if is_completed == Some(true) {
             Some(Utc::now())
         } else if is_completed == Some(false) {
