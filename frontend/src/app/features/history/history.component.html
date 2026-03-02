@@ -138,7 +138,7 @@
                     </div>
                     <div class="workout-item__details">
                       <div class="workout-item__stat">
-                        <span class="workout-item__stat-value">{{ workout.exerciseCount ?? workout.exercises.length }}</span>
+                        <span class="workout-item__stat-value">{{ workout.exerciseCount ?? workout.exercises?.length }}</span>
                         <span class="workout-item__stat-label">exercises</span>
                       </div>
                       <div class="workout-item__stat">
@@ -154,13 +154,13 @@
                         <span class="workout-item__stat-label">duration</span>
                       </div>
                     </div>
-                    @if (workout.exercises.length) {
+                    @if (workout.exercises?.length) {
                       <div class="workout-item__exercises">
-                        @for (exercise of workout.exercises.slice(0, 3); track exercise.id) {
+                        @for (exercise of workout.exercises!.slice(0, 3); track exercise.id) {
                           <app-badge [size]="'sm'">{{ exercise.exerciseName }}</app-badge>
                         }
-                        @if (workout.exercises.length > 3) {
-                          <app-badge [size]="'sm'" [variant]="'default'">+{{ workout.exercises.length - 3 }}</app-badge>
+                        @if (workout.exercises!.length > 3) {
+                          <app-badge [size]="'sm'" [variant]="'default'">+{{ workout.exercises!.length - 3 }}</app-badge>
                         }
                       </div>
                     }
@@ -187,7 +187,7 @@
                     </div>
                     <div class="workout-item__details">
                       <div class="workout-item__stat">
-                        <span class="workout-item__stat-value">{{ workout.exerciseCount ?? workout.exercises.length }}</span>
+                        <span class="workout-item__stat-value">{{ workout.exerciseCount ?? workout.exercises?.length }}</span>
                         <span class="workout-item__stat-label">exercises</span>
                       </div>
                       <div class="workout-item__stat">
@@ -203,13 +203,13 @@
                         <span class="workout-item__stat-label">duration</span>
                       </div>
                     </div>
-                    @if (workout.exercises.length) {
+                    @if (workout.exercises?.length) {
                       <div class="workout-item__exercises">
-                        @for (exercise of workout.exercises.slice(0, 3); track exercise.id) {
+                        @for (exercise of workout.exercises!.slice(0, 3); track exercise.id) {
                           <app-badge [size]="'sm'">{{ exercise.exerciseName }}</app-badge>
                         }
-                        @if (workout.exercises.length > 3) {
-                          <app-badge [size]="'sm'" [variant]="'default'">+{{ workout.exercises.length - 3 }}</app-badge>
+                        @if (workout.exercises!.length > 3) {
+                          <app-badge [size]="'sm'" [variant]="'default'">+{{ workout.exercises!.length - 3 }}</app-badge>
                         }
                       </div>
                     }
