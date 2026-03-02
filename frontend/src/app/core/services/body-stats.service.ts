@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, of, firstValueFrom } from 'rxjs';
+import { Observable, tap, catchError, of, map, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { BodyMeasurement, BodyStatsGoal } from '../models';
 import { AuthService } from './auth.service';
