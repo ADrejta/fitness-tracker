@@ -3,6 +3,10 @@
 ## Git Commit Rules
 
 - **Never** add `Co-Authored-By` lines to commit messages.
+- **Always** run builds and tests before committing or pushing:
+  - Frontend: `cd frontend && npx ng build`
+  - Backend: `cd backend && cargo check && cargo test`
+  - Fix all errors before proceeding with the commit.
 
 ## Project Structure
 
