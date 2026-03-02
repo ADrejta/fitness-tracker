@@ -84,9 +84,9 @@ export class BodyStatsComponent {
     };
 
     if (this.editingMeasurement) {
-      this.bodyStatsService.updateMeasurement(this.editingMeasurement.id, measurement);
+      this.bodyStatsService.updateMeasurement(this.editingMeasurement.id, measurement).subscribe();
     } else {
-      this.bodyStatsService.addMeasurement(measurement);
+      this.bodyStatsService.addMeasurement(measurement).subscribe();
     }
 
     this.closeModal();
@@ -94,7 +94,7 @@ export class BodyStatsComponent {
 
   deleteMeasurement(): void {
     if (this.editingMeasurement) {
-      this.bodyStatsService.deleteMeasurement(this.editingMeasurement.id);
+      this.bodyStatsService.deleteMeasurement(this.editingMeasurement.id).subscribe();
       this.closeModal();
     }
   }
