@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { PageContainerComponent } from '../../../layout';
@@ -34,6 +34,13 @@ export class WorkoutDetailComponent implements OnInit {
   workout = signal<Workout | null>(null);
   showMenu = false;
   showDeleteModal = false;
+
+  readonly completedSetCount = computed(() =>
+    this.workout()?.exercises
+      .flatMap(e => e.sets)
+      .filter(s => s.isCompleted)
+      .length ?? 0
+  );
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
