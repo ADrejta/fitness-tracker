@@ -203,15 +203,27 @@ body {
   gap: var(--spacing-md);
 
   &--2 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
+
+    @media (min-width: 480px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
   }
 
   &--3 {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
+
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   &--4 {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+
+    @media (min-width: 768px) {
+      grid-template-columns: repeat(4, 1fr);
+    }
   }
 
   &--auto {

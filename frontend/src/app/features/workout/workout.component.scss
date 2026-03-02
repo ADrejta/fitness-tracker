@@ -162,17 +162,23 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.75rem;
+  height: 2.75rem;
   padding: 0;
   background: none;
   border: none;
   border-radius: var(--radius-md);
   color: var(--color-text-secondary);
   cursor: pointer;
+  flex-shrink: 0;
 
   &:hover {
     background: var(--color-background-secondary);
+  }
+
+  @media (min-width: 480px) {
+    width: 2rem;
+    height: 2rem;
   }
 }
 
@@ -395,7 +401,12 @@
   &__stats {
     display: flex;
     justify-content: center;
-    gap: var(--spacing-xl);
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+
+    @media (min-width: 480px) {
+      gap: var(--spacing-xl);
+    }
   }
 
   &__stat {

@@ -15,6 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--spacing-sm);
   padding: var(--spacing-md) 0;
   border-bottom: 1px solid var(--color-border-light);
 

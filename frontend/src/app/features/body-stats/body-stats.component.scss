@@ -89,7 +89,9 @@
 .measurement-item {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
 
   &__date {
     font-weight: var(--font-weight-medium);
@@ -98,7 +100,8 @@
 
   &__stats {
     display: flex;
-    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-xs) var(--spacing-md);
     font-size: var(--font-size-sm);
     color: var(--color-text-secondary);
   }
@@ -106,6 +109,10 @@
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr;
   gap: var(--spacing-md);
+
+  @media (min-width: 480px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }

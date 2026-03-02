@@ -37,7 +37,11 @@
 .header__actions {
   display: flex;
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm);
+
+  @media (min-width: 480px) {
+    gap: var(--spacing-md);
+  }
 }
 
 .header__workout-indicator {
@@ -84,6 +88,10 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  @media (max-width: 479px) {
+    display: none;
+  }
 }
 
 .header__login-btn {

@@ -262,7 +262,9 @@
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   cursor: pointer;
-  min-width: 180px;
+  min-width: 0;
+  width: 100%;
+  max-width: 280px;
 
   &:focus {
     outline: none;
@@ -369,10 +371,16 @@
 
 .progress-summary {
   display: flex;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
+  flex-wrap: wrap;
   padding: var(--spacing-md);
   background: var(--color-background-secondary);
   border-radius: var(--radius-md);
+
+  @media (min-width: 480px) {
+    gap: var(--spacing-lg);
+    flex-wrap: nowrap;
+  }
 }
 
 .progress-stat {
