@@ -70,9 +70,10 @@ impl WorkoutRepository {
                     r#"
                     SELECT
                         w.id, w.user_id, w.name, w.started_at, w.completed_at,
-                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.total_volume, w.total_reps, w.duration,
                         w.status, w.template_id, w.notes, w.tags,
-                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count,
+                        (SELECT COUNT(ws2.id)::int FROM workout_exercises we2 JOIN workout_sets ws2 ON ws2.workout_exercise_id = we2.id WHERE we2.workout_id = w.id AND ws2.is_completed = true) as total_sets
                     FROM workouts w
                     WHERE w.user_id = $1 AND w.deleted_at IS NULL
                     ORDER BY w.started_at DESC, w.id DESC
@@ -90,9 +91,10 @@ impl WorkoutRepository {
                     r#"
                     SELECT
                         w.id, w.user_id, w.name, w.started_at, w.completed_at,
-                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.total_volume, w.total_reps, w.duration,
                         w.status, w.template_id, w.notes, w.tags,
-                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count,
+                        (SELECT COUNT(ws2.id)::int FROM workout_exercises we2 JOIN workout_sets ws2 ON ws2.workout_exercise_id = we2.id WHERE we2.workout_id = w.id AND ws2.is_completed = true) as total_sets
                     FROM workouts w
                     WHERE w.user_id = $1 AND w.status = $2 AND w.deleted_at IS NULL
                     ORDER BY w.started_at DESC, w.id DESC
@@ -111,9 +113,10 @@ impl WorkoutRepository {
                     r#"
                     SELECT
                         w.id, w.user_id, w.name, w.started_at, w.completed_at,
-                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.total_volume, w.total_reps, w.duration,
                         w.status, w.template_id, w.notes, w.tags,
-                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count,
+                        (SELECT COUNT(ws2.id)::int FROM workout_exercises we2 JOIN workout_sets ws2 ON ws2.workout_exercise_id = we2.id WHERE we2.workout_id = w.id AND ws2.is_completed = true) as total_sets
                     FROM workouts w
                     WHERE w.user_id = $1 AND w.deleted_at IS NULL
                       AND (w.started_at < $2 OR (w.started_at = $2 AND w.id < $3))
@@ -134,9 +137,10 @@ impl WorkoutRepository {
                     r#"
                     SELECT
                         w.id, w.user_id, w.name, w.started_at, w.completed_at,
-                        w.total_volume, w.total_sets, w.total_reps, w.duration,
+                        w.total_volume, w.total_reps, w.duration,
                         w.status, w.template_id, w.notes, w.tags,
-                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count
+                        (SELECT COUNT(*)::int FROM workout_exercises WHERE workout_id = w.id) as exercise_count,
+                        (SELECT COUNT(ws2.id)::int FROM workout_exercises we2 JOIN workout_sets ws2 ON ws2.workout_exercise_id = we2.id WHERE we2.workout_id = w.id AND ws2.is_completed = true) as total_sets
                     FROM workouts w
                     WHERE w.user_id = $1 AND w.status = $2 AND w.deleted_at IS NULL
                       AND (w.started_at < $3 OR (w.started_at = $3 AND w.id < $4))
