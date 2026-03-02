@@ -35,10 +35,10 @@ export class WorkoutDetailComponent implements OnInit {
   showMenu = false;
   showDeleteModal = false;
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
-      const workout = this.workoutService.getWorkoutById(id);
+      const workout = await this.workoutService.fetchWorkout(id);
       if (workout) {
         this.workout.set(workout);
       } else {

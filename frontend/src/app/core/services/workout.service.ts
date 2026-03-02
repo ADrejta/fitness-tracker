@@ -747,6 +747,20 @@ export class WorkoutService {
     return this._workouts().find((w) => w.id === id);
   }
 
+  async fetchWorkout(id: string): Promise<Workout | null> {
+    if (this.authService.isAuthenticated()) {
+      try {
+        return await firstValueFrom(
+          this.http.get<Workout>(`${environment.apiUrl}/workouts/${id}`)
+        );
+      } catch (error) {
+        console.error('[WorkoutService] Failed to fetch workout:', error);
+        return null;
+      }
+    }
+    return this.getWorkoutById(id) ?? null;
+  }
+
   getWorkoutsInDateRange(startDate: Date, endDate: Date): Workout[] {
     return this.completedWorkouts().filter((w) => {
       const completedDate = parseISO(w.completedAt!);
