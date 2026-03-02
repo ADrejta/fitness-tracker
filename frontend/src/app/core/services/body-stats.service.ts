@@ -1,10 +1,11 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of, map } from 'rxjs';
+import { Observable, tap, of, firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { BodyMeasurement, BodyStatsGoal } from '../models';
 import { AuthService } from './auth.service';
 import { StorageService } from './storage.service';
+import { ToastService } from './toast.service';
 import { parseISO, startOfDay, isAfter, isBefore } from 'date-fns';
 
 const MEASUREMENTS_KEY = 'bodyMeasurements';
@@ -28,6 +29,7 @@ export class BodyStatsService {
   private http = inject(HttpClient);
   private authService = inject(AuthService);
   private storage = inject(StorageService);
+  private toastService = inject(ToastService);
 
   private _measurements = signal<BodyMeasurement[]>([]);
   private _goals = signal<BodyStatsGoal[]>([]);
@@ -105,15 +107,20 @@ export class BodyStatsService {
   }
 
   // Measurements CRUD
-  addMeasurement(measurement: Omit<BodyMeasurement, 'id'>): Observable<BodyMeasurement> {
+  async addMeasurement(measurement: Omit<BodyMeasurement, 'id'>): Promise<BodyMeasurement | null> {
     if (this.authService.isAuthenticated()) {
-      return this.http.post<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements`, measurement)
-        .pipe(
-          tap((newMeasurement) => {
-            this._measurements.update(current => [...current, newMeasurement]);
-            this.checkGoalProgress();
-          })
+      try {
+        const newMeasurement = await firstValueFrom(
+          this.http.post<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements`, measurement)
         );
+        this._measurements.update(current => [...current, newMeasurement]);
+        this.checkGoalProgress();
+        return newMeasurement;
+      } catch (error) {
+        console.error('Failed to add measurement via API:', error);
+        this.toastService.error('Failed to save measurement');
+        return null;
+      }
     } else {
       const newMeasurement: BodyMeasurement = {
         ...measurement,
@@ -122,46 +129,53 @@ export class BodyStatsService {
       this._measurements.update(current => [...current, newMeasurement]);
       this.saveToLocalStorage();
       this.checkGoalProgress();
-      return of(newMeasurement);
+      return newMeasurement;
     }
   }
 
-  updateMeasurement(id: string, updates: Partial<Omit<BodyMeasurement, 'id'>>): Observable<boolean> {
+  async updateMeasurement(id: string, updates: Partial<Omit<BodyMeasurement, 'id'>>): Promise<boolean> {
     if (this.authService.isAuthenticated()) {
-      return this.http.patch<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements/${id}`, updates)
-        .pipe(
-          tap((updated) => {
-            this._measurements.update(current =>
-              current.map(m => m.id === id ? updated : m)
-            );
-            this.checkGoalProgress();
-          }),
-          catchError(() => of(false))
-        ) as Observable<boolean>;
+      try {
+        const updated = await firstValueFrom(
+          this.http.patch<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements/${id}`, updates)
+        );
+        this._measurements.update(current =>
+          current.map(m => m.id === id ? updated : m)
+        );
+        this.checkGoalProgress();
+        return true;
+      } catch (error) {
+        console.error('Failed to update measurement via API:', error);
+        this.toastService.error('Failed to update measurement');
+        return false;
+      }
     } else {
       this._measurements.update(current =>
         current.map(m => m.id === id ? { ...m, ...updates } : m)
       );
       this.saveToLocalStorage();
       this.checkGoalProgress();
-      return of(true);
+      return true;
     }
   }
 
-  deleteMeasurement(id: string): Observable<boolean> {
+  async deleteMeasurement(id: string): Promise<boolean> {
     if (this.authService.isAuthenticated()) {
-      return this.http.delete(`${environment.apiUrl}/body-stats/measurements/${id}`)
-        .pipe(
-          tap(() => {
-            this._measurements.update(current => current.filter(m => m.id !== id));
-          }),
-          map(() => true),
-          catchError(() => of(false))
+      try {
+        await firstValueFrom(
+          this.http.delete(`${environment.apiUrl}/body-stats/measurements/${id}`)
         );
+        this._measurements.update(current => current.filter(m => m.id !== id));
+        return true;
+      } catch (error) {
+        console.error('Failed to delete measurement via API:', error);
+        this.toastService.error('Failed to delete measurement');
+        return false;
+      }
     } else {
       this._measurements.update(current => current.filter(m => m.id !== id));
       this.saveToLocalStorage();
-      return of(true);
+      return true;
     }
   }
 
