@@ -8,7 +8,7 @@ import {
   ModalComponent, InputComponent, ProgressComponent, TabsComponent,
 } from '../../shared/components';
 import { Tab } from '../../shared/components/tabs/tabs.component';
-import { ProgramService, TemplateService, ToastService } from '../../core/services';
+import { ProgramService, TemplateService, ToastService, WorkoutService } from '../../core/services';
 import { ProgramSummary, WorkoutProgram, ProgramWorkout, ProgramWeek, WorkoutTemplate, ExerciseTemplate } from '../../core/models';
 import { ExercisePickerComponent } from '../workout/components/exercise-picker/exercise-picker.component';
 import { format, parseISO } from 'date-fns';
@@ -57,6 +57,7 @@ interface DaySlot {
 export class ProgramsComponent {
   programService = inject(ProgramService);
   templateService = inject(TemplateService);
+  private workoutService = inject(WorkoutService);
   private router = inject(Router);
   private toastService = inject(ToastService);
 
@@ -555,7 +556,8 @@ export class ProgramsComponent {
   startProgramWorkout(programId: string, workout: ProgramWorkout): void {
     if (workout.isRestDay || workout.completedWorkoutId) return;
     this.programService.startProgramWorkout(programId, workout.id).subscribe({
-      next: () => {
+      next: (createdWorkout) => {
+        this.workoutService.setActiveWorkout(createdWorkout);
         this.router.navigate(['/workout']);
       },
       error: () => {}
