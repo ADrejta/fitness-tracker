@@ -399,7 +399,10 @@ export class WorkoutService {
         );
       } catch (error) {
         console.error('Failed to update set via API:', error);
-        this.toastService.error('Failed to update set');
+        // Status 0 = network/server-down; interceptor already showed "queued" toast
+        if ((error as { status?: number }).status !== 0) {
+          this.toastService.error('Failed to update set');
+        }
       } finally {
         this._pendingUpdates.update(n => n - 1);
       }
@@ -601,7 +604,12 @@ export class WorkoutService {
         return completedWorkout;
       } catch (error) {
         console.error('Failed to complete workout via API:', error);
-        this.toastService.error('Failed to complete workout');
+        const isNetworkError = (error as { status?: number }).status === 0;
+        this.toastService.error(
+          isNetworkError
+            ? 'Server is starting up — please try again in a moment'
+            : 'Failed to complete workout'
+        );
       }
     }
 
