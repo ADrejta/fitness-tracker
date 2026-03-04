@@ -242,8 +242,10 @@ impl WorkoutRepository {
     ) -> Result<Workout, AppError> {
         let mut tx = pool.begin().await?;
 
-        // Lock the set rows while computing totals so a concurrent PATCH cannot
-        // slip between this SELECT and the UPDATE below.
+        // Compute totals inside the transaction so the snapshot and the UPDATE
+        // are atomic. FOR SHARE is not compatible with aggregate functions in
+        // PostgreSQL; the status guard in update_set() already prevents
+        // concurrent mutations once the workout is being completed.
         let stats = sqlx::query_as::<_, WorkoutStats>(
             r#"
             SELECT
@@ -253,7 +255,6 @@ impl WorkoutRepository {
             FROM workout_exercises we
             JOIN workout_sets ws ON ws.workout_exercise_id = we.id
             WHERE we.workout_id = $1
-            FOR SHARE
             "#,
         )
         .bind(id)
