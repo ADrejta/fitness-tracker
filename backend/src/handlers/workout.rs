@@ -16,7 +16,7 @@ use crate::dto::{
 use crate::cache;
 use crate::error::AppError;
 use crate::middleware::AuthUser;
-use crate::repositories::WorkoutRepository;
+use crate::repositories::{ProgramRepository, WorkoutRepository};
 use crate::routes::AppState;
 use crate::services::{PrJob, WorkoutService};
 
@@ -215,6 +215,7 @@ pub async fn complete_workout(
     Path(id): Path<Uuid>,
 ) -> Result<Json<WorkoutResponse>, AppError> {
     WorkoutRepository::complete(&state.pool, id, auth_user.user_id).await?;
+    ProgramRepository::finalize_slot_by_workout(&state.pool, id).await?;
     let _ = state.pr_tx.try_send(PrJob {
         pool: state.pool.clone(),
         workout_id: id,

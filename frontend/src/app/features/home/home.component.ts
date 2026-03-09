@@ -102,6 +102,7 @@ export class HomeComponent {
     if (!program || !workout) return;
     const result = await firstValueFrom(this.programService.startProgramWorkout(program.id, workout.id));
     if (result) {
+      this.workoutService.setActiveWorkout(result);
       this.router.navigate(['/workout']);
     }
   }

@@ -52,9 +52,9 @@
           @if (todaysProgramWorkout(); as todaysWorkout) {
             @if (todaysWorkout.isRestDay) {
               <p class="active-program__rest">Rest day — enjoy your recovery!</p>
-            } @else if (todaysWorkout.completedWorkoutId) {
+            } @else if (todaysWorkout.completedAt) {
               <p class="active-program__done">Today's workout completed!</p>
-            } @else {
+            } @else if (!todaysWorkout.completedWorkoutId) {
               <div class="active-program__today">
                 <span class="active-program__today-label">Day {{ todaysWorkout.dayNumber }}</span>
                 <span class="active-program__today-name">{{ todaysWorkout.name }}</span>

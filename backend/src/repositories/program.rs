@@ -259,26 +259,33 @@ impl ProgramRepository {
         Ok(())
     }
 
-    pub async fn mark_workout_completed(
+    pub async fn link_workout_to_slot(
         pool: &PgPool,
         id: Uuid,
         workout_id: Uuid,
-    ) -> Result<ProgramWorkout, AppError> {
-        let workout = sqlx::query_as::<_, ProgramWorkout>(
-            r#"
-            UPDATE program_workouts SET
-                completed_workout_id = $2,
-                completed_at = NOW()
-            WHERE id = $1
-            RETURNING *
-            "#,
+    ) -> Result<(), AppError> {
+        sqlx::query(
+            "UPDATE program_workouts SET completed_workout_id = $2 WHERE id = $1",
         )
         .bind(id)
         .bind(workout_id)
-        .fetch_optional(pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound("Program workout not found".to_string()))?;
+        .execute(pool)
+        .await?;
 
-        Ok(workout)
+        Ok(())
+    }
+
+    pub async fn finalize_slot_by_workout(
+        pool: &PgPool,
+        workout_id: Uuid,
+    ) -> Result<(), AppError> {
+        sqlx::query(
+            "UPDATE program_workouts SET completed_at = NOW() WHERE completed_workout_id = $1",
+        )
+        .bind(workout_id)
+        .execute(pool)
+        .await?;
+
+        Ok(())
     }
 }

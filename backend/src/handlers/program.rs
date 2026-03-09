@@ -282,8 +282,8 @@ pub async fn start_program_workout(
         WorkoutService::start_empty(&pool, auth_user.user_id, &program_workout.name).await?
     };
 
-    // Link the completed workout to the program slot
-    ProgramRepository::mark_workout_completed(&pool, workout_id, response.id).await?;
+    // Link the workout to the program slot (completed_at set when workout is actually finished)
+    ProgramRepository::link_workout_to_slot(&pool, workout_id, response.id).await?;
 
     Ok(Json(response))
 }
