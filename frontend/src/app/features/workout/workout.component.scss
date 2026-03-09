@@ -245,8 +245,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
   padding: 0;
   background: none;
   border: none;
@@ -287,6 +288,10 @@
 
   &:hover .exercise-drag-handle {
     opacity: 1;
+  }
+
+  @media (hover: none) {
+    .exercise-drag-handle { opacity: 0.3; }
   }
 
   &.in-superset {

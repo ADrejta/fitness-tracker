@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, catchError, of, map, firstValueFrom } from 'rxjs';
+import { Observable, tap, catchError, of, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { BodyMeasurement, BodyStatsGoal } from '../models';
 import { AuthService } from './auth.service';
@@ -107,20 +107,20 @@ export class BodyStatsService {
   }
 
   // Measurements CRUD
-  async addMeasurement(measurement: Omit<BodyMeasurement, 'id'>): Promise<BodyMeasurement | null> {
+  addMeasurement(measurement: Omit<BodyMeasurement, 'id'>): Observable<BodyMeasurement | null> {
     if (this.authService.isAuthenticated()) {
-      try {
-        const newMeasurement = await firstValueFrom(
-          this.http.post<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements`, measurement)
+      return this.http.post<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements`, measurement)
+        .pipe(
+          tap((newMeasurement) => {
+            this._measurements.update(current => [...current, newMeasurement]);
+            this.checkGoalProgress();
+          }),
+          catchError((error) => {
+            console.error('Failed to add measurement via API:', error);
+            this.toastService.error('Failed to save measurement');
+            return of(null);
+          })
         );
-        this._measurements.update(current => [...current, newMeasurement]);
-        this.checkGoalProgress();
-        return newMeasurement;
-      } catch (error) {
-        console.error('Failed to add measurement via API:', error);
-        this.toastService.error('Failed to save measurement');
-        return null;
-      }
     } else {
       const newMeasurement: BodyMeasurement = {
         ...measurement,
@@ -129,53 +129,55 @@ export class BodyStatsService {
       this._measurements.update(current => [...current, newMeasurement]);
       this.saveToLocalStorage();
       this.checkGoalProgress();
-      return newMeasurement;
+      return of(newMeasurement);
     }
   }
 
-  async updateMeasurement(id: string, updates: Partial<Omit<BodyMeasurement, 'id'>>): Promise<boolean> {
+  updateMeasurement(id: string, updates: Partial<Omit<BodyMeasurement, 'id'>>): Observable<boolean> {
     if (this.authService.isAuthenticated()) {
-      try {
-        const updated = await firstValueFrom(
-          this.http.patch<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements/${id}`, updates)
+      return this.http.patch<BodyMeasurement>(`${environment.apiUrl}/body-stats/measurements/${id}`, updates)
+        .pipe(
+          tap((updated) => {
+            this._measurements.update(current =>
+              current.map(m => m.id === id ? updated : m)
+            );
+            this.checkGoalProgress();
+          }),
+          map(() => true as boolean),
+          catchError((error) => {
+            console.error('Failed to update measurement via API:', error);
+            this.toastService.error('Failed to update measurement');
+            return of(false);
+          })
         );
-        this._measurements.update(current =>
-          current.map(m => m.id === id ? updated : m)
-        );
-        this.checkGoalProgress();
-        return true;
-      } catch (error) {
-        console.error('Failed to update measurement via API:', error);
-        this.toastService.error('Failed to update measurement');
-        return false;
-      }
     } else {
       this._measurements.update(current =>
         current.map(m => m.id === id ? { ...m, ...updates } : m)
       );
       this.saveToLocalStorage();
       this.checkGoalProgress();
-      return true;
+      return of(true);
     }
   }
 
-  async deleteMeasurement(id: string): Promise<boolean> {
+  deleteMeasurement(id: string): Observable<boolean> {
     if (this.authService.isAuthenticated()) {
-      try {
-        await firstValueFrom(
-          this.http.delete(`${environment.apiUrl}/body-stats/measurements/${id}`)
+      return this.http.delete(`${environment.apiUrl}/body-stats/measurements/${id}`)
+        .pipe(
+          tap(() => {
+            this._measurements.update(current => current.filter(m => m.id !== id));
+          }),
+          map(() => true as boolean),
+          catchError((error) => {
+            console.error('Failed to delete measurement via API:', error);
+            this.toastService.error('Failed to delete measurement');
+            return of(false);
+          })
         );
-        this._measurements.update(current => current.filter(m => m.id !== id));
-        return true;
-      } catch (error) {
-        console.error('Failed to delete measurement via API:', error);
-        this.toastService.error('Failed to delete measurement');
-        return false;
-      }
     } else {
       this._measurements.update(current => current.filter(m => m.id !== id));
       this.saveToLocalStorage();
-      return true;
+      return of(true);
     }
   }
 

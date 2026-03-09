@@ -72,6 +72,19 @@ textarea {
   font-size: inherit;
 }
 
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
 button {
   cursor: pointer;
 }

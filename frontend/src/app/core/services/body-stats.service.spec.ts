@@ -73,7 +73,7 @@ describe('BodyStatsService (guest mode)', () => {
       let result: BodyMeasurement | undefined;
       service
         .addMeasurement({ date: '2026-01-15', weight: 80 })
-        .subscribe((m) => (result = m));
+        .subscribe((m) => (result = m ?? undefined));
 
       expect(result).toBeDefined();
       expect(result!.weight).toBe(80);
@@ -82,7 +82,7 @@ describe('BodyStatsService (guest mode)', () => {
 
     it('assigns a non-empty id', () => {
       let result: BodyMeasurement | undefined;
-      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (result = m));
+      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (result = m ?? undefined));
       expect(result!.id.length).toBeGreaterThan(0);
     });
 
@@ -100,7 +100,7 @@ describe('BodyStatsService (guest mode)', () => {
     let id: string;
 
     beforeEach(() => {
-      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (id = m.id));
+      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (id = m!.id));
     });
 
     it('returns true on success', () => {
@@ -116,7 +116,7 @@ describe('BodyStatsService (guest mode)', () => {
 
     it('does not change other measurements', () => {
       let id2!: string;
-      service.addMeasurement({ date: '2026-01-16', weight: 81 }).subscribe((m) => (id2 = m.id));
+      service.addMeasurement({ date: '2026-01-16', weight: 81 }).subscribe((m) => (id2 = m!.id));
       service.updateMeasurement(id, { weight: 79 }).subscribe();
       expect(service.getMeasurementById(id2)!.weight).toBe(81);
     });
@@ -129,7 +129,7 @@ describe('BodyStatsService (guest mode)', () => {
     let id: string;
 
     beforeEach(() => {
-      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (id = m.id));
+      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (id = m!.id));
     });
 
     it('removes the measurement from the signal', () => {
@@ -145,7 +145,7 @@ describe('BodyStatsService (guest mode)', () => {
 
     it('leaves other measurements intact', () => {
       let id2!: string;
-      service.addMeasurement({ date: '2026-01-16', weight: 81 }).subscribe((m) => (id2 = m.id));
+      service.addMeasurement({ date: '2026-01-16', weight: 81 }).subscribe((m) => (id2 = m!.id));
       service.deleteMeasurement(id).subscribe();
       expect(service.measurements()).toHaveLength(1);
       expect(service.getMeasurementById(id2)).toBeDefined();
@@ -158,7 +158,7 @@ describe('BodyStatsService (guest mode)', () => {
   describe('getMeasurementById', () => {
     it('returns the measurement when found', () => {
       let id!: string;
-      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (id = m.id));
+      service.addMeasurement({ date: '2026-01-15', weight: 80 }).subscribe((m) => (id = m!.id));
       expect(service.getMeasurementById(id)!.weight).toBe(80);
     });
 
