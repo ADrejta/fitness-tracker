@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { WorkoutService } from '../../core/services';
@@ -16,8 +16,42 @@ interface NavItem {
     templateUrl: './navigation.component.html',
     styleUrls: ['./navigation.component.scss']
 })
-export class NavigationComponent {
+export class NavigationComponent implements OnDestroy {
   workoutService = inject(WorkoutService);
+
+  private _tick = signal(0);
+  private timerInterval: number | null = null;
+
+  elapsedLabel = computed(() => {
+    this._tick(); // reactive dependency so computed re-runs every 30s
+    const workout = this.workoutService.activeWorkout();
+    if (!workout) return 'Continue';
+    const elapsed = Math.floor((Date.now() - new Date(workout.startedAt).getTime()) / 1000);
+    const hours = Math.floor(elapsed / 3600);
+    const minutes = Math.floor((elapsed % 3600) / 60);
+    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  });
+
+  constructor() {
+    effect(() => {
+      if (this.workoutService.hasActiveWorkout()) {
+        if (!this.timerInterval) {
+          this.timerInterval = window.setInterval(() => this._tick.update(v => v + 1), 30000);
+        }
+      } else {
+        if (this.timerInterval) {
+          clearInterval(this.timerInterval);
+          this.timerInterval = null;
+        }
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+    }
+  }
 
   navItems: NavItem[] = [
     {

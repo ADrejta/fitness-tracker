@@ -39,6 +39,7 @@ export class SetRowComponent {
 
   showPlateCalculator = signal(false);
   showE1rmOverlay = signal(false);
+  weightFocused = signal(false);
   weightValue: number | null = null;
   repsValue: number | null = null;
   rpeValue: number | null = null;

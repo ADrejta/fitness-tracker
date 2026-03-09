@@ -1,9 +1,11 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { PageContainerComponent } from '../../layout';
 import { ButtonComponent, CardComponent, BadgeComponent, ProgressComponent } from '../../shared/components';
 import { WorkoutService, TemplateService, StatisticsService, SettingsService, ProgramService, OnboardingService } from '../../core/services';
+import { ProgramWorkout } from '../../core/models';
 import { OnboardingModalComponent } from './onboarding-modal/onboarding-modal.component';
 import { format, isToday, isYesterday } from 'date-fns';
 
@@ -33,6 +35,14 @@ export class HomeComponent {
   private router = inject(Router);
 
   showOnboarding = this.onboardingService.shouldShow;
+
+  todaysProgramWorkout = computed((): ProgramWorkout | null => {
+    const program = this.programService.activeProgram();
+    if (!program?.weeks) return null;
+    const week = program.weeks.find(w => w.weekNumber === program.currentWeek);
+    if (!week) return null;
+    return week.workouts.find(w => w.dayNumber === program.currentDay) ?? null;
+  });
 
   get greeting(): string {
     const hour = new Date().getHours();
@@ -84,6 +94,16 @@ export class HomeComponent {
 
   startNewWorkout(): void {
     this.router.navigate(['/workout'], { queryParams: { start: 'true' } });
+  }
+
+  async startTodaysProgramWorkout(): Promise<void> {
+    const program = this.programService.activeProgram();
+    const workout = this.todaysProgramWorkout();
+    if (!program || !workout) return;
+    const result = await firstValueFrom(this.programService.startProgramWorkout(program.id, workout.id));
+    if (result) {
+      this.router.navigate(['/workout']);
+    }
   }
 
   async startFromTemplate(templateId: string): Promise<void> {

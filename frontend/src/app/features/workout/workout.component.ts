@@ -6,7 +6,7 @@ import { CdkDragDrop, CdkDropList, CdkDrag, CdkDragHandle, moveItemInArray } fro
 import { PageContainerComponent } from '../../layout';
 import { ButtonComponent, CardComponent, ModalComponent, EmptyStateComponent } from '../../shared/components';
 import { WorkoutService, SettingsService, TemplateService } from '../../core/services';
-import { WorkoutSet, WorkoutExercise } from '../../core/models';
+import { WorkoutSet, WorkoutExercise, Workout, PersonalRecord } from '../../core/models';
 import { ExercisePickerComponent } from './components/exercise-picker/exercise-picker.component';
 import { WorkoutExerciseComponent } from './components/workout-exercise/workout-exercise.component';
 import { RestTimerComponent } from './components/rest-timer/rest-timer.component';
@@ -53,6 +53,9 @@ export class WorkoutComponent implements OnInit {
   showWorkoutMenu = false;
   showNotes = false;
   tagInput = '';
+
+  finishedWorkout = signal<Workout | null>(null);
+  newPRs = signal<PersonalRecord[]>([]);
 
   elapsedTime = signal('0:00');
   private timerInterval: number | null = null;
@@ -322,15 +325,42 @@ export class WorkoutComponent implements OnInit {
   }
 
   async finishWorkout(): Promise<void> {
+    const prIdsBefore = new Set(this.workoutService.personalRecords().map(r => r.id));
+
     const completed = await this.workoutService.completeWorkout();
-    this.showFinishModal = false;
 
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
+      this.timerInterval = null;
     }
 
     if (completed) {
-      this.router.navigate(['/history', completed.id]);
+      const earnedPRs = this.workoutService.personalRecords().filter(r => !prIdsBefore.has(r.id));
+      this.newPRs.set(earnedPRs);
+      this.finishedWorkout.set(completed);
+      // Modal stays open — transitions to celebration phase
+    }
+  }
+
+  navigateToSummary(): void {
+    const workout = this.finishedWorkout();
+    this.showFinishModal = false;
+    this.finishedWorkout.set(null);
+    this.newPRs.set([]);
+    if (workout) {
+      this.router.navigate(['/history', workout.id]);
+    }
+  }
+
+  closeFinishModal(): void {
+    if (this.finishedWorkout()) {
+      // Workout already completed — go home
+      this.showFinishModal = false;
+      this.finishedWorkout.set(null);
+      this.newPRs.set([]);
+      this.router.navigate(['/']);
+    } else {
+      this.showFinishModal = false;
     }
   }
 

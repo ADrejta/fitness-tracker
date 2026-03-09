@@ -236,32 +236,77 @@
   <!-- Finish Workout Modal -->
   <app-modal
     [isOpen]="showFinishModal"
-    title="Finish Workout?"
+    [title]="finishedWorkout() ? 'Workout Complete!' : 'Finish Workout?'"
     [showFooter]="true"
     size="sm"
-    (closed)="showFinishModal = false"
+    (closed)="closeFinishModal()"
   >
-    <div class="finish-modal">
-      <p>Great work! Here's your workout summary:</p>
-      <div class="finish-modal__stats">
-        <div class="finish-modal__stat">
-          <span class="finish-modal__stat-value">{{ workoutService.activeWorkout()?.exercises?.length || 0 }}</span>
-          <span class="finish-modal__stat-label">Exercises</span>
-        </div>
-        <div class="finish-modal__stat">
-          <span class="finish-modal__stat-value">{{ completedSets() }}</span>
-          <span class="finish-modal__stat-label">Sets</span>
-        </div>
-        <div class="finish-modal__stat">
-          <span class="finish-modal__stat-value">{{ settingsService.formatWeight(totalVolume(), false) }}</span>
-          <span class="finish-modal__stat-label">{{ settingsService.weightUnit() }}</span>
+    @if (!finishedWorkout()) {
+      <!-- Phase 1: Confirm finish -->
+      <div class="finish-modal">
+        <p>Great work! Here's your workout summary:</p>
+        <div class="finish-modal__stats">
+          <div class="finish-modal__stat">
+            <span class="finish-modal__stat-value">{{ workoutService.activeWorkout()?.exercises?.length || 0 }}</span>
+            <span class="finish-modal__stat-label">Exercises</span>
+          </div>
+          <div class="finish-modal__stat">
+            <span class="finish-modal__stat-value">{{ completedSets() }}</span>
+            <span class="finish-modal__stat-label">Sets</span>
+          </div>
+          <div class="finish-modal__stat">
+            <span class="finish-modal__stat-value">{{ settingsService.formatWeight(totalVolume(), false) }}</span>
+            <span class="finish-modal__stat-label">{{ settingsService.weightUnit() }}</span>
+          </div>
+          <div class="finish-modal__stat">
+            <span class="finish-modal__stat-value">{{ elapsedTime() }}</span>
+            <span class="finish-modal__stat-label">Duration</span>
+          </div>
         </div>
       </div>
-    </div>
-    <div modal-footer>
-      <app-button variant="ghost" (clicked)="showFinishModal = false">Cancel</app-button>
-      <app-button variant="success" (clicked)="finishWorkout()">Finish</app-button>
-    </div>
+    } @else {
+      <!-- Phase 2: Celebration -->
+      <div class="finish-summary">
+        @if (newPRs().length > 0) {
+          <div class="finish-summary__prs">
+            <p class="finish-summary__prs-title">New Personal Records!</p>
+            @for (pr of newPRs(); track pr.id) {
+              <div class="finish-summary__pr-row">
+                <span class="finish-summary__pr-name">{{ pr.exerciseName }}</span>
+                <span class="finish-summary__pr-detail">
+                  @if (pr.type === 'max-weight') { {{ settingsService.formatWeight(pr.value) }} }
+                  @else if (pr.type === 'estimated-1rm') { {{ settingsService.formatWeight(pr.value) }} e1RM }
+                  @else if (pr.type === 'max-reps') { {{ pr.value }} reps }
+                </span>
+              </div>
+            }
+          </div>
+        }
+        <div class="finish-modal__stats">
+          <div class="finish-modal__stat">
+            <span class="finish-modal__stat-value">{{ finishedWorkout()?.exercises?.length || 0 }}</span>
+            <span class="finish-modal__stat-label">Exercises</span>
+          </div>
+          <div class="finish-modal__stat">
+            <span class="finish-modal__stat-value">{{ finishedWorkout()?.totalSets || 0 }}</span>
+            <span class="finish-modal__stat-label">Sets</span>
+          </div>
+          <div class="finish-modal__stat">
+            <span class="finish-modal__stat-value">{{ settingsService.formatWeight(finishedWorkout()?.totalVolume || 0, false) }}</span>
+            <span class="finish-modal__stat-label">{{ settingsService.weightUnit() }}</span>
+          </div>
+        </div>
+      </div>
+    }
+    <ng-container modal-footer>
+      @if (!finishedWorkout()) {
+        <app-button variant="ghost" (clicked)="closeFinishModal()">Keep Going</app-button>
+        <app-button variant="success" (clicked)="finishWorkout()">Finish</app-button>
+      } @else {
+        <app-button variant="ghost" (clicked)="closeFinishModal()">Done</app-button>
+        <app-button variant="primary" (clicked)="navigateToSummary()">View Summary</app-button>
+      }
+    </ng-container>
   </app-modal>
 
   <!-- Cancel Workout Modal -->

@@ -116,8 +116,6 @@
 }
 
 .active-program {
-  display: block;
-  text-decoration: none;
   color: var(--color-text);
 
   &__header {
@@ -131,6 +129,47 @@
     font-size: var(--font-size-base);
     font-weight: var(--font-weight-semibold);
     margin: 0;
+  }
+
+  &__today {
+    display: flex;
+    align-items: baseline;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+  }
+
+  &__today-label {
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+
+  &__today-name {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text);
+  }
+
+  &__rest {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+    margin: 0 0 var(--spacing-md);
+    font-style: italic;
+  }
+
+  &__done {
+    font-size: var(--font-size-sm);
+    color: var(--color-success-600);
+    font-weight: var(--font-weight-medium);
+    margin: 0 0 var(--spacing-md);
+  }
+
+  app-progress {
+    margin-top: var(--spacing-md);
+    display: block;
   }
 }
 

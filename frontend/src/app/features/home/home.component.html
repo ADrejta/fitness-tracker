@@ -36,6 +36,48 @@
     }
   </section>
 
+  <!-- Active Program -->
+  @if (programService.activeProgram(); as program) {
+    <section class="section">
+      <div class="section__header">
+        <h2 class="section__title">Active Program</h2>
+        <a routerLink="/programs" class="section__link">View all →</a>
+      </div>
+      <app-card [highlight]="true">
+        <div class="active-program">
+          <div class="active-program__header">
+            <h3 class="active-program__name">{{ program.name }}</h3>
+            <app-badge [variant]="'success'" [size]="'sm'">Week {{ program.currentWeek }}</app-badge>
+          </div>
+          @if (todaysProgramWorkout(); as todaysWorkout) {
+            @if (todaysWorkout.isRestDay) {
+              <p class="active-program__rest">Rest day — enjoy your recovery!</p>
+            } @else if (todaysWorkout.completedWorkoutId) {
+              <p class="active-program__done">Today's workout completed!</p>
+            } @else {
+              <div class="active-program__today">
+                <span class="active-program__today-label">Day {{ todaysWorkout.dayNumber }}</span>
+                <span class="active-program__today-name">{{ todaysWorkout.name }}</span>
+              </div>
+              <app-button [fullWidth]="true" variant="success" (clicked)="startTodaysProgramWorkout()">
+                Start Today's Workout
+              </app-button>
+            }
+          }
+          <app-progress
+            [value]="program.currentWeek"
+            [max]="program.durationWeeks"
+            [variant]="'success'"
+            [size]="'sm'"
+            [showValue]="true"
+            [valueFormat]="'fraction'"
+            label="Weeks"
+          ></app-progress>
+        </div>
+      </app-card>
+    </section>
+  }
+
   <!-- Weekly Summary -->
   <section class="section">
     <div class="section__header">
@@ -68,33 +110,6 @@
       </app-card>
     </div>
   </section>
-
-  <!-- Active Program -->
-  @if (programService.activeProgram(); as program) {
-    <section class="section">
-      <div class="section__header">
-        <h2 class="section__title">Active Program</h2>
-        <a routerLink="/programs" class="section__link">View all</a>
-      </div>
-      <app-card [interactive]="true" [highlight]="true">
-        <a routerLink="/programs" class="active-program">
-          <div class="active-program__header">
-            <h3 class="active-program__name">{{ program.name }}</h3>
-            <app-badge [variant]="'success'" [size]="'sm'">Week {{ program.currentWeek }}</app-badge>
-          </div>
-          <app-progress
-            [value]="program.currentWeek"
-            [max]="program.durationWeeks"
-            [variant]="'success'"
-            [size]="'sm'"
-            [showValue]="true"
-            [valueFormat]="'fraction'"
-            label="Weeks"
-          ></app-progress>
-        </a>
-      </app-card>
-    </section>
-  }
 
   <!-- Recent Templates -->
   @if (templateService.recentTemplates().length > 0) {
