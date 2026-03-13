@@ -239,7 +239,7 @@ impl WorkoutRepository {
         pool: &PgPool,
         id: Uuid,
         user_id: Uuid,
-    ) -> Result<Workout, AppError> {
+    ) -> Result<(Workout, bool), AppError> {
         let mut tx = pool.begin().await?;
 
         // Compute totals inside the transaction so the snapshot and the UPDATE
@@ -261,7 +261,7 @@ impl WorkoutRepository {
         .fetch_one(&mut *tx)
         .await?;
 
-        let workout = sqlx::query_as::<_, Workout>(
+        let updated = sqlx::query_as::<_, Workout>(
             r#"
             UPDATE workouts
             SET status = 'completed',
@@ -270,7 +270,7 @@ impl WorkoutRepository {
                 total_sets = $4,
                 total_reps = $5,
                 duration = EXTRACT(EPOCH FROM (NOW() - started_at))::int
-            WHERE id = $1 AND user_id = $2
+            WHERE id = $1 AND user_id = $2 AND status = 'in-progress'
             RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
             "#,
         )
@@ -280,23 +280,19 @@ impl WorkoutRepository {
         .bind(stats.total_sets)
         .bind(stats.total_reps)
         .fetch_optional(&mut *tx)
-        .await?
-        .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
+        .await?;
 
         tx.commit().await?;
 
-        Ok(workout)
-    }
+        if let Some(workout) = updated {
+            return Ok((workout, true));
+        }
 
-    pub async fn cancel(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<Workout, AppError> {
-        let workout = sqlx::query_as::<_, Workout>(
-            r#"
-            UPDATE workouts
-            SET status = 'cancelled',
-                duration = EXTRACT(EPOCH FROM (NOW() - started_at))::int
-            WHERE id = $1 AND user_id = $2
-            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
-            "#,
+        // No rows updated — workout was not in-progress. Return it as-is if it
+        // is already completed (idempotent), otherwise 404.
+        let existing = sqlx::query_as::<_, Workout>(
+            r#"SELECT id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
+               FROM workouts WHERE id = $1 AND user_id = $2"#,
         )
         .bind(id)
         .bind(user_id)
@@ -304,7 +300,41 @@ impl WorkoutRepository {
         .await?
         .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
 
-        Ok(workout)
+        Ok((existing, false))
+    }
+
+    pub async fn cancel(pool: &PgPool, id: Uuid, user_id: Uuid) -> Result<Workout, AppError> {
+        let updated = sqlx::query_as::<_, Workout>(
+            r#"
+            UPDATE workouts
+            SET status = 'cancelled',
+                duration = EXTRACT(EPOCH FROM (NOW() - started_at))::int
+            WHERE id = $1 AND user_id = $2 AND status = 'in-progress'
+            RETURNING id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
+            "#,
+        )
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?;
+
+        if let Some(workout) = updated {
+            return Ok(workout);
+        }
+
+        // No rows updated — workout was not in-progress. Return it as-is if it
+        // is already cancelled (idempotent), otherwise 404.
+        let existing = sqlx::query_as::<_, Workout>(
+            r#"SELECT id, user_id, name, started_at, completed_at, total_volume, total_sets, total_reps, duration, status, template_id, notes, tags
+               FROM workouts WHERE id = $1 AND user_id = $2"#,
+        )
+        .bind(id)
+        .bind(user_id)
+        .fetch_optional(pool)
+        .await?
+        .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
+
+        Ok(existing)
     }
 
     // Exercise methods

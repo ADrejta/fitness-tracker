@@ -164,13 +164,15 @@ impl WorkoutService {
         workout_id: Uuid,
         user_id: Uuid,
     ) -> Result<WorkoutResponse, AppError> {
-        // Complete the workout
-        let workout = WorkoutRepository::complete(pool, workout_id, user_id).await?;
+        // Complete the workout (idempotent: returns existing if already completed)
+        let (_, newly_completed) = WorkoutRepository::complete(pool, workout_id, user_id).await?;
 
-        // Check for personal records
-        Self::detect_personal_records(pool, workout_id, user_id).await?;
+        // Check for personal records only on a fresh completion to avoid duplicates
+        if newly_completed {
+            Self::detect_personal_records(pool, workout_id, user_id).await?;
+        }
 
-        Self::get_workout_with_exercises(pool, workout.id, user_id).await
+        Self::get_workout_with_exercises(pool, workout_id, user_id).await
     }
 
     pub async fn detect_personal_records(

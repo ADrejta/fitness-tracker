@@ -1,19 +1,19 @@
 use axum::{
-    extract::{Path, Query, State},
     Extension, Json,
+    extract::{Path, Query, State},
 };
 use sqlx::PgPool;
 use uuid::Uuid;
 use validator::Validate;
 
+use crate::cache;
 use crate::cursor::encode_cursor;
 use crate::dto::{
     CreateSetRequest, CreateSupersetRequest, CreateWorkoutExerciseRequest, CreateWorkoutRequest,
     ErrorResponse, ReorderExercisesRequest, SupersetResponse, UpdateSetRequest,
-    UpdateWorkoutExerciseRequest, UpdateWorkoutRequest, WorkoutExerciseResponse, WorkoutListResponse,
-    WorkoutQuery, WorkoutResponse, WorkoutSetResponse, WorkoutSummaryResponse,
+    UpdateWorkoutExerciseRequest, UpdateWorkoutRequest, WorkoutExerciseResponse,
+    WorkoutListResponse, WorkoutQuery, WorkoutResponse, WorkoutSetResponse, WorkoutSummaryResponse,
 };
-use crate::cache;
 use crate::error::AppError;
 use crate::middleware::AuthUser;
 use crate::repositories::{ProgramRepository, WorkoutRepository};
@@ -50,7 +50,8 @@ pub async fn create_workout(
     )
     .await?;
 
-    let response = WorkoutService::get_workout_with_exercises(&pool, workout.id, auth_user.user_id).await?;
+    let response =
+        WorkoutService::get_workout_with_exercises(&pool, workout.id, auth_user.user_id).await?;
     Ok(Json(response))
 }
 
@@ -214,13 +215,15 @@ pub async fn complete_workout(
     Extension(auth_user): Extension<AuthUser>,
     Path(id): Path<Uuid>,
 ) -> Result<Json<WorkoutResponse>, AppError> {
-    WorkoutRepository::complete(&state.pool, id, auth_user.user_id).await?;
-    ProgramRepository::finalize_slot_by_workout(&state.pool, id).await?;
-    let _ = state.pr_tx.try_send(PrJob {
-        pool: state.pool.clone(),
-        workout_id: id,
-        user_id: auth_user.user_id,
-    });
+    let (_, newly_completed) =
+        WorkoutRepository::complete(&state.pool, id, auth_user.user_id).await?;
+    if newly_completed {
+        let _ = state.pr_tx.try_send(PrJob {
+            pool: state.pool.clone(),
+            workout_id: id,
+            user_id: auth_user.user_id,
+        });
+    }
     let response =
         WorkoutService::get_workout_with_exercises(&state.pool, id, auth_user.user_id).await?;
     Ok(Json(response))
@@ -282,13 +285,11 @@ pub async fn add_exercise(
     } else if let Some(cached) = cache::get_exercise_name(&req.exercise_template_id) {
         cached
     } else {
-        sqlx::query_scalar::<_, String>(
-            "SELECT name FROM exercise_templates WHERE id = $1",
-        )
-        .bind(&req.exercise_template_id)
-        .fetch_optional(&pool)
-        .await?
-        .ok_or_else(|| AppError::NotFound("Exercise template not found".to_string()))?
+        sqlx::query_scalar::<_, String>("SELECT name FROM exercise_templates WHERE id = $1")
+            .bind(&req.exercise_template_id)
+            .fetch_optional(&pool)
+            .await?
+            .ok_or_else(|| AppError::NotFound("Exercise template not found".to_string()))?
     };
 
     let exercise = WorkoutRepository::add_exercise(
@@ -361,7 +362,8 @@ pub async fn update_exercise(
     req.validate()
         .map_err(|e| AppError::Validation(e.to_string()))?;
 
-    let exercise = WorkoutRepository::update_exercise(&pool, exercise_id, req.notes.as_deref()).await?;
+    let exercise =
+        WorkoutRepository::update_exercise(&pool, exercise_id, req.notes.as_deref()).await?;
     let (sets, exercise_category) = tokio::join!(
         WorkoutRepository::get_sets(&pool, exercise_id),
         WorkoutRepository::get_exercise_category(&pool, &exercise.exercise_template_id),
@@ -588,7 +590,8 @@ pub async fn create_superset(
         .await?
         .ok_or_else(|| AppError::NotFound("Workout not found".to_string()))?;
 
-    let superset_id = WorkoutRepository::create_superset(&pool, workout_id, &req.exercise_ids).await?;
+    let superset_id =
+        WorkoutRepository::create_superset(&pool, workout_id, &req.exercise_ids).await?;
 
     Ok(Json(SupersetResponse {
         superset_id,
