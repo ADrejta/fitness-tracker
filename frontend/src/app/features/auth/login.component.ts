@@ -28,7 +28,11 @@ export class LoginComponent {
         this.router.navigate(['/']);
       },
       error: (err) => {
-        this.error.set(err.error?.error || 'Invalid email or password');
+        if (err.status === 0) {
+          this.error.set('Unable to reach the server. Please try again.');
+        } else {
+          this.error.set(err.error?.error || 'Invalid email or password');
+        }
       },
     });
   }

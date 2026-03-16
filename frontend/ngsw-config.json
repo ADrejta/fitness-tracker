@@ -27,12 +27,22 @@
   ],
   "dataGroups": [
     {
+      "name": "api-auth",
+      "urls": ["/api/v1/auth/**"],
+      "cacheConfig": {
+        "maxSize": 0,
+        "maxAge": "0u",
+        "timeout": "30s",
+        "strategy": "freshness"
+      }
+    },
+    {
       "name": "api-freshness",
       "urls": ["/api/v1/**"],
       "cacheConfig": {
         "maxSize": 100,
         "maxAge": "1d",
-        "timeout": "3s",
+        "timeout": "10s",
         "strategy": "freshness"
       }
     }
