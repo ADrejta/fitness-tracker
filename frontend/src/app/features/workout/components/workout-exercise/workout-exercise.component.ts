@@ -79,9 +79,18 @@ export class WorkoutExerciseComponent implements OnInit, AfterViewInit, OnDestro
     headerEl.parentElement?.insertBefore(this.sentinelEl, headerEl);
 
     // rootMargin: negative top margin equal to header height so we detect when
-    // the sentinel passes behind the sticky header. We read the CSS variable.
-    const headerHeight = getComputedStyle(document.documentElement)
+    // the sentinel passes behind the sticky header. We read the CSS variable
+    // and convert to px (IntersectionObserver rootMargin only accepts px or %).
+    const headerHeightRaw = getComputedStyle(document.documentElement)
       .getPropertyValue('--header-height').trim() || '4rem';
+    let headerHeightPx: number;
+    if (headerHeightRaw.endsWith('rem')) {
+      const rem = parseFloat(headerHeightRaw);
+      const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      headerHeightPx = rem * rootFontSize;
+    } else {
+      headerHeightPx = parseFloat(headerHeightRaw) || 64;
+    }
 
     this.stickyObserver = new IntersectionObserver(
       (entries) => {
@@ -92,7 +101,7 @@ export class WorkoutExerciseComponent implements OnInit, AfterViewInit, OnDestro
       },
       {
         threshold: [0],
-        rootMargin: `-${headerHeight} 0px 0px 0px`,
+        rootMargin: `-${headerHeightPx}px 0px 0px 0px`,
       }
     );
     this.stickyObserver.observe(this.sentinelEl);
