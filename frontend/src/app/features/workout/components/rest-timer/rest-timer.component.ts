@@ -100,6 +100,21 @@ export class RestTimerComponent implements OnDestroy {
     }
   }
 
+  adjustTimer(delta: number): void {
+    const newRemaining = Math.max(0, this.remainingSeconds() + delta);
+    this.remainingSeconds.set(newRemaining);
+
+    // If adding time, also increase the duration so the progress circle stays accurate
+    if (delta > 0) {
+      this.duration.update(d => d + delta);
+    }
+
+    // If subtracting brought us to 0 and timer is running, complete it
+    if (newRemaining <= 0 && this.isRunning()) {
+      this.complete();
+    }
+  }
+
   // Drag handle touch events -- called from template (no arrow functions)
   onDragStart(event: TouchEvent): void {
     this.dragStartY = event.touches[0].clientY;

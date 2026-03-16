@@ -253,6 +253,11 @@ export class WorkoutComponent implements OnInit {
         this.restTimer.show(true);
       }
     }
+
+    // Auto-scroll to next exercise if this was the last set
+    if (this.isLastSetOfExercise(exerciseId, setId)) {
+      this.scrollToNextIncompleteExercise(exerciseId);
+    }
   }
 
   private isLastSetOfExercise(exerciseId: string, setId: string): boolean {
@@ -266,6 +271,30 @@ export class WorkoutComponent implements OnInit {
     if (nonWarmupSets.length === 0) return true;
 
     return nonWarmupSets[nonWarmupSets.length - 1]?.id === setId;
+  }
+
+  private scrollToNextIncompleteExercise(currentExerciseId: string): void {
+    const workout = this.workoutService.activeWorkout();
+    if (!workout) return;
+
+    const currentIndex = workout.exercises.findIndex((e) => e.id === currentExerciseId);
+    if (currentIndex === -1) return;
+
+    // Find the next exercise that has incomplete non-warmup sets
+    const nextExercise = workout.exercises.slice(currentIndex + 1).find((e) => {
+      const incompleteSets = e.sets.filter((s) => !s.isWarmup && !s.isCompleted);
+      return incompleteSets.length > 0;
+    });
+
+    if (!nextExercise) return;
+
+    // Delay scroll so rest timer has time to appear first
+    setTimeout(() => {
+      const element = document.getElementById('exercise-' + nextExercise.id);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 300);
   }
 
   onExerciseDrop(event: CdkDragDrop<GroupedExercise[]>): void {

@@ -192,6 +192,7 @@ Do **not** suggest these as new features — they are fully built:
 - If something goes sideways, STOP and re-plan immediately — don't keep pushing
 - Use plan mode for verification steps, not just building
 - Write detailed specs upfront to reduce ambiguity
+- During planning, use specialized subagents (Explore, Plan) to gather context, analyze architecture, and validate assumptions before finalizing the plan — don't plan blind
 
 ### 2. Subagent Strategy
 - Use subagents liberally to keep main context window clean
@@ -199,6 +200,15 @@ Do **not** suggest these as new features — they are fully built:
 - For complex problems, throw more compute at it via subagents
 - One task per subagent for focused execution
 - In plan mode: list which agent types you intend to use for each step (e.g., Explore, Plan, general-purpose) so the user can review and redirect before execution
+- When launching subagents, read ALL relevant agent definitions from `~/.claude/agents/` and include their system prompts in the subagent's prompt so it operates with that specialized expertise
+
+**Agent persona selection is organic, not predetermined:**
+1. During planning, scan `~/.claude/agents/` to see what agent definitions are currently available
+2. Read each definition's description and expertise areas
+3. Based on the specific task at hand, select and combine whichever agent personas are most relevant — there is no fixed mapping
+4. Different subtasks within the same plan may need different persona combinations
+5. If no agent definitions exist or none are relevant, proceed without persona injection
+6. Always explain in the plan *why* specific personas were chosen for each subtask so the user can redirect
 
 ### 3. Self-Improvement Loop
 - After ANY correction from the user: update `tasks/lessons.md` with the pattern

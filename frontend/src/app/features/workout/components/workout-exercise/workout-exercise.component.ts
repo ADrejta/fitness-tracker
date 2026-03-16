@@ -35,9 +35,11 @@ export class WorkoutExerciseComponent implements OnInit, AfterViewInit, OnDestro
   workingWeight = signal(0);
   notesValue = signal('');
   isStuck = signal(false);
+  isCollapsed = signal(false);
   private _progressionSuggestion = signal<ProgressionSuggestion | undefined>(undefined);
   private stickyObserver: IntersectionObserver | null = null;
   private sentinelEl: HTMLElement | null = null;
+  private _previousAllCompleted = false;
 
   warmupSets = computed((): WarmupSet[] => {
     const weight = this.workingWeight();
@@ -151,6 +153,10 @@ export class WorkoutExerciseComponent implements OnInit, AfterViewInit, OnDestro
     this.workoutService.updateExerciseNotes(this.exercise.id, this.notesValue());
   }
 
+  onNotesBlur(): void {
+    this.saveNotes();
+  }
+
   addSet(): void {
     this.showMenu = false;
     this.setAdded.emit({ isWarmup: false });
@@ -168,6 +174,11 @@ export class WorkoutExerciseComponent implements OnInit, AfterViewInit, OnDestro
 
   openWarmupCalculator(): void {
     this.showMenu = false;
+    // Pre-fill working weight from first working set's target weight
+    const firstWorkingSet = this.exercise.sets.find(s => !s.isWarmup && s.targetWeight);
+    if (firstWorkingSet?.targetWeight && this.workingWeight() === 0) {
+      this.workingWeight.set(firstWorkingSet.targetWeight);
+    }
     this.showWarmupCalculator.set(true);
   }
 
@@ -199,9 +210,44 @@ export class WorkoutExerciseComponent implements OnInit, AfterViewInit, OnDestro
 
   onSetCompleted(setId: string, updates: Partial<WorkoutSet>): void {
     this.setCompleted.emit({ setId, updates });
+    // Defer check so the parent has time to update the set's isCompleted flag
+    setTimeout(() => this.checkAutoCollapse(), 0);
   }
 
   onSetUncompleted(setId: string): void {
     this.setUpdated.emit({ setId, updates: { isCompleted: false, completedAt: undefined } });
+    // Update the tracking flag so re-completing later can trigger collapse again
+    setTimeout(() => { this._previousAllCompleted = this.allSetsCompleted; }, 0);
+  }
+
+  /** True when every non-warmup set is completed */
+  get allSetsCompleted(): boolean {
+    const workingSets = this.exercise.sets.filter(s => !s.isWarmup);
+    return workingSets.length > 0 && workingSets.every(s => s.isCompleted);
+  }
+
+  /** Summary string for the collapsed view, e.g. "3 sets — 80kg×8, 80kg×8, 80kg×7" */
+  get completionSummary(): string {
+    const unit = this.settingsService.weightUnit();
+    const workingSets = this.exercise.sets.filter(s => !s.isWarmup && s.isCompleted);
+    const setDescriptions = workingSets.map(s => {
+      const weight = s.actualWeight ?? s.targetWeight ?? 0;
+      const reps = s.actualReps ?? s.targetReps ?? 0;
+      return `${weight}${unit}\u00D7${reps}`;
+    });
+    return `${workingSets.length} set${workingSets.length !== 1 ? 's' : ''} \u2014 ${setDescriptions.join(', ')}`;
+  }
+
+  /** Check completion status and auto-collapse if all sets just became completed */
+  checkAutoCollapse(): void {
+    const allDone = this.allSetsCompleted;
+    if (allDone && !this._previousAllCompleted) {
+      this.isCollapsed.set(true);
+    }
+    this._previousAllCompleted = allDone;
+  }
+
+  toggleCollapsed(): void {
+    this.isCollapsed.set(!this.isCollapsed());
   }
 }

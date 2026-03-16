@@ -109,6 +109,7 @@
           }
           <div
             class="exercise-wrapper"
+            [id]="'exercise-' + exercise.id"
             cdkDrag
             [class.in-superset]="exercise.isInSuperset"
             [class.superset-first]="exercise.isFirstInSuperset"

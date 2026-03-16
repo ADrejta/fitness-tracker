@@ -27,7 +27,7 @@
       >
         All
       </button>
-      @for (group of popularMuscleGroups; track group) {
+      @for (group of displayedMuscleGroups(); track group) {
         <button
           class="filter-chip"
           [class.filter-chip--active]="selectedMuscleGroup() === group"
@@ -36,10 +36,50 @@
           {{ exerciseService.getMuscleGroupLabel(group) }}
         </button>
       }
+      <button
+        class="filter-chip filter-chip--toggle"
+        (click)="toggleMoreMuscleGroups()"
+      >
+        {{ showAllMuscleGroups() ? 'Less' : 'More' }}
+      </button>
     </div>
 
     <!-- Exercise List -->
     <div class="picker__list">
+      <!-- Recent Exercises Section -->
+      @if (showRecentSection()) {
+        <div class="picker__section-header">Recent</div>
+        @for (exercise of recentExercises(); track exercise.id) {
+          <button class="exercise-item" (click)="selectExercise(exercise)">
+            <div class="exercise-item__info">
+              <h4 class="exercise-item__name">{{ exercise.name }}</h4>
+              <div class="exercise-item__tags">
+                @for (
+                  muscle of exercise.muscleGroups.slice(0, 2);
+                  track muscle
+                ) {
+                  <app-badge [size]="'sm'" [variant]="'default'">
+                    {{ exerciseService.getMuscleGroupLabel(muscle) }}
+                  </app-badge>
+                }
+              </div>
+            </div>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        }
+        <div class="picker__section-divider"></div>
+      }
+
       @if (filteredExercises().length > 0) {
         @for (exercise of filteredExercises(); track exercise.id) {
           <button class="exercise-item" (click)="selectExercise(exercise)">

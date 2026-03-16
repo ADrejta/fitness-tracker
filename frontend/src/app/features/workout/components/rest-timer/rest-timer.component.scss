@@ -211,6 +211,33 @@
   }
 }
 
+.rest-timer__adjust {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
+}
+
+.rest-timer__adjust-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-secondary);
+  background: var(--color-background-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+
+  &:hover {
+    background: var(--color-background-tertiary);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
 .rest-timer__actions {
   display: flex;
   justify-content: center;

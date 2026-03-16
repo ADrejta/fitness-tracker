@@ -149,18 +149,83 @@
   text-align: center;
 }
 
+.workout-exercise--collapsed {
+  .workout-exercise__header {
+    border-bottom: none;
+    border-radius: var(--radius-xl);
+  }
+}
+
 .workout-exercise__name-row {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
   margin: 0 0 var(--spacing-xs);
+
+  .workout-exercise--collapsed & {
+    margin-bottom: 0;
+  }
 }
 
-.workout-exercise__notes-indicator {
+.workout-exercise__notes-btn {
   display: flex;
   align-items: center;
-  color: var(--color-primary-500);
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
   flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-background-tertiary);
+    color: var(--color-text-secondary);
+  }
+
+  &--has-notes {
+    color: var(--color-primary-500);
+
+    &:hover {
+      color: var(--color-primary-600);
+    }
+  }
+}
+
+.workout-exercise__collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-success-600);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+
+  &:hover {
+    background: var(--color-success-50);
+    color: var(--color-success-700);
+  }
+}
+
+.workout-exercise__summary {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 50%;
+  flex-shrink: 0;
+  padding-right: var(--spacing-sm);
 }
 
 .exercise-notes-panel {
@@ -191,22 +256,6 @@
     }
   }
 
-  &__save {
-    margin-top: var(--spacing-xs);
-    padding: var(--spacing-xs) var(--spacing-md);
-    font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-white);
-    background: var(--color-primary-600);
-    border: none;
-    border-radius: var(--radius-md);
-    cursor: pointer;
-    transition: background var(--transition-fast);
-
-    &:hover {
-      background: var(--color-primary-700);
-    }
-  }
 }
 
 .workout-exercise__add-row {

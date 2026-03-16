@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, HostListener, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,7 +20,7 @@ export interface ProgressionSuggestion {
     templateUrl: './set-row.component.html',
     styleUrls: ['./set-row.component.scss']
 })
-export class SetRowComponent {
+export class SetRowComponent implements OnInit {
   @Input() set!: WorkoutSet;
   @Input() previousSet?: WorkoutSet;
   @Input() progressionSuggestion?: ProgressionSuggestion;
@@ -263,6 +263,27 @@ export class SetRowComponent {
       this.durationSec = durSrc % 60;
     }
     this.caloriesValue = this.set.calories ?? null;
+
+    // Auto-fill progression suggestion for first working set
+    if (this.progressionSuggestion && this.set.setNumber === 1 && !this.set.isWarmup) {
+      if (this.progressionSuggestion.type === 'increase_weight') {
+        const suggested = this.progressionSuggestion.suggestedWeight;
+        if (this.weightValue === null || this.weightValue === this.set.targetWeight) {
+          if (suggested !== this.weightValue) {
+            this.weightValue = suggested;
+            this.setUpdated.emit({ targetWeight: this.weightValue });
+          }
+        }
+      } else if (this.progressionSuggestion.type === 'increase_reps' && this.progressionSuggestion.suggestedReps) {
+        const suggested = this.progressionSuggestion.suggestedReps;
+        if (this.repsValue === null || this.repsValue === this.set.targetReps) {
+          if (suggested !== this.repsValue) {
+            this.repsValue = suggested;
+            this.setUpdated.emit({ targetReps: this.repsValue });
+          }
+        }
+      }
+    }
   }
 
   private computeDurationSeconds(): number | undefined {
@@ -301,6 +322,17 @@ export class SetRowComponent {
     this.setUpdated.emit({ rpe: this.rpeValue ?? undefined });
   }
 
+  onRpeQuickSelect(value: number): void {
+    if (this.rpeValue === value) {
+      this.rpeValue = null;
+    } else {
+      this.rpeValue = value;
+    }
+    this.setUpdated.emit({ rpe: this.rpeValue ?? undefined });
+  }
+
+  readonly rpeQuickValues = [6, 7, 8, 9, 10];
+
   toggleWarmup(): void {
     this.setUpdated.emit({ isWarmup: !this.set.isWarmup });
   }
@@ -320,12 +352,14 @@ export class SetRowComponent {
       this.setCompleted.emit({
         actualWeight: weight,
         distanceMeters: this.distanceM ?? undefined,
+        rpe: this.rpeValue ?? undefined,
         isCompleted: true,
       });
     } else if (this.isTimed) {
       this.setCompleted.emit({
         actualWeight: this.weightValue ?? undefined,
         durationSeconds: this.computeDurationSeconds(),
+        rpe: this.rpeValue ?? undefined,
         isCompleted: true,
       });
     } else if (this.isCardio) {
@@ -333,13 +367,14 @@ export class SetRowComponent {
         distanceMeters: this.distanceKm != null ? this.distanceKm * 1000 : undefined,
         durationSeconds: this.computeDurationSeconds(),
         calories: this.caloriesValue ?? undefined,
+        rpe: this.rpeValue ?? undefined,
         isCompleted: true,
       };
       this.setCompleted.emit(updates);
     } else {
       const weight = this.weightValue ?? this.set.targetWeight ?? 0;
       const reps = this.repsValue ?? this.set.targetReps ?? 0;
-      this.setCompleted.emit({ actualWeight: weight, actualReps: reps, isCompleted: true });
+      this.setCompleted.emit({ actualWeight: weight, actualReps: reps, rpe: this.rpeValue ?? undefined, isCompleted: true });
     }
   }
 }

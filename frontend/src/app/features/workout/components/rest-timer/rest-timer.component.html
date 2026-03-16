@@ -64,6 +64,15 @@
           }
         </div>
 
+        <div class="rest-timer__adjust">
+          <button class="rest-timer__adjust-btn" (click)="adjustTimer(-15)">
+            -15s
+          </button>
+          <button class="rest-timer__adjust-btn" (click)="adjustTimer(15)">
+            +15s
+          </button>
+        </div>
+
         <div class="rest-timer__actions">
           @if (isRunning()) {
             <button class="rest-timer__btn rest-timer__btn--pause" (click)="pause()">
