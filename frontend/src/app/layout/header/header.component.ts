@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { WorkoutService, AuthService } from '../../core/services';
+import { WorkoutService, AuthService, StatisticsService, TemplateService } from '../../core/services';
 import { SyncQueueService } from '../../core/services/sync-queue.service';
 import { LoadingBarComponent } from '../loading-bar/loading-bar.component';
 
@@ -17,6 +17,8 @@ export class HeaderComponent {
   workoutService = inject(WorkoutService);
   authService = inject(AuthService);
   syncQueue = inject(SyncQueueService);
+  private statisticsService = inject(StatisticsService);
+  private templateService = inject(TemplateService);
 
   isOnline = signal(typeof navigator !== 'undefined' ? navigator.onLine : true);
   isRefreshing = signal(false);
@@ -24,6 +26,12 @@ export class HeaderComponent {
   refresh(): void {
     if (this.isRefreshing()) return;
     this.isRefreshing.set(true);
+
+    // Refresh data from API
+    this.statisticsService.refresh();
+    this.templateService.refresh();
+
+    // Re-init the current route
     const url = this.router.url;
     this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
       this.router.navigateByUrl(url).then(() => {
