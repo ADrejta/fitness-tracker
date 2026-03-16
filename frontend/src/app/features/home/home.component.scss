@@ -69,8 +69,8 @@
   }
 
   &__title {
-    font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
     color: var(--color-text);
     margin: 0;
   }
@@ -319,8 +319,8 @@
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-    background: var(--color-primary-50);
-    color: var(--color-primary-600);
+    background: var(--color-primary-600);
+    color: white;
     border-radius: var(--radius-lg);
   }
 }
@@ -352,8 +352,8 @@
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-    background: var(--color-primary-50);
-    color: var(--color-primary-600);
+    background: var(--color-primary-600);
+    color: white;
     border-radius: var(--radius-lg);
     flex-shrink: 0;
   }
