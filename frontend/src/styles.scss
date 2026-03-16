@@ -254,3 +254,73 @@ body {
 .gap-sm { gap: var(--spacing-sm); }
 .gap-md { gap: var(--spacing-md); }
 .gap-lg { gap: var(--spacing-lg); }
+
+// Pull-to-refresh indicator
+.ptr-indicator {
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  transition: height 0.2s ease, opacity 0.2s ease;
+  will-change: height, opacity;
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
+  }
+
+  &__spinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    color: var(--color-primary-500);
+  }
+
+  &__arrow {
+    display: block;
+    transition: transform 0.2s ease;
+  }
+
+  &__loading {
+    display: none;
+    animation: ptr-spin 0.8s linear infinite;
+  }
+
+  &__text {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  &--ready {
+    .ptr-indicator__text {
+      color: var(--color-primary-600);
+    }
+  }
+
+  &--refreshing {
+    .ptr-indicator__arrow {
+      display: none;
+    }
+
+    .ptr-indicator__loading {
+      display: block;
+    }
+
+    .ptr-indicator__text {
+      color: var(--color-primary-600);
+    }
+  }
+}
+
+@keyframes ptr-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

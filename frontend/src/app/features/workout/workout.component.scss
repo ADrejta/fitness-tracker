@@ -497,3 +497,40 @@
 .workout__exercises.cdk-drop-list-dragging .exercise-wrapper:not(.cdk-drag-placeholder) {
   transition: transform 200ms ease;
 }
+
+// Floating Action Button — Add Exercise
+.fab-add-exercise {
+  position: fixed;
+  bottom: calc(var(--nav-height) + 1.25rem + env(safe-area-inset-bottom, 0));
+  right: 1.5rem;
+  z-index: calc(var(--z-sticky) - 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  background: var(--color-primary-600);
+  color: var(--color-white, #fff);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease, background 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    background: var(--color-primary-700);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    transform: scale(0.92);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  @media (min-width: 1024px) {
+    // On desktop, position relative to viewport bottom (no bottom nav)
+    bottom: 1.5rem;
+  }
+}

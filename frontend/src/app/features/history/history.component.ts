@@ -2,7 +2,8 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PageContainerComponent } from '../../layout';
-import { CardComponent, BadgeComponent, EmptyStateComponent, ButtonComponent, SkeletonComponent } from '../../shared/components';
+import { CardComponent, BadgeComponent, EmptyStateComponent, ButtonComponent } from '../../shared/components';
+import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
 import { WorkoutService, SettingsService } from '../../core/services';
 import { Workout } from '../../core/models';
 import {
@@ -48,7 +49,7 @@ export interface CalendarDay {
         BadgeComponent,
         EmptyStateComponent,
         ButtonComponent,
-        SkeletonComponent
+        PullToRefreshDirective
     ],
     templateUrl: './history.component.html',
     styleUrls: ['./history.component.scss']
@@ -153,6 +154,11 @@ export class HistoryComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadPage(null);
+  }
+
+  async onPullRefresh(): Promise<void> {
+    this.cursorStack.set([]);
+    await this.loadPage(null);
   }
 
   async loadPage(cursor: string | null): Promise<void> {

@@ -1,5 +1,5 @@
 <div class="workout-exercise">
-  <div class="workout-exercise__header">
+  <div class="workout-exercise__header" #stickyHeader [class.stuck]="isStuck()">
     <div class="workout-exercise__info">
       <div class="workout-exercise__name-row">
         <h3 class="workout-exercise__name">{{ exercise.exerciseName }}</h3>

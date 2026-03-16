@@ -1,10 +1,71 @@
-<app-page-container title="History" subtitle="Your workout history">
+<app-page-container title="History" subtitle="Your workout history" appPullToRefresh (refresh)="onPullRefresh()">
   @if (workoutService.isLoading() || isLoadingPage()) {
-    <!-- Loading Skeletons -->
+    <!-- Loading Skeletons: stats row -->
+    <div class="skeleton-stats-row">
+      <div class="skeleton-stat">
+        <div class="skeleton-pulse skeleton-stat__value"></div>
+        <div class="skeleton-pulse skeleton-stat__label"></div>
+      </div>
+      <div class="skeleton-stat">
+        <div class="skeleton-pulse skeleton-stat__value"></div>
+        <div class="skeleton-pulse skeleton-stat__label"></div>
+      </div>
+      <div class="skeleton-stat">
+        <div class="skeleton-pulse skeleton-stat__value"></div>
+        <div class="skeleton-pulse skeleton-stat__label"></div>
+      </div>
+    </div>
+    <!-- Loading Skeletons: workout list items -->
     <div class="skeleton-container">
-      <app-skeleton variant="card"></app-skeleton>
-      <app-skeleton variant="card"></app-skeleton>
-      <app-skeleton variant="card"></app-skeleton>
+      <div class="skeleton-workout-card">
+        <div class="skeleton-workout-card__header">
+          <div class="skeleton-pulse" style="width: 50%; height: 1rem;"></div>
+          <div class="skeleton-pulse" style="width: 20%; height: 0.875rem;"></div>
+        </div>
+        <div class="skeleton-workout-card__stats">
+          <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 5rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 3.5rem; height: 1.25rem;"></div>
+        </div>
+        <div class="skeleton-workout-card__badges">
+          <div class="skeleton-pulse" style="width: 5rem; height: 1.25rem; border-radius: 9999px;"></div>
+          <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem; border-radius: 9999px;"></div>
+        </div>
+      </div>
+      <div class="skeleton-workout-card">
+        <div class="skeleton-workout-card__header">
+          <div class="skeleton-pulse" style="width: 40%; height: 1rem;"></div>
+          <div class="skeleton-pulse" style="width: 25%; height: 0.875rem;"></div>
+        </div>
+        <div class="skeleton-workout-card__stats">
+          <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 5rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 3.5rem; height: 1.25rem;"></div>
+        </div>
+        <div class="skeleton-workout-card__badges">
+          <div class="skeleton-pulse" style="width: 6rem; height: 1.25rem; border-radius: 9999px;"></div>
+          <div class="skeleton-pulse" style="width: 4.5rem; height: 1.25rem; border-radius: 9999px;"></div>
+          <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem; border-radius: 9999px;"></div>
+        </div>
+      </div>
+      <div class="skeleton-workout-card">
+        <div class="skeleton-workout-card__header">
+          <div class="skeleton-pulse" style="width: 55%; height: 1rem;"></div>
+          <div class="skeleton-pulse" style="width: 18%; height: 0.875rem;"></div>
+        </div>
+        <div class="skeleton-workout-card__stats">
+          <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 5rem; height: 1.25rem;"></div>
+          <div class="skeleton-pulse" style="width: 3.5rem; height: 1.25rem;"></div>
+        </div>
+        <div class="skeleton-workout-card__badges">
+          <div class="skeleton-pulse" style="width: 5.5rem; height: 1.25rem; border-radius: 9999px;"></div>
+          <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem; border-radius: 9999px;"></div>
+        </div>
+      </div>
     </div>
   } @else if (workoutGroups().length > 0 || viewMode() === 'calendar') {
     <!-- Stats Summary -->

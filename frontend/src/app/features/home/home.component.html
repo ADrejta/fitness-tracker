@@ -1,4 +1,4 @@
-<app-page-container>
+<app-page-container appPullToRefresh (refresh)="onPullRefresh()">
   <!-- Welcome Section -->
   <section class="welcome">
     <h1 class="welcome__title">{{ greeting }}</h1>
@@ -83,32 +83,41 @@
     <div class="section__header">
       <h2 class="section__title">This Week</h2>
     </div>
-    <div class="stats-grid">
-      <app-card [compact]="true">
-        <div class="stat-card">
-          <span class="stat-card__value">{{ statisticsService.thisWeekWorkouts().length }}</span>
-          <span class="stat-card__label">Workouts</span>
-        </div>
-      </app-card>
-      <app-card [compact]="true">
-        <div class="stat-card">
-          <span class="stat-card__value">{{ formatVolume(statisticsService.thisWeekVolume()) }}</span>
-          <span class="stat-card__label">Volume</span>
-        </div>
-      </app-card>
-      <app-card [compact]="true">
-        <div class="stat-card">
-          <span class="stat-card__value">{{ statisticsService.currentStreak() }}</span>
-          <span class="stat-card__label">Day Streak</span>
-        </div>
-      </app-card>
-      <app-card [compact]="true">
-        <div class="stat-card">
-          <span class="stat-card__value">{{ formatDuration(statisticsService.thisWeekDuration()) }}</span>
-          <span class="stat-card__label">Time</span>
-        </div>
-      </app-card>
-    </div>
+    @if (isLoading()) {
+      <div class="stats-grid">
+        <div class="skeleton-stat-card"><div class="skeleton-pulse skeleton-stat-value"></div><div class="skeleton-pulse skeleton-stat-label"></div></div>
+        <div class="skeleton-stat-card"><div class="skeleton-pulse skeleton-stat-value"></div><div class="skeleton-pulse skeleton-stat-label"></div></div>
+        <div class="skeleton-stat-card"><div class="skeleton-pulse skeleton-stat-value"></div><div class="skeleton-pulse skeleton-stat-label"></div></div>
+        <div class="skeleton-stat-card"><div class="skeleton-pulse skeleton-stat-value"></div><div class="skeleton-pulse skeleton-stat-label"></div></div>
+      </div>
+    } @else {
+      <div class="stats-grid">
+        <app-card [compact]="true">
+          <div class="stat-card">
+            <span class="stat-card__value">{{ statisticsService.thisWeekWorkouts().length }}</span>
+            <span class="stat-card__label">Workouts</span>
+          </div>
+        </app-card>
+        <app-card [compact]="true">
+          <div class="stat-card">
+            <span class="stat-card__value">{{ formatVolume(statisticsService.thisWeekVolume()) }}</span>
+            <span class="stat-card__label">Volume</span>
+          </div>
+        </app-card>
+        <app-card [compact]="true">
+          <div class="stat-card">
+            <span class="stat-card__value">{{ statisticsService.currentStreak() }}</span>
+            <span class="stat-card__label">Day Streak</span>
+          </div>
+        </app-card>
+        <app-card [compact]="true">
+          <div class="stat-card">
+            <span class="stat-card__value">{{ formatDuration(statisticsService.thisWeekDuration()) }}</span>
+            <span class="stat-card__label">Time</span>
+          </div>
+        </app-card>
+      </div>
+    }
   </section>
 
   <!-- Recent Templates -->
@@ -145,7 +154,43 @@
       }
     </div>
 
-    @if (workoutService.recentWorkouts().length > 0) {
+    @if (isLoading()) {
+      <div class="workouts-list">
+        <div class="skeleton-workout-item">
+          <div class="skeleton-workout-item__header">
+            <div class="skeleton-pulse" style="width: 50%; height: 1rem;"></div>
+            <div class="skeleton-pulse" style="width: 20%; height: 0.875rem;"></div>
+          </div>
+          <div class="skeleton-workout-item__stats">
+            <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+            <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+            <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem;"></div>
+          </div>
+        </div>
+        <div class="skeleton-workout-item">
+          <div class="skeleton-workout-item__header">
+            <div class="skeleton-pulse" style="width: 40%; height: 1rem;"></div>
+            <div class="skeleton-pulse" style="width: 25%; height: 0.875rem;"></div>
+          </div>
+          <div class="skeleton-workout-item__stats">
+            <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+            <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+            <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem;"></div>
+          </div>
+        </div>
+        <div class="skeleton-workout-item">
+          <div class="skeleton-workout-item__header">
+            <div class="skeleton-pulse" style="width: 55%; height: 1rem;"></div>
+            <div class="skeleton-pulse" style="width: 18%; height: 0.875rem;"></div>
+          </div>
+          <div class="skeleton-workout-item__stats">
+            <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+            <div class="skeleton-pulse" style="width: 3rem; height: 1.25rem;"></div>
+            <div class="skeleton-pulse" style="width: 4rem; height: 1.25rem;"></div>
+          </div>
+        </div>
+      </div>
+    } @else if (workoutService.recentWorkouts().length > 0) {
       <div class="workouts-list">
         @for (workout of workoutService.recentWorkouts(); track workout.id) {
           <app-card [interactive]="true">

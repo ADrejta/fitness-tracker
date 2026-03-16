@@ -6,14 +6,25 @@
 }
 
 .workout-exercise__header {
-  position: relative;
+  position: sticky;
+  top: var(--header-height);
+  z-index: calc(var(--z-dropdown) - 1);
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   padding: var(--spacing-md);
   background: var(--color-background-secondary);
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid var(--color-border);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  // Subtle shadow visible when stuck (always present but only noticeable when header
+  // overlaps content below it during sticky scroll)
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0);
+  transition: box-shadow 150ms ease;
+
+  &.stuck {
+    border-radius: 0;
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .workout-exercise__info {

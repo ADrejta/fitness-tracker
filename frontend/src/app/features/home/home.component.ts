@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { PageContainerComponent } from '../../layout';
 import { ButtonComponent, CardComponent, BadgeComponent, ProgressComponent } from '../../shared/components';
+import { PullToRefreshDirective } from '../../shared/directives/pull-to-refresh.directive';
 import { WorkoutService, TemplateService, StatisticsService, SettingsService, ProgramService, OnboardingService } from '../../core/services';
 import { ProgramWorkout } from '../../core/models';
 import { OnboardingModalComponent } from './onboarding-modal/onboarding-modal.component';
@@ -20,7 +21,8 @@ import { format, isToday, isYesterday } from 'date-fns';
         CardComponent,
         BadgeComponent,
         ProgressComponent,
-        OnboardingModalComponent
+        OnboardingModalComponent,
+        PullToRefreshDirective
     ],
     templateUrl: './home.component.html',
     styleUrls: ['./home.component.scss']
@@ -35,6 +37,11 @@ export class HomeComponent {
   private router = inject(Router);
 
   showOnboarding = this.onboardingService.shouldShow;
+
+  /** True while initial data is being fetched from the API. */
+  isLoading = computed(() =>
+    this.workoutService.isLoading() || this.statisticsService.isLoading()
+  );
 
   todaysProgramWorkout = computed((): ProgramWorkout | null => {
     const program = this.programService.activeProgram();
@@ -112,5 +119,10 @@ export class HomeComponent {
     if (workout) {
       this.router.navigate(['/workout']);
     }
+  }
+
+  onPullRefresh(): void {
+    this.statisticsService.refresh();
+    this.templateService.refresh();
   }
 }

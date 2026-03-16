@@ -1,4 +1,9 @@
 <app-header />
-<router-outlet />
+<div class="main-content"
+  (touchstart)="onTouchStart($event)"
+  (touchmove)="onTouchMove($event)"
+  (touchend)="onTouchEnd($event)">
+  <router-outlet />
+</div>
 <app-navigation />
 <app-toast-container />

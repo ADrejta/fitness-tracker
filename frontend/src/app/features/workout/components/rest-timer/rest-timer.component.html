@@ -1,5 +1,16 @@
 @if (isVisible()) {
-  <div class="rest-timer" [class.rest-timer--minimized]="isMinimized()">
+  <!-- Backdrop overlay -->
+  @if (!isMinimized()) {
+    <div class="rest-timer-backdrop" (click)="onBackdropClick()"></div>
+  }
+
+  <div
+    class="rest-timer"
+    [class.rest-timer--minimized]="isMinimized()"
+    [class.rest-timer--entering]="isVisible() && !isMinimized()"
+    [style.transform]="isMinimized() ? '' : getSheetTransform()"
+    [style.transition]="isMinimized() ? '' : getSheetTransition()"
+  >
     @if (isMinimized()) {
       <button class="rest-timer__expand" (click)="isMinimized.set(false)">
         <span class="rest-timer__mini-time">{{ formatTime(remainingSeconds()) }}</span>
@@ -8,6 +19,16 @@
         </svg>
       </button>
     } @else {
+      <!-- Drag handle -->
+      <div
+        class="rest-timer__drag-zone"
+        (touchstart)="onDragStart($event)"
+        (touchmove)="onDragMove($event)"
+        (touchend)="onDragEnd()"
+      >
+        <div class="rest-timer__drag-handle"></div>
+      </div>
+
       <div class="rest-timer__content">
         <div class="rest-timer__header">
           <span class="rest-timer__label">Rest Timer</span>

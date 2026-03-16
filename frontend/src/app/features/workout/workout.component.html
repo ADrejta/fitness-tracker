@@ -150,7 +150,7 @@
         </div>
       }
 
-      <!-- Add Exercise Button -->
+      <!-- Add Exercise Button (inline) -->
       <app-button
         [fullWidth]="true"
         variant="secondary"
@@ -164,6 +164,19 @@
           Add Exercise
         </span>
       </app-button>
+
+      <!-- Floating Action Button for Add Exercise -->
+      <button
+        class="fab-add-exercise"
+        (click)="showExercisePicker = true"
+        aria-label="Add exercise"
+        type="button"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+      </button>
 
       <!-- Finish Button -->
       @if (workoutService.activeWorkout()?.exercises?.length) {

@@ -1,22 +1,94 @@
+// Backdrop overlay
+.rest-timer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: calc(var(--z-sticky) + 9);
+  animation: backdrop-fade-in 0.25s ease;
+}
+
+@keyframes backdrop-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+// Bottom sheet container
 .rest-timer {
   position: fixed;
-  bottom: calc(var(--nav-height) + var(--spacing-md) + env(safe-area-inset-bottom, 0));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-sticky);
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: calc(var(--z-sticky) + 10);
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-lg);
-  overflow: hidden;
+  border-top-left-radius: var(--radius-xl);
+  border-top-right-radius: var(--radius-xl);
+  box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  will-change: transform;
 
-  @media (min-width: 1024px) {
+  // Desktop: constrain width and position at bottom-center
+  @media (min-width: 640px) {
+    left: 50%;
+    right: auto;
     bottom: var(--spacing-lg);
+    transform: translateX(-50%);
+    width: 360px;
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-lg);
   }
 
-  &--minimized {
-    border-radius: var(--radius-full);
+  // Slide-up entrance animation
+  &--entering {
+    animation: sheet-slide-up 0.3s cubic-bezier(0.2, 0, 0, 1);
   }
+
+  // Minimized state: small pill at bottom
+  &--minimized {
+    bottom: calc(var(--nav-height) + var(--spacing-md) + env(safe-area-inset-bottom, 0));
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--color-border);
+    animation: none;
+    padding-bottom: 0;
+    width: auto;
+
+    @media (min-width: 1024px) {
+      bottom: var(--spacing-lg);
+    }
+  }
+}
+
+@keyframes sheet-slide-up {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// Drag handle zone -- large touch target
+.rest-timer__drag-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-sm) 0 0;
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.rest-timer__drag-handle {
+  width: 36px;
+  height: 4px;
+  background: var(--color-gray-300);
+  border-radius: var(--radius-full);
 }
 
 .rest-timer__expand {
@@ -37,8 +109,7 @@
 }
 
 .rest-timer__content {
-  padding: var(--spacing-md);
-  width: 280px;
+  padding: var(--spacing-xs) var(--spacing-lg) var(--spacing-lg);
 }
 
 .rest-timer__header {
@@ -58,16 +129,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
   padding: 0;
   background: none;
   border: none;
   color: var(--color-text-tertiary);
   cursor: pointer;
+  border-radius: var(--radius-md);
 
   &:hover {
     color: var(--color-text);
+    background: var(--color-background-secondary);
   }
 }
 
@@ -76,8 +149,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
   margin: 0 auto var(--spacing-md);
 }
 
@@ -118,6 +191,7 @@
 
 .rest-timer__preset {
   padding: var(--spacing-xs) var(--spacing-sm);
+  min-height: 2.25rem;
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
   background: var(--color-background-secondary);
@@ -148,6 +222,7 @@
   align-items: center;
   justify-content: center;
   padding: var(--spacing-sm) var(--spacing-md);
+  min-height: 2.75rem;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-medium);
   border: none;
@@ -158,6 +233,7 @@
   &--play, &--pause {
     background: var(--color-primary-600);
     color: white;
+    min-width: 3rem;
 
     &:hover {
       background: var(--color-primary-700);

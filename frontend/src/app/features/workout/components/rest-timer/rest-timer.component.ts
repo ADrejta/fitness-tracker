@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnDestroy, inject, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnDestroy, inject, signal, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SettingsService } from '../../../../core/services';
 
@@ -16,6 +16,7 @@ export class RestTimerComponent implements OnDestroy {
   @Output() timerSkipped = new EventEmitter<void>();
 
   settingsService = inject(SettingsService);
+  private zone = inject(NgZone);
 
   isVisible = signal(false);
   isMinimized = signal(false);
@@ -23,10 +24,16 @@ export class RestTimerComponent implements OnDestroy {
   duration = signal(90);
   remainingSeconds = signal(90);
 
+  // Bottom sheet drag state
+  dragOffsetY = signal(0);
+  isDragging = signal(false);
+
   presets = [30, 60, 90, 120, 180];
   circumference = 2 * Math.PI * 45;
 
   private intervalId: number | null = null;
+  private dragStartY = 0;
+  private readonly dismissThreshold = 80;
 
   progressOffset(): number {
     const progress = this.remainingSeconds() / this.duration();
@@ -39,6 +46,7 @@ export class RestTimerComponent implements OnDestroy {
     this.remainingSeconds.set(defaultDuration);
     this.isVisible.set(true);
     this.isMinimized.set(false);
+    this.dragOffsetY.set(0);
 
     if (autoStart && this.settingsService.settings().autoStartRestTimer) {
       this.start();
@@ -48,6 +56,7 @@ export class RestTimerComponent implements OnDestroy {
   hide(): void {
     this.stop();
     this.isVisible.set(false);
+    this.dragOffsetY.set(0);
   }
 
   start(): void {
@@ -89,6 +98,45 @@ export class RestTimerComponent implements OnDestroy {
       this.pause();
       this.start();
     }
+  }
+
+  // Drag handle touch events -- called from template (no arrow functions)
+  onDragStart(event: TouchEvent): void {
+    this.dragStartY = event.touches[0].clientY;
+    this.isDragging.set(true);
+    this.dragOffsetY.set(0);
+  }
+
+  onDragMove(event: TouchEvent): void {
+    if (!this.isDragging()) return;
+    const currentY = event.touches[0].clientY;
+    const delta = currentY - this.dragStartY;
+    // Only allow dragging downward
+    const offset = Math.max(0, delta);
+    this.dragOffsetY.set(offset);
+  }
+
+  onDragEnd(): void {
+    if (!this.isDragging()) return;
+    this.isDragging.set(false);
+
+    if (this.dragOffsetY() >= this.dismissThreshold) {
+      this.skip();
+    } else {
+      this.dragOffsetY.set(0);
+    }
+  }
+
+  onBackdropClick(): void {
+    this.isMinimized.set(true);
+  }
+
+  getSheetTransform(): string {
+    return `translateY(${this.dragOffsetY()}px)`;
+  }
+
+  getSheetTransition(): string {
+    return this.isDragging() ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0, 0, 1)';
   }
 
   private complete(): void {

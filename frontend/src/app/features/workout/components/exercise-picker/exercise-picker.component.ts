@@ -6,6 +6,9 @@ import {
   inject,
   signal,
   computed,
+  OnChanges,
+  SimpleChanges,
+  ElementRef,
 } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { FormsModule } from "@angular/forms";
@@ -30,11 +33,12 @@ import { ExerciseTemplate, MuscleGroup } from "../../../../core/models";
     templateUrl: './exercise-picker.component.html',
     styleUrls: ['./exercise-picker.component.scss']
 })
-export class ExercisePickerComponent {
+export class ExercisePickerComponent implements OnChanges {
   @Input() isOpen = false;
   @Output() closed = new EventEmitter<void>();
   @Output() exerciseSelected = new EventEmitter<ExerciseTemplate>();
 
+  private el = inject(ElementRef);
   exerciseService = inject(ExerciseService);
 
   searchQuery = signal("");
@@ -50,6 +54,18 @@ export class ExercisePickerComponent {
     "hamstrings",
     "glutes",
   ];
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isOpen'] && this.isOpen) {
+      // Delay to allow the modal to render, then focus the search input
+      setTimeout(() => {
+        const input = (this.el.nativeElement as HTMLElement).querySelector('.picker__search input');
+        if (input instanceof HTMLElement) {
+          input.focus();
+        }
+      }, 150);
+    }
+  }
 
   filteredExercises = computed(() => {
     let exercises = this.exerciseService.exercises();

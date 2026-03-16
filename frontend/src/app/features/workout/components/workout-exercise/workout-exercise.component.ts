@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkoutExercise, WorkoutSet } from '../../../../core/models';
@@ -14,8 +14,9 @@ import { calculateWarmupSets, WarmupSet } from '../../../../shared/utils';
     templateUrl: './workout-exercise.component.html',
     styleUrls: ['./workout-exercise.component.scss']
 })
-export class WorkoutExerciseComponent implements OnInit {
+export class WorkoutExerciseComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() exercise!: WorkoutExercise;
+  @ViewChild('stickyHeader', { static: false }) stickyHeaderRef!: ElementRef<HTMLElement>;
 
   @Output() setAdded = new EventEmitter<{ isWarmup: boolean; targetWeight?: number; targetReps?: number }>();
   @Output() setRemoved = new EventEmitter<string>();
@@ -33,7 +34,10 @@ export class WorkoutExerciseComponent implements OnInit {
   showWarmupCalculator = signal(false);
   workingWeight = signal(0);
   notesValue = signal('');
+  isStuck = signal(false);
   private _progressionSuggestion = signal<ProgressionSuggestion | undefined>(undefined);
+  private stickyObserver: IntersectionObserver | null = null;
+  private sentinelEl: HTMLElement | null = null;
 
   warmupSets = computed((): WarmupSet[] => {
     const weight = this.workingWeight();
@@ -44,6 +48,52 @@ export class WorkoutExerciseComponent implements OnInit {
   ngOnInit(): void {
     this._progressionSuggestion.set(this.calculateProgressionSuggestion());
     this.notesValue.set(this.exercise.notes ?? '');
+  }
+
+  ngAfterViewInit(): void {
+    this.setupStickyObserver();
+  }
+
+  ngOnDestroy(): void {
+    if (this.stickyObserver) {
+      this.stickyObserver.disconnect();
+    }
+    if (this.sentinelEl) {
+      this.sentinelEl.remove();
+    }
+  }
+
+  private setupStickyObserver(): void {
+    if (!this.stickyHeaderRef) return;
+
+    const headerEl = this.stickyHeaderRef.nativeElement;
+    // Insert a zero-height sentinel element just before the header.
+    // When the sentinel scrolls out of view (above the sticky offset), the header is stuck.
+    this.sentinelEl = document.createElement('div');
+    this.sentinelEl.style.height = '0';
+    this.sentinelEl.style.width = '100%';
+    this.sentinelEl.style.pointerEvents = 'none';
+    this.sentinelEl.setAttribute('aria-hidden', 'true');
+    headerEl.parentElement?.insertBefore(this.sentinelEl, headerEl);
+
+    // rootMargin: negative top margin equal to header height so we detect when
+    // the sentinel passes behind the sticky header. We read the CSS variable.
+    const headerHeight = getComputedStyle(document.documentElement)
+      .getPropertyValue('--header-height').trim() || '4rem';
+
+    this.stickyObserver = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          // When the sentinel is NOT intersecting, the header is stuck
+          this.isStuck.set(!entry.isIntersecting);
+        }
+      },
+      {
+        threshold: [0],
+        rootMargin: `-${headerHeight} 0px 0px 0px`,
+      }
+    );
+    this.stickyObserver.observe(this.sentinelEl);
   }
 
   get progressionSuggestion(): ProgressionSuggestion | undefined {
