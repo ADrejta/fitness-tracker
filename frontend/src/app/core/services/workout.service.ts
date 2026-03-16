@@ -108,11 +108,15 @@ export class WorkoutService {
       this.storage.set(PERSONAL_RECORDS_KEY, this._personalRecords());
     });
 
-    // Load from API if authenticated
+    // Load from API if authenticated, clear state on logout
     effect(() => {
       const isAuth = this.authService.isAuthenticated();
       if (isAuth) {
         this.loadFromApi();
+      } else {
+        this._workouts.set([]);
+        this._activeWorkout.set(null);
+        this._personalRecords.set([]);
       }
     });
 

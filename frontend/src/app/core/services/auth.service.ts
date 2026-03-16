@@ -3,6 +3,7 @@ import { HttpClient, HttpBackend } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of, BehaviorSubject, skip, take, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { StorageService } from './storage.service';
 
 export interface User {
   id: string;
@@ -42,6 +43,7 @@ export class AuthService {
   private http = inject(HttpClient);
   private httpBackend = inject(HttpBackend);
   private router = inject(Router);
+  private storageService = inject(StorageService);
 
   private _user = signal<User | null>(this.loadUser());
   private _isAuthenticated = signal<boolean>(this.hasValidToken());
@@ -134,6 +136,7 @@ export class AuthService {
 
   logout(): void {
     this.clearAuth();
+    this.storageService.clear();
     this.router.navigate(['/login']);
   }
 
