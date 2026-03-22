@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
+import { LoadingService } from '../../core/services/loading.service';
 
 @Component({
     standalone: true,
@@ -14,11 +15,13 @@ import { AuthService } from '../../core/services/auth.service';
 export class LoginComponent {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private loadingService = inject(LoadingService);
 
   email = '';
   password = '';
   error = signal<string | null>(null);
   isLoading = this.authService.isLoading;
+  isSlowLoading = this.loadingService.isSlowLoading;
 
   onSubmit(): void {
     this.error.set(null);

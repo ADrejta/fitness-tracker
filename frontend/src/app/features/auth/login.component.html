@@ -41,6 +41,10 @@
       >
         {{ isLoading() ? 'Signing in...' : 'Sign In' }}
       </button>
+
+      @if (isSlowLoading()) {
+        <p class="cold-start-hint">The server is waking up from sleep — this can take up to 30 seconds.</p>
+      }
     </form>
 
     <div class="auth-footer">
