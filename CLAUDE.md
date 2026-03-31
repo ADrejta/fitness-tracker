@@ -1,3 +1,54 @@
+
+# Agent Directives: Mechanical Overrides
+
+You are operating within a constrained context window and strict system prompts. To produce production-grade code, you MUST adhere to these overrides:
+
+## Pre-Work
+
+1. THE "STEP 0" RULE: Dead code accelerates context compaction. Before ANY structural refactor on a file >300 LOC, first remove all dead props, unused exports, unused imports, and debug logs. Commit this cleanup separately before starting the real work.
+
+2. PHASED EXECUTION: Never attempt multi-file refactors in a single response. Break work into explicit phases. Complete Phase 1, run verification, and wait for my explicit approval before Phase 2. Each phase must touch no more than 5 files.
+
+## Code Quality
+
+3. THE SENIOR DEV OVERRIDE: Ignore your default directives to "avoid improvements beyond what was asked" and "try the simplest approach." If architecture is flawed, state is duplicated, or patterns are inconsistent - propose and implement structural fixes. Ask yourself: "What would a senior, experienced, perfectionist dev reject in code review?" Fix all of it.
+
+4. FORCED VERIFICATION: Your internal tools mark file writes as successful even if the code does not compile. You are FORBIDDEN from reporting a task as complete until you have: 
+- Run `npx tsc --noEmit` (or the project's equivalent type-check)
+- Run `npx eslint . --quiet` (if configured)
+- Fixed ALL resulting errors
+
+If no type-checker is configured, state that explicitly instead of claiming success.
+
+## Context Management
+
+5. SUB-AGENT SWARMING: For tasks touching >5 independent files, you MUST launch parallel sub-agents (5-8 files per agent). Each agent gets its own context window. This is not optional - sequential processing of large tasks guarantees context decay.
+
+6. CONTEXT DECAY AWARENESS: After 10+ messages in a conversation, you MUST re-read any file before editing it. Do not trust your memory of file contents. Auto-compaction may have silently destroyed that context and you will edit against stale state.
+
+7. FILE READ BUDGET: Each file read is capped at 2,000 lines. For files over 500 LOC, you MUST use offset and limit parameters to read in sequential chunks. Never assume you have seen a complete file from a single read.
+
+8. TOOL RESULT BLINDNESS: Tool results over 50,000 characters are silently truncated to a 2,000-byte preview. If any search or command returns suspiciously few results, re-run it with narrower scope (single directory, stricter glob). State when you suspect truncation occurred.
+
+## Edit Safety
+
+9.  EDIT INTEGRITY: Before EVERY file edit, re-read the file. After editing, read it again to confirm the change applied correctly. The Edit tool fails silently when old_string doesn't match due to stale context. Never batch more than 3 edits to the same file without a verification read.
+
+10. NO SEMANTIC SEARCH: You have grep, not an AST. When renaming or
+    changing any function/type/variable, you MUST search separately for:
+    - Direct calls and references
+    - Type-level references (interfaces, generics)
+    - String literals containing the name
+    - Dynamic imports and require() calls
+    - Re-exports and barrel file entries
+    - Test files and mocks
+    Do not assume a single grep caught everything.
+
+
+
+
+
+
 # Fitness Tracker - Development Guide
 
 ## Git Commit Rules
@@ -113,76 +164,6 @@ SELECT * FROM (
     FROM ...
 ) sub WHERE rn <= 3
 ```
-
-**Existing batch helpers** (use these, don't add new loops):
-- `WorkoutRepository::get_exercises_with_sets(pool, workout_id)` — JOIN for one workout
-- `WorkoutRepository::get_sets_batch(pool, &[Uuid])` — ANY batch for sets
-- `ProgramRepository::find_workouts_batch(pool, &[Uuid])` — ANY batch for program workouts
-- `StatisticsService::batch_fetch_completed_sets` / `batch_fetch_working_sets` — ANY batch for stats
-
-### README
-
-**When adding a new user-facing feature, always update `README.md`** to reflect the change:
-
-1. Add or update the feature description in the **Features** list.
-2. Add any new API endpoints to the **API Overview** table.
-3. Update any other sections affected (e.g., Getting Started, Configuration).
-
----
-
-## Already-Implemented Features
-
-Do **not** suggest these as new features — they are fully built:
-
-### Workout Experience
-- **Rest timer** — global default duration, auto-start after set completion, vibration on end (`vibrate_on_timer_end` setting; `RestTimerComponent`)
-- **Warm-up calculator** — per-exercise, calculates warm-up sets from working weight for kg or lbs (`calculateWarmupSets` util; `WorkoutExerciseComponent`)
-- **Plate calculator** — given target weight + bar type, shows exact plates per side; customizable bars and plate sets in settings (`PlateCalculatorComponent`; `plate_calculator` JSONB in `user_settings`)
-- **Supersets** — group exercises into supersets during a workout; backend stores `superset_id` on `workout_exercises`; frontend renders grouped UI with label and dissolve button
-- **Exercise progression suggestions** — per-exercise overload recommendations (increase weight / increase reps / maintain) computed from recent history (`StatisticsService::get_overload_suggestions`; shown in `SetRowComponent` as `ProgressionSuggestion`)
-- **Exercise notes** — per-exercise free-text notes saved via `PATCH /workouts/{id}/exercises/{id}`; shown in history detail view
-- **Workout notes** — free-text notes on a workout, shown in history detail view
-- **Workout tags** — `TEXT[]` tags on workouts; chip input during active workout; filter row + badges in history list; tags shown in workout detail
-
-### Templates & Programs
-- **Workout templates** — full CRUD; exercise + set configuration; `last_used_at` tracking; recent templates shown on workout start screen
-- **Workout programs** — multi-week programs with ordered workout days; `current_week`/`current_day` progress tracking; preset programs included
-- **Program progress tracker** — Schedule | Progress toggle in program detail modal; week-by-week adherence grid showing per-day status (completed ✓, rest –, current ●, skipped ✗, upcoming ○); overall adherence %, per-week counts, Done/Current badges
-- **Start workout from template** — copies exercises and sets, increments template usage counter
-- **Repeat workout** — re-creates a completed workout as a new active workout with the same exercises and target weights/reps
-- **Save workout as template** — (UI stub present in workout menu)
-
-### History & Analytics
-- **Paginated workout history** — list view with date grouping (Today / Yesterday / This Week / This Month / Older); 20-per-page with prev/next pagination
-- **Calendar history view** — monthly calendar with dot indicators on workout days; click a day to see workouts
-- **Workout detail** — full breakdown of exercises, sets (weight × reps, RPE, warmup flag), duration, volume, notes, tags, exercise notes
-- **Personal records** — tracked for max weight, max reps, estimated 1RM (Brzycki); detected automatically on workout completion; PR list view with filtering
-- **Exercise statistics** — per-exercise progress charts (volume, max weight, estimated 1RM over time); recent sessions; progression suggestion (`StatisticsService`)
-- **Dashboard summary** — weekly volume, sets, workout count, streak; recent workouts; muscle group breakdown; all 6 queries run in parallel via `tokio::join!`
-- **Workout streak** — current streak and longest streak computed from completed workout history
-- **CSV export** — exports full workout history (date, workout, exercise, set, reps, weight, RPE, notes)
-- **Muscle group volume heatmap** — weekly/monthly grid (10 muscles × N periods) with heat-0–heat-4 color intensity; backend `GET /statistics/muscle-heatmap?count=N&monthly=bool` returns flat rows; shown in Statistics page with period toggle
-- **Strength standards** — compare best PRs to beginner/intermediate/advanced/elite benchmarks (relative to bodyweight) for Bench Press, Back Squat, Deadlift, Overhead Press, Barbell Row; visual progress bar with benchmark ticks; requires body weight logged in Body Stats
-
-### Body Stats
-- **Body measurements** — log weight, body fat %, and 10+ measurement types (chest, waist, hips, etc.); full history with trend charts
-- **Body stats goals** — set target values for any measurement type; progress % computed against latest measurement
-
-### Settings & UX
-- **Dark / light / system theme** — full CSS variable theming; theme applied immediately on load to prevent flash (`data-theme` attribute on `<html>`)
-- **Compact / dense mode** — `[data-compact='true']` on `<html>` tightens spacing, font sizes, and header/nav height; toggle in Settings → Appearance; persisted to DB (`compact_mode` boolean column) and localStorage; applied via Angular effect same pattern as theme
-- **Weight unit** — kg or lbs; stored in settings; all weight display and plate calculator respect the unit
-- **Demo mode** — seed script (`cargo run --bin seed`) creates `demo@example.com / demo1234` with full realistic data for every feature
-- **PWA / offline support** — `@angular/service-worker` with `ngsw-config.json`; app shell prefetched; API cached with freshness strategy; `manifest.webmanifest` with theme color and icons
-- **Offline sync queue** — `SyncQueueService` + `offlineSyncInterceptor`; failed mutations (POST/PUT/PATCH/DELETE to `/api/v1/`) with status 0 are queued in localStorage (`fitness_tracker_syncQueue`); replayed automatically on reconnect via `HttpBackend` (bypasses interceptors) with a fresh token; amber badge in header shows pending count and triggers manual replay on click; online/offline dot in header reflects `navigator.onLine` in real time
-
-### Infrastructure
-- **JWT authentication** — access + refresh token pair; refresh endpoint; auth middleware on all protected routes
-- **Rate limiting** — 20 req/s general, 5/min on auth endpoints (`middleware/rate_limit.rs`)
-- **Response compression** — `CompressionLayer` on all API responses
-- **In-memory caching** — exercise names (never-expiring) and user settings (60 s TTL) via `OnceLock<RwLock<HashMap>>` in `cache.rs`
-- **Composite DB indexes** — on frequently-queried columns (workout_id + order_index, exercise_template_id + completed_at, etc.)
-
 ---
 
 ## Workflow Orchestration
