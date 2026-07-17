@@ -74,7 +74,11 @@
 // --- Set row grid ---
 .set-row {
   display: grid;
-  grid-template-columns: 2.5rem 1fr auto auto 3.25rem;
+  grid-template-columns: 2.5rem 1fr 3rem;
+  grid-template-areas:
+    "num inputs check"
+    "prev prev prev"
+    "rpe rpe rpe";
   gap: var(--spacing-xs);
   align-items: center;
   padding: var(--spacing-sm) 0;
@@ -82,6 +86,7 @@
 
   @media (min-width: 480px) {
     grid-template-columns: 2.5rem 5rem 1fr auto auto 3rem;
+    grid-template-areas: none;
     gap: var(--spacing-sm);
   }
 
@@ -94,17 +99,43 @@
   }
 
   &--completed {
-    grid-template-columns: 2.5rem 1fr auto auto auto 3.25rem;
-    gap: var(--spacing-xs);
-
     @media (min-width: 480px) {
       grid-template-columns: 2.5rem 5rem 1fr auto auto auto 3rem;
-      gap: var(--spacing-sm);
     }
 
     .set-row__input {
       color: var(--color-success-600);
     }
+  }
+}
+
+// Explicit areas (not auto-placement) keep the complete button reachable regardless of optional siblings
+@media (max-width: 479px) {
+  .set-row__number {
+    grid-area: num;
+  }
+
+  .set-row__inputs {
+    grid-area: inputs;
+    min-width: 0;
+  }
+
+  .set-row__actions {
+    grid-area: check;
+  }
+
+  .set-row__previous-mobile {
+    grid-area: prev;
+  }
+
+  .set-row__rpe-quick {
+    grid-area: rpe;
+    justify-self: start;
+  }
+
+  .set-row__rpe {
+    grid-area: rpe;
+    justify-self: end;
   }
 }
 
@@ -179,7 +210,6 @@
 
 .set-row__previous-mobile {
   display: block;
-  grid-column: 2 / -1;
   font-size: var(--font-size-xs);
   color: var(--color-text-tertiary);
   font-variant-numeric: tabular-nums;
